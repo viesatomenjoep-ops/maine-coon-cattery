@@ -4,12 +4,12 @@ import Link from 'next/link';
 export function Logo({ light = false }) {
   return (
     <Link href="/" className="group inline-flex items-center gap-3">
-      <span className={`grid h-10 w-10 place-items-center rounded-full border ${light ? 'border-cream-100/40' : 'border-forest-900/20'}`}>
-        <PawMark className={light ? 'text-cream-100' : 'text-forest-800'} />
+      <span className={`grid h-10 w-10 place-items-center rounded-full border ${light ? 'border-cream-100/30' : 'border-terracotta-900/10'} transition group-hover:border-terracotta-500`}>
+        <PawMark className={light ? 'text-cream-100' : 'text-terracotta-600'} />
       </span>
       <span className="leading-none">
-        <span className={`block font-display text-xl tracking-tight ${light ? 'text-cream-100' : 'text-forest-900'}`}>Maelduin</span>
-        <span className={`block text-[10px] uppercase tracking-[0.32em] ${light ? 'text-cream-100/70' : 'text-brass-600'}`}>Maine Coon Cattery</span>
+        <span className={`block font-display text-2xl font-light tracking-tight ${light ? 'text-cream-100' : 'text-ink'}`}>Wendy's Dream</span>
+        <span className={`block text-[9px] uppercase tracking-[0.35em] ${light ? 'text-cream-100/60' : 'text-terracotta-500'}`}>Maine Coon Cattery</span>
       </span>
     </Link>
   );
@@ -43,8 +43,8 @@ export function StatusPill({ status }) {
 
 export function SectionLabel({ children }) {
   return (
-    <span className="inline-flex items-center gap-2 text-xs uppercase tracking-[0.32em] text-brass-600">
-      <span className="h-px w-8 bg-brass-400/60" />
+    <span className="inline-flex items-center gap-2.5 text-xs font-semibold uppercase tracking-[0.35em] text-terracotta-600">
+      <span className="h-px w-8 bg-terracotta-400/40" />
       {children}
     </span>
   );
@@ -52,15 +52,15 @@ export function SectionLabel({ children }) {
 
 // Placeholder for future Cloudinary/AI-generated imagery.
 // Renders a tasteful textured block so the prototype is presentable without assets.
-export function ImageSlot({ label = 'AI-afbeelding', ratio = 'aspect-[4/5]', className = '' }) {
+export function ImageSlot({ label = 'Afbeelding', ratio = 'aspect-[4/5]', className = '' }) {
   return (
-    <div className={`relative overflow-hidden rounded-2xl ${ratio} ${className}`}>
-      <div className="absolute inset-0 bg-gradient-to-br from-forest-200 via-cream-200 to-brass-200" />
-      <div className="absolute inset-0 bg-grain opacity-60" />
+    <div className={`relative overflow-hidden rounded-[2rem] ${ratio} ${className}`}>
+      <div className="absolute inset-0 bg-gradient-to-tr from-sand-200/70 via-beige-200/50 to-terracotta-200/70" />
+      <div className="absolute inset-0 bg-grain opacity-40" />
       <div className="absolute inset-0 grid place-items-center">
-        <span className="flex flex-col items-center gap-2 text-forest-700/70">
-          <PawMark className="h-7 w-7" />
-          <span className="text-[10px] uppercase tracking-[0.28em]">{label}</span>
+        <span className="flex flex-col items-center gap-2 text-terracotta-900/60">
+          <PawMark className="h-6 w-6 text-terracotta-500/70" />
+          <span className="text-[9px] font-medium tracking-[0.3em] uppercase">{label}</span>
         </span>
       </div>
     </div>
