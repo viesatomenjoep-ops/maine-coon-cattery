@@ -69,7 +69,7 @@ export default function HomePage() {
   return (
     <div className="overflow-x-hidden">
       {/* 1. HERO SLIDER - Split Grid magazine layout (Images 100% visible, no overlay block) */}
-      <section className="relative mx-auto max-w-7xl px-6 pt-10 pb-20 md:py-24 grid gap-12 md:grid-cols-[1.1fr_0.9fr] items-center bg-cream-100">
+      <section className="relative mx-auto max-w-7xl px-6 pt-10 pb-20 md:py-24 grid gap-12 md:grid-cols-[1.1fr_0.9fr] items-center">
         <div className="animate-fade-up space-y-6">
           <span className="text-xs font-semibold uppercase tracking-[0.3em] text-terracotta-600">
             {mounted ? t('logo_subtext') : 'Maine Coon Cattery'}
@@ -127,7 +127,7 @@ export default function HomePage() {
       </section>
 
       {/* 2. OVER WENDY'S DREAM (Ibiza Oase) */}
-      <section className="relative py-20 px-6 md:py-28 bg-cream-100">
+      <section className="relative py-20 px-6 md:py-28 bg-sand-100/50 mx-4 md:mx-8 rounded-[3rem] my-12">
         <div className="mx-auto max-w-5xl text-center">
           <SectionLabel>{mounted ? t('intro_label') : "Wendy's Dream"}</SectionLabel>
           <h2 className="mt-6 font-display text-4xl md:text-5xl lg:text-6xl font-light text-ink">
@@ -144,7 +144,7 @@ export default function HomePage() {
       </section>
 
       {/* 3. INTERACTIEVE MAGAZINE SECTIE (Geschiedenis & Kenmerken) */}
-      <section id="geschiedenis" className="relative py-20 px-6 bg-cream-50/50 border-y border-terracotta-900/5">
+      <section id="geschiedenis" className="relative py-20 px-6 bg-terracotta-50/60 rounded-[3rem] mx-4 md:mx-8 my-12 border border-terracotta-900/5 shadow-soft">
         <div className="mx-auto max-w-7xl">
           <div className="grid gap-12 lg:grid-cols-[0.8fr_1.2fr] items-center">
             
@@ -249,7 +249,7 @@ export default function HomePage() {
       </section>
 
       {/* 4. VISUELE TIMELINE / PORTFOLIO (Van Kitten tot Reus) */}
-      <section id="verhaal" className="relative py-20 px-6 md:py-28 bg-cream-100">
+      <section id="verhaal" className="relative py-20 px-6 md:py-28 bg-beige-100/50 mx-4 md:mx-8 rounded-[3rem] my-12">
         <div className="mx-auto max-w-7xl">
           <div className="text-center max-w-3xl mx-auto mb-16">
             <SectionLabel>{mounted ? t('timeline_label') : 'Fotodagboek & Groeicyclus'}</SectionLabel>
