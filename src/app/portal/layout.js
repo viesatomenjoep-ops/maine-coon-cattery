@@ -18,16 +18,16 @@ export default function PortalLayout({ children }) {
   }
 
   return (
-    <div className="relative z-10 min-h-screen">
-      <header className="sticky top-0 z-30 border-b border-forest-900/10 bg-cream-100/85 backdrop-blur">
+    <div className="relative z-10 min-h-screen w-full overflow-x-hidden bg-cream-100">
+      <header className="sticky top-0 z-30 border-b border-terracotta-900/10 bg-cream-100/80 backdrop-blur">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
           <Logo />
           <div className="flex items-center gap-4">
-            <span className="hidden text-sm text-forest-700/70 sm:block">{user.name}</span>
+            <span className="hidden text-sm text-ink/70 sm:block">{user.name}</span>
             {user.role === 'admin' && (
-              <Link href="/admin" className="text-sm font-medium text-brass-600 hover:underline">Admin</Link>
+              <Link href="/admin" className="text-sm font-semibold text-terracotta-600 hover:underline">Admin</Link>
             )}
-            <button onClick={() => { logout(); router.push('/'); }} className="rounded-full border border-forest-900/15 px-4 py-2 text-sm text-forest-800 transition hover:bg-forest-800 hover:text-cream-100">
+            <button onClick={() => { logout(); router.push('/'); }} className="rounded-full border border-terracotta-900/10 px-5 py-2 text-xs font-semibold uppercase tracking-wider text-terracotta-800 transition hover:bg-terracotta-600 hover:text-cream-50 hover:border-terracotta-600 shadow-soft">
               Uitloggen
             </button>
           </div>

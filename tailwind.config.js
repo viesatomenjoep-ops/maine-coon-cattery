@@ -23,7 +23,19 @@ module.exports = {
         cream: {
           50: '#fdfdfb', 100: '#faf9f5', 200: '#f5f2ea', 300: '#ece6d8',
         },
-        ink: '#3c2e27',
+        ink: '#1c140f',
+      },
+      fontSize: {
+        xs: ['0.95rem', { lineHeight: '1.4' }],
+        sm: ['1.1rem', { lineHeight: '1.5' }],
+        base: ['1.25rem', { lineHeight: '1.6' }],
+        lg: ['1.4rem', { lineHeight: '1.6' }],
+        xl: ['1.55rem', { lineHeight: '1.6' }],
+        '2xl': ['1.8rem', { lineHeight: '2.25rem' }],
+        '3xl': ['2.2rem', { lineHeight: '2.5rem' }],
+        '4xl': ['2.8rem', { lineHeight: '1.15' }],
+        '5xl': ['3.6rem', { lineHeight: '1.1' }],
+        '6xl': ['4.5rem', { lineHeight: '1.05' }],
       },
       fontFamily: {
         display: ['Cormorant Garamond', 'Georgia', 'serif'],

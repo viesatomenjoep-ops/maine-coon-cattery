@@ -3,9 +3,10 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { SectionLabel, PawMark } from '@/components/ui';
+import { useLanguage } from '@/context/LanguageContext';
 
-// Hero slides data
-const heroSlides = [
+// Standard fallback data
+const fallbackSlides = [
   {
     image: '/images/litter_terrace.png',
     title: 'Een oase van rust & pure liefde',
@@ -26,177 +27,118 @@ const heroSlides = [
   },
 ];
 
-// Chronological timeline showcasing the growth of a Maine Coon from newborn to adult
-const growthStages = [
-  {
-    image: '/images/mother_kittens.png',
-    stage: 'Fase 1: Geboorte & Nestwarmte',
-    age: 'Week 0 - 2',
-    title: 'De eerste zachte zonnestralen',
-    desc: 'De kittens worden in alle rust geboren in onze werpkist. De eerste twee weken zijn ze volledig afhankelijk van de moeder. Warmte, rust en moedermelk vormen de basis voor hun immuniteit en groei.',
-  },
-  {
-    image: '/images/kitten_sleepy.png',
-    stage: 'Fase 2: Oogjes Open & Dromen',
-    age: 'Week 2 - 4',
-    title: 'Slaperige ontdekkers',
-    desc: 'Rond de tiende dag gaan de oogjes langzaam open. Ze beginnen hun nestgenootjes en directe omgeving waar te nemen. Tussen het drinken door slapen ze diep en dromen ze van hun eerste stapjes in de oase.',
-  },
-  {
-    image: '/images/kitten_playful.png',
-    stage: 'Fase 3: Spel & Socialisatie',
-    age: 'Week 4 - 8',
-    title: 'De speelse wereld van wol',
-    desc: 'Spelenderwijs ontdekken ze de wereld. Ze leren rennen, klimmen en stoeien met elkaar. Dit is een cruciale fase waarin we ze intensief socialiseren met geluiden, mensen en zacht speelgoed.',
-  },
-  {
-    image: '/images/kitten_curious.png',
-    stage: 'Fase 4: Karakter & Alertheid',
-    age: 'Week 8 - 12',
-    title: 'De nieuwsgierige blik',
-    desc: 'Met grote, sprekende ogen observeren ze alles. Het karakter vormt zich nu snel: ze worden aanhankelijk, volgen je door het huis en tonen hun typische, zachtaardige Maine Coon temperament.',
-  },
-  {
-    image: '/images/litter_terrace.png',
-    stage: 'Fase 5: De Spaanse Bries',
-    age: 'Week 12 - 16',
-    title: 'Samen op avontuur',
-    desc: 'Rond 12-16 weken zijn de kittens klaar om (volledig gevaccineerd en gechipt) de buitenwereld te ontdekken. Ze genieten van de frisse lucht op ons beveiligde Ibiza-terras en zijn klaar voor hun nieuwe gouden mandje.',
-  },
-  {
-    image: '/images/junior_garden.png',
-    stage: 'Fase 6: De Junior Leeftijd',
-    age: 'Maand 4 - 8',
-    title: 'Verkennen in het groen',
-    desc: 'Als jonge pubers schieten ze door de tuin. Hun lichaam wordt langer, de poten groter en de kenmerkende pluisjes op de oren (lynx tips) beginnen echt op te vallen. Ze barsten van de energie.',
-  },
-  {
-    image: '/images/junior_window.png',
-    stage: 'Fase 7: Rust & Observatie',
-    age: 'Maand 8 - 12',
-    title: 'Blik op de horizon',
-    desc: 'De snelle babygroei vlakt wat af. Ze worden rustiger en nemen vaak een vaste plek in voor het raam om de vogels te observeren. Hun vacht begint dichter te worden en de kraag krijgt meer volume.',
-  },
-  {
-    image: '/images/adult_regal.png',
-    stage: 'Fase 8: De Zachte Reus',
-    age: 'Jaar 1 - 2',
-    title: 'Majestueuze uitstraling',
-    desc: 'Rond hun eerste verjaardag begint de Maine Coon zijn volwassen spierkracht en gewicht te ontwikkelen. De mannetjes krijgen een brede borstkas en een indrukwekkende, leeuw-achtige kraag.',
-  },
-  {
-    image: '/images/adult_fluffy.png',
-    stage: 'Fase 9: Vacht in Volle Glorie',
-    age: 'Jaar 2 - 3',
-    title: 'De weelderige sleepstaart',
-    desc: 'De vacht is nu volledig ontwikkeld. De staart is net zo lang als het lichaam en wappert als een weelderige pluim. Ze hebben hun volledige winterjas ontwikkeld die hen beschermt tegen weer en wind.',
-  },
-  {
-    image: '/images/adult_smoke.png',
-    stage: 'Fase 10: Volwassen Wijsheid',
-    age: 'Jaar 3 - 5',
-    title: 'Een blik van pure harmonie',
-    desc: 'Pas rond de leeftijd van 4 tot 5 jaar is een Maine Coon volledig uitgegroeid. Ze stralen een koninklijke rust en intense wijsheid uit, en blijven hun leven lang de aanhankelijke metgezel van hun eigenaar.',
-  },
+const growthImages = [
+  '/images/mother_kittens.png',
+  '/images/kitten_sleepy.png',
+  '/images/kitten_playful.png',
+  '/images/kitten_curious.png',
+  '/images/litter_terrace.png',
+  '/images/junior_garden.png',
+  '/images/junior_window.png',
+  '/images/adult_regal.png',
+  '/images/adult_fluffy.png',
+  '/images/adult_smoke.png',
 ];
 
 export default function HomePage() {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [activeTab, setActiveTab] = useState('oorsprong');
+  const { t, mounted } = useLanguage();
 
   // Autoplay hero slider
   useEffect(() => {
     const timer = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % heroSlides.length);
+      setCurrentSlide((prev) => (prev + 1) % fallbackSlides.length);
     }, 6000);
     return () => clearInterval(timer);
   }, []);
 
+  // Hydrate translation arrays safely
+  const slides = mounted ? t('hero_slides') : fallbackSlides;
+  const currentSlideData = slides[currentSlide] || slides[0];
+  const slideImage = fallbackSlides[currentSlide]?.image || '/images/litter_terrace.png';
+
+  const rawStages = mounted ? t('timeline_stages') : [];
+  const stages = Array.isArray(rawStages) && rawStages.length > 0 
+    ? rawStages.map((stageText, idx) => ({
+        ...stageText,
+        image: growthImages[idx] || '/images/litter_terrace.png',
+      }))
+    : [];
+
   return (
     <div className="overflow-x-hidden">
-      {/* 1. HERO SLIDER */}
-      <section className="relative w-full h-[85vh] min-h-[550px] md:h-[90vh] bg-cream-200 overflow-hidden">
-        {heroSlides.map((slide, idx) => (
-          <div
-            key={idx}
-            className={`absolute inset-0 w-full h-full transition-opacity duration-1000 ease-in-out ${
-              idx === currentSlide ? 'opacity-100 z-10' : 'opacity-0 z-0'
-            }`}
-          >
-            {/* Parallax background feeling */}
-            <div className="absolute inset-0 bg-ink/15 z-10" />
+      {/* 1. HERO SLIDER - Split Grid magazine layout (Images 100% visible, no overlay block) */}
+      <section className="relative mx-auto max-w-7xl px-6 pt-10 pb-20 md:py-24 grid gap-12 md:grid-cols-[1.1fr_0.9fr] items-center bg-cream-100">
+        <div className="animate-fade-up space-y-6">
+          <span className="text-xs font-semibold uppercase tracking-[0.3em] text-terracotta-600">
+            {mounted ? t('logo_subtext') : 'Maine Coon Cattery'}
+          </span>
+          <h1 className="font-display text-5xl md:text-6xl font-light text-ink leading-[1.15]">
+            {currentSlideData.title}
+          </h1>
+          <p className="max-w-md text-base md:text-lg text-ink/80 font-light leading-relaxed">
+            {currentSlideData.text}
+          </p>
+          <div className="pt-4 flex flex-wrap gap-4">
+            <Link
+              href="/login"
+              className="rounded-full bg-terracotta-500 px-6 py-3.5 text-xs font-semibold uppercase tracking-wider text-cream-50 shadow-soft transition hover:bg-terracotta-600 hover:shadow-glow"
+            >
+              {mounted ? t('hero_available_btn') : 'Bekijk Beschikbare Kittens'}
+            </Link>
+            <a
+              href="#geschiedenis"
+              className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-terracotta-800 transition hover:text-terracotta-500 py-3.5"
+            >
+              {mounted ? t('hero_discover_btn') : 'Ontdek het Ras'} <span aria-hidden>→</span>
+            </a>
+          </div>
+
+          {/* Dots below the text for pagination */}
+          <div className="flex gap-2.5 pt-6">
+            {fallbackSlides.map((_, idx) => (
+              <button
+                key={idx}
+                onClick={() => setCurrentSlide(idx)}
+                aria-label={`Dia ${idx + 1}`}
+                className={`h-2 transition-all duration-300 rounded-full ${
+                  idx === currentSlide ? 'w-8 bg-terracotta-500' : 'w-2.5 bg-terracotta-300'
+                }`}
+              />
+            ))}
+          </div>
+        </div>
+
+        {/* Right side: Edge-to-edge dromerige slider image, completely visible! */}
+        <div className="relative w-full aspect-[4/5] rounded-[2.5rem] overflow-hidden shadow-lux bg-cream-200">
+          {fallbackSlides.map((slide, idx) => (
             <img
+              key={idx}
               src={slide.image}
               alt={slide.title}
-              className="w-full h-full object-cover object-center transform scale-105 transition-transform duration-[6000ms] ease-out"
-              style={{
-                transform: idx === currentSlide ? 'scale(1)' : 'scale(1.05)',
-              }}
-            />
-            
-            {/* Hero Text Card inside large margins */}
-            <div className="absolute inset-0 z-20 flex items-center justify-start px-6 md:px-20 max-w-7xl mx-auto">
-              <div className="max-w-xl bg-cream-50/90 backdrop-blur-md p-8 md:p-12 rounded-[2rem] border border-cream-100/40 shadow-lux animate-fade-up">
-                <span className="text-xs font-semibold uppercase tracking-[0.3em] text-terracotta-600">
-                  {slide.subtitle}
-                </span>
-                <h1 className="mt-4 font-display text-4xl md:text-5xl lg:text-6xl font-light text-ink leading-tight">
-                  {slide.title}
-                </h1>
-                <p className="mt-4 text-sm md:text-base text-ink/85 leading-relaxed font-light">
-                  {slide.text}
-                </p>
-                <div className="mt-8 flex flex-wrap gap-4">
-                  <Link
-                    href="/login"
-                    className="rounded-full bg-terracotta-500 px-6 py-3 text-xs font-semibold uppercase tracking-wider text-cream-50 shadow-soft transition hover:bg-terracotta-600 hover:shadow-glow"
-                  >
-                    Bekijk Beschikbare Kittens
-                  </Link>
-                  <a
-                    href="#geschiedenis"
-                    className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-terracotta-800 transition hover:text-terracotta-500 py-3"
-                  >
-                    Ontdek het Ras <span aria-hidden>→</span>
-                  </a>
-                </div>
-              </div>
-            </div>
-          </div>
-        ))}
-
-        {/* Slider Navigation Dots */}
-        <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-30 flex gap-3">
-          {heroSlides.map((_, idx) => (
-            <button
-              key={idx}
-              onClick={() => setCurrentSlide(idx)}
-              aria-label={`Ga naar dia ${idx + 1}`}
-              className={`h-2.5 rounded-full transition-all duration-500 ${
-                idx === currentSlide ? 'w-8 bg-terracotta-500' : 'w-2.5 bg-cream-50/60'
+              className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ease-in-out transform ${
+                idx === currentSlide ? 'opacity-100 scale-100 z-10' : 'opacity-0 scale-105 z-0'
               }`}
             />
           ))}
+          <div className="absolute inset-0 bg-gradient-to-t from-ink/10 to-transparent z-20 pointer-events-none" />
         </div>
       </section>
 
       {/* 2. OVER WENDY'S DREAM (Ibiza Oase) */}
       <section className="relative py-20 px-6 md:py-28 bg-cream-100">
         <div className="mx-auto max-w-5xl text-center">
-          <SectionLabel>Wendy's Dream</SectionLabel>
+          <SectionLabel>{mounted ? t('intro_label') : "Wendy's Dream"}</SectionLabel>
           <h2 className="mt-6 font-display text-4xl md:text-5xl lg:text-6xl font-light text-ink">
-            Thuiskomen in een wereld van <span className="italic text-terracotta-500">pure liefde</span>
+            {mounted ? t('intro_title') : 'Thuiskomen in een wereld van pure liefde'}
           </h2>
           <p className="mt-8 mx-auto max-w-3xl text-base md:text-lg font-light leading-relaxed text-ink/80">
-            Wendy's Dream is ontstaan uit een diepgewortelde passie voor de majestueuze Maine Coon. 
-            Onze cattery combineert de ontspannen, zonnige rust van Ibiza met uiterst professionele en 
-            liefdevolle zorg. Wij geloven dat een gezonde en gelukkige kat begint bij een stressvrije omgeving. 
-            Onze zachte reuzen groeien op in een harmonieuze oase waar ze alle ruimte krijgen om hun speelse 
-            en aanhankelijke karakter te ontplooien.
+            {mounted ? t('intro_text') : 'Wendy\'s Dream is ontstaan uit een diepgewortelde passie voor de majestueuze Maine Coon.'}
           </p>
           <div className="mt-12 inline-flex items-center gap-2 text-sm font-semibold tracking-wider text-terracotta-600 uppercase">
             <PawMark className="h-5 w-5" />
-            <span>Ouders getest op HCM · SMA · PKDef</span>
+            <span>{mounted ? t('intro_tested') : 'Ouders getest op HCM · SMA · PKDef'}</span>
           </div>
         </div>
       </section>
@@ -211,7 +153,7 @@ export default function HomePage() {
               <div className="relative rounded-[2.5rem] overflow-hidden aspect-[4/5] shadow-lux">
                 <img
                   src="/images/litter_terrace.png"
-                  alt="Maine Coon kittens op Ibiza"
+                  alt="Maine Coon kittens"
                   className="w-full h-full object-cover"
                 />
               </div>
@@ -226,17 +168,17 @@ export default function HomePage() {
 
             {/* Right Column: Tabbed Magazine Article */}
             <div className="flex flex-col justify-center">
-              <SectionLabel>Ontdek het ras</SectionLabel>
+              <SectionLabel>{mounted ? t('breed_label') : 'Ontdek het ras'}</SectionLabel>
               <h2 className="mt-4 font-display text-3xl md:text-4xl lg:text-5xl font-light text-ink leading-tight">
-                De mystiek achter de <span className="italic text-terracotta-500">Zachte Reus</span>
+                {mounted ? t('breed_title') : 'De mystiek achter de Zachte Reus'}
               </h2>
 
               {/* Tabs Navigation */}
               <div className="mt-8 flex border-b border-terracotta-900/10 gap-6">
                 {[
-                  { id: 'oorsprong', label: 'Oorsprong' },
-                  { id: 'karakter', label: 'Karakter' },
-                  { id: 'uiterlijk', label: 'Uiterlijk & Verzorging' },
+                  { id: 'oorsprong', label: mounted ? t('breed_tab_oorsprong') : 'Oorsprong' },
+                  { id: 'karakter', label: mounted ? t('breed_tab_karakter') : 'Karakter' },
+                  { id: 'uiterlijk', label: mounted ? t('breed_tab_uiterlijk') : 'Uiterlijk & Verzorging' },
                 ].map((tab) => (
                   <button
                     key={tab.id}
@@ -257,56 +199,45 @@ export default function HomePage() {
               <div className="mt-8 min-h-[250px] transition-all duration-500">
                 {activeTab === 'oorsprong' && (
                   <div className="space-y-4 animate-fade-in">
-                    <h3 className="font-display text-2xl text-ink font-light">Van de koude wouden van Maine</h3>
+                    <h3 className="font-display text-2xl text-ink font-light">
+                      {mounted ? t('breed_origins_title') : 'Van de koude wouden van Maine'}
+                    </h3>
                     <p className="text-sm md:text-base font-light leading-relaxed text-ink/80">
-                      De Maine Coon is een van de oudste natuurlijke kattenrassen van Noord-Amerika. 
-                      Er gaan talloze legendes rond over hun herkomst: van romantische verhalen over de 
-                      langharige katten van de Franse koningin Marie Antoinette die per schip naar Maine vluchtten, 
-                      tot mythes over een kruising tussen een kat en een wasbeer (raccoon, vandaar 'Coon').
+                      {mounted ? t('breed_origins_p1') : '...'}
                     </p>
                     <p className="text-sm md:text-base font-light leading-relaxed text-ink/80">
-                      In werkelijkheid is het ras ontstaan uit een natuurlijke selectie. Kortharige huiskatten, 
-                      meegenomen door vroege kolonisten, kruisten zich met langharige zeemanskatten (zoals de 
-                      Noorse Boskat). Alleen de sterkste katten met een dikke, waterafstotende vacht en grote, 
-                      brede poten overleefden de barre winters van New England. Zo ontstond de robuuste, 
-                      majestueuze Maine Coon.
+                      {mounted ? t('breed_origins_p2') : '...'}
                     </p>
                   </div>
                 )}
 
                 {activeTab === 'karakter' && (
                   <div className="space-y-4 animate-fade-in">
-                    <h3 className="font-display text-2xl text-ink font-light">De zachtaardige clown</h3>
+                    <h3 className="font-display text-2xl text-ink font-light">
+                      {mounted ? t('breed_character_title') : 'De zachtaardige clown'}
+                    </h3>
                     <p className="text-sm md:text-base font-light leading-relaxed text-ink/80">
-                      Ondanks hun imposante, wilde uiterlijk staan Maine Coons bekend om hun uiterst zachte, 
-                      vriendelijke en tolerante karakter. Ze worden niet voor niets "gentle giants" genoemd. 
-                      Ze zijn enorm sociaal, hechten zich sterk aan hun menselijke gezin en kunnen uitstekend 
-                      opschieten met kinderen en andere huisdieren.
+                      {mounted ? t('breed_character_p1') : '...'}
                     </p>
                     <p className="text-sm md:text-base font-light leading-relaxed text-ink/80">
-                      Een ander uniek kenmerk is hun speelsheid, die ze tot op hoge leeftijd behouden, en hun 
-                      charmante stemgeluid. In plaats van luid miauwen, communiceren ze met een schattig, 
-                      zacht getjilp of gekwetter. Ze houden van water en apporteren speelgoed alsof het honden zijn.
+                      {mounted ? t('breed_character_p2') : '...'}
                     </p>
                   </div>
                 )}
 
                 {activeTab === 'uiterlijk' && (
                   <div className="space-y-4 animate-fade-in">
-                    <h3 className="font-display text-2xl text-ink font-light">Robuust, weelderig en gezond</h3>
+                    <h3 className="font-display text-2xl text-ink font-light">
+                      {mounted ? t('breed_appearance_title') : 'Robuust, weelderig en gezond'}
+                    </h3>
                     <p className="text-sm md:text-base font-light leading-relaxed text-ink/80">
-                      De fysieke kenmerken van de Maine Coon zijn iconisch: grote tufted oren met lynxpluimpjes, 
-                      een stevige vierkante snuit, een massief gespierd lichaam en een weelderige sleepstaart die 
-                      om het lichaam kan worden gevouwen voor warmte. Hun vacht is halflang, dicht en klit nauwelijks.
+                      {mounted ? t('breed_appearance_p1') : '...'}
                     </p>
                     <p className="text-sm md:text-base font-light leading-relaxed text-ink/80">
-                      <strong>Verzorging:</strong> Wekelijks borstelen is meestal voldoende om de vacht glanzend 
-                      en klitvrij te houden. 
+                      {mounted ? t('breed_appearance_p2') : '...'}
                     </p>
                     <p className="text-sm md:text-base font-light leading-relaxed text-ink/80">
-                      <strong>Gezondheid:</strong> Omdat we uitsluitend fokken met geteste ouderdieren, 
-                      garanderen we dat onze kittens vrij zijn van erfelijke aandoeningen zoals hypertrofische 
-                      cardiomyopathie (HCM), spinale musculaire atrofie (SMA) en pyruvaatkinase deficiëntie (PKDef).
+                      {mounted ? t('breed_appearance_p3') : '...'}
                     </p>
                   </div>
                 )}
@@ -321,20 +252,18 @@ export default function HomePage() {
       <section id="verhaal" className="relative py-20 px-6 md:py-28 bg-cream-100">
         <div className="mx-auto max-w-7xl">
           <div className="text-center max-w-3xl mx-auto mb-16">
-            <SectionLabel>Fotodagboek & Groeicyclus</SectionLabel>
+            <SectionLabel>{mounted ? t('timeline_label') : 'Fotodagboek & Groeicyclus'}</SectionLabel>
             <h2 className="mt-4 font-display text-4xl md:text-5xl font-light text-ink">
-              Van Kitten tot <span className="italic text-terracotta-500">Majestueuze Reus</span>
+              {mounted ? t('timeline_title') : 'Van Kitten tot Majestueuze Reus'}
             </h2>
             <p className="mt-4 text-sm md:text-base font-light text-ink/75 leading-relaxed">
-              Volg de fascinerende ontwikkeling van onze Maine Coons. Deze chronologische fotoreeks helpt u 
-              begrijpen hoe een kitten uitgroeit tot een volwaardige, indrukwekkende zachte reus. 
-              Perfect voor potentiële kopers om het groeiproces te bestuderen.
+              {mounted ? t('timeline_desc') : 'Volg de fascinerende ontwikkeling van onze Maine Coons.'}
             </p>
           </div>
 
           {/* Timeline Layout */}
           <div className="space-y-16">
-            {growthStages.map((stage, idx) => (
+            {stages.map((stage, idx) => (
               <div
                 key={idx}
                 className={`flex flex-col md:flex-row gap-10 items-center ${
@@ -370,7 +299,7 @@ export default function HomePage() {
                   <div className="pt-2">
                     <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-terracotta-600 uppercase tracking-wider">
                       <span className="h-1.5 w-1.5 rounded-full bg-terracotta-500" />
-                      Wendy's Dream Standaard
+                      {mounted ? t('timeline_standard') : 'Wendy\'s Dream Standaard'}
                     </span>
                   </div>
                 </div>
@@ -380,11 +309,10 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* 5. CTA PRIVATE ACCESS */}
+      {/* 5. CTA PORTAL ACCESS */}
       <section className="mx-auto py-20 px-6 max-w-7xl">
         <div className="relative overflow-hidden rounded-[3rem] bg-ink px-8 py-16 text-center shadow-lux md:px-16 md:py-24">
           <div className="absolute inset-0 bg-grain opacity-20" />
-          {/* Ambient backgrounds */}
           <div className="absolute -left-32 -bottom-32 h-96 w-96 rounded-full bg-terracotta-500/10 blur-3xl" />
           <div className="absolute -right-32 -top-32 h-96 w-96 rounded-full bg-sand-500/10 blur-3xl" />
 
@@ -393,30 +321,27 @@ export default function HomePage() {
               <PawMark className="h-8 w-8" />
             </span>
             <h2 className="font-display text-4xl md:text-5xl font-light text-cream-50 leading-tight">
-              Krijg toegang tot ons digitaal nest-portaal
+              {mounted ? t('portal_cta_title') : 'Krijg toegang tot ons digitaal nest-portaal'}
             </h2>
             <p className="mt-6 text-sm md:text-base text-cream-100/70 font-light leading-relaxed">
-              Bent u geïnteresseerd in een van onze kittens? Inloggen op de beveiligde 
-              **Private Access** omgeving geeft u direct inzage in de actuele beschikbaarheid, 
-              stambomen, weegcurves en medische dossiers. Neem contact met ons op om een 
-              account aan te vragen.
+              {mounted ? t('portal_cta_desc') : 'Bent u geïnteresseerd in een van onze kittens?'}
             </p>
             <div className="mt-10 flex flex-wrap justify-center gap-4">
               <Link
                 href="/login"
                 className="rounded-full bg-terracotta-500 px-8 py-4 text-xs font-semibold uppercase tracking-wider text-cream-50 shadow-soft transition hover:bg-terracotta-600 hover:shadow-glow"
               >
-                Inloggen Private Access
+                {mounted ? t('portal_cta_login') : 'Inloggen Exclusieve Toegang'}
               </Link>
               <a
                 href="#contact"
                 className="rounded-full border border-cream-100/30 px-8 py-4 text-xs font-semibold uppercase tracking-wider text-cream-100 transition hover:bg-cream-100/10"
               >
-                Contact Opnemen
+                {mounted ? t('portal_cta_contact') : 'Contact Opnemen'}
               </a>
             </div>
             <p className="mt-4 text-xs text-cream-100/40">
-              Uitsluitend voor goedgekeurde liefhebbers en toekomstige eigenaren.
+              {mounted ? t('portal_cta_sub') : 'Uitsluitend voor goedgekeurde liefhebbers.'}
             </p>
           </div>
         </div>

@@ -4,12 +4,12 @@ import Link from 'next/link';
 export function Logo({ light = false }) {
   return (
     <Link href="/" className="group inline-flex items-center gap-3">
-      <span className={`grid h-10 w-10 place-items-center rounded-full border ${light ? 'border-cream-100/30' : 'border-terracotta-900/10'} transition group-hover:border-terracotta-500`}>
+      <span className={`grid h-11 w-11 place-items-center rounded-full border ${light ? 'border-cream-100/30' : 'border-terracotta-900/10'} transition group-hover:border-terracotta-500`}>
         <PawMark className={light ? 'text-cream-100' : 'text-terracotta-600'} />
       </span>
       <span className="leading-none">
-        <span className={`block font-display text-2xl font-light tracking-tight ${light ? 'text-cream-100' : 'text-ink'}`}>Wendy's Dream</span>
-        <span className={`block text-[9px] uppercase tracking-[0.35em] ${light ? 'text-cream-100/60' : 'text-terracotta-500'}`}>Maine Coon Cattery</span>
+        <span className={`block font-display text-3xl font-medium tracking-tight ${light ? 'text-cream-100' : 'text-ink'}`}>Wendy's Dream</span>
+        <span className={`block text-[11px] font-semibold uppercase tracking-[0.32em] mt-1.5 ${light ? 'text-cream-100/70' : 'text-terracotta-600'}`}>Maine Coon Cattery</span>
       </span>
     </Link>
   );
