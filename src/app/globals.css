@@ -1,0 +1,41 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --paper: #faf6ee;
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  background-color: var(--paper);
+  color: theme('colors.ink');
+  -webkit-font-smoothing: antialiased;
+}
+
+/* subtle grain overlay across the app for warmth/depth */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background-image: theme('backgroundImage.grain');
+  opacity: 0.5;
+  z-index: 1;
+  mix-blend-mode: multiply;
+}
+
+::selection { background: theme('colors.brass.300'); color: theme('colors.forest.900'); }
+
+/* thin hairline divider */
+.hairline { border-top: 1px solid rgba(36,50,40,0.14); }
+
+.lift { transition: transform .5s cubic-bezier(.16,1,.3,1), box-shadow .5s; }
+.lift:hover { transform: translateY(-4px); }
+
+/* status pills */
+.pill { @apply inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium tracking-wide; }
+.pill-available { @apply bg-forest-100 text-forest-700; }
+.pill-reserved  { @apply bg-brass-100 text-brass-800; }
+.pill-sold      { @apply bg-stone-200 text-stone-500; }

@@ -1,0 +1,53 @@
+'use client';
+import { useState } from 'react';
+import { useStore } from '@/context/StoreContext';
+import { PageHead, Card, Select, Btn } from '@/components/admin';
+import { ImageSlot } from '@/components/ui';
+
+export default function MediaPage() {
+  const { kittens } = useStore();
+  const [target, setTarget] = useState(kittens[0]?.id || '');
+
+  return (
+    <>
+      <PageHead label="Media" title="Media Sync" />
+      <p className="-mt-4 mb-8 max-w-2xl text-sm text-forest-700/70">
+        Voorbereiding voor de naadloze koppeling met Cloudinary. Upload (later AI-gegenereerde)
+        afbeeldingen en koppel ze direct aan een advertentie of nieuwsbericht.
+      </p>
+
+      <div className="grid gap-6 lg:grid-cols-[1fr_1.2fr]">
+        <Card>
+          <h2 className="mb-4 font-display text-xl text-forest-900">Uploaden & koppelen</h2>
+          <label className="block">
+            <span className="text-xs font-medium uppercase tracking-wide text-forest-700">Koppelen aan kitten</span>
+            <Select value={target} onChange={(e)=>setTarget(e.target.value)} className="mt-1.5">
+              {kittens.map(k=><option key={k.id} value={k.id}>{k.name} · {k.color}</option>)}
+            </Select>
+          </label>
+
+          <div className="mt-5 grid place-items-center rounded-2xl border-2 border-dashed border-forest-900/15 bg-white/60 p-10 text-center">
+            <ImageSlot label="Sleep bestand" ratio="aspect-square w-24" className="rounded-xl" />
+            <p className="mt-4 text-sm text-forest-700">Sleep een afbeelding hierheen</p>
+            <p className="text-xs text-forest-600/60">of</p>
+            <Btn variant="ghost" className="mt-2">Bladeren</Btn>
+          </div>
+
+          <div className="mt-5 rounded-xl border border-dashed border-brass-300 bg-brass-50 p-4 text-xs text-brass-900">
+            <p className="font-semibold uppercase tracking-wide">Integratie-status</p>
+            <p className="mt-1">Cloudinary upload-widget wordt gekoppeld bij migratie naar de Viesa Automations Stack. URLs worden opgeslagen in het <code className="rounded bg-white/60 px-1">media</code> veld per record.</p>
+          </div>
+        </Card>
+
+        <Card>
+          <h2 className="mb-4 font-display text-xl text-forest-900">Mediabibliotheek (preview)</h2>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+            {['Hero', 'Castor profiel', 'Pollux spelen', 'Lyra vacht', 'Nest 4wk', 'Vega'].map((l) => (
+              <ImageSlot key={l} label={l} ratio="aspect-square" className="rounded-xl" />
+            ))}
+          </div>
+        </Card>
+      </div>
+    </>
+  );
+}
