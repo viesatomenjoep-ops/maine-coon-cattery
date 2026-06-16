@@ -12,7 +12,7 @@ const CldUploadWidget = ({ children }) => {
 
 export default function CatDossier({ params }) {
   const router = useRouter();
-  const { kittens, deleteKitten } = useStore();
+  const { kittens, deleteKitten, updateKitten, addKitten } = useStore();
   const isNew = params.id === 'new';
 
   let hasCloudinary = false;
@@ -55,7 +55,7 @@ export default function CatDossier({ params }) {
     if (!isNew) {
       const cat = kittens.find((k) => k.id === params.id);
       if (cat) {
-        setFormData(prev => ({ ...prev, name: cat.name, sex: cat.sex, color: cat.color, status: cat.status }));
+        setFormData(prev => ({ ...prev, ...cat }));
       }
     }
   }, [params.id, isNew, kittens]);
@@ -66,7 +66,12 @@ export default function CatDossier({ params }) {
   };
 
   const handleSave = () => {
-    alert('Sectie opgeslagen!');
+    if (!isNew) {
+      updateKitten(params.id, formData);
+    } else {
+      addKitten(formData);
+    }
+    alert('Sectie opgeslagen in actieve sessie!');
     if (isNew) router.push('/admin/cats');
   };
 
