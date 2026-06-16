@@ -3,6 +3,7 @@ import { useRef, useState } from 'react';
 import { useStore } from '@/context/StoreContext';
 import { PageHead, Card, Field, Input, Select, Btn } from '@/components/admin';
 import { ImageSlot } from '@/components/ui';
+import { CldUploadWidget } from 'next-cloudinary';
 
 const TAGS = ['Aankondiging', 'Update', 'Medisch', 'Show'];
 
@@ -24,6 +25,7 @@ export default function NewsEditor() {
   const editorRef = useRef(null);
   const [title, setTitle] = useState('');
   const [tag, setTag] = useState(TAGS[0]);
+  const [imageUrl, setImageUrl] = useState('');
   const [saved, setSaved] = useState(false);
 
   const exec = (cmd, val) => document.execCommand(cmd, false, val);
@@ -32,8 +34,8 @@ export default function NewsEditor() {
     const html = editorRef.current?.innerHTML?.trim();
     const text = editorRef.current?.innerText?.trim();
     if (!title.trim() || !text) return;
-    addNews({ title: title.trim(), body: text, html, tag });
-    setTitle(''); setTag(TAGS[0]);
+    addNews({ title: title.trim(), body: text, html, tag, image: imageUrl });
+    setTitle(''); setTag(TAGS[0]); setImageUrl('');
     if (editorRef.current) editorRef.current.innerHTML = '';
     setSaved(true);
     setTimeout(() => setSaved(false), 2200);
@@ -63,16 +65,44 @@ export default function NewsEditor() {
           </div>
 
           <Field label="Afbeelding (Cloudinary)">
-            <div className="flex items-center gap-3">
-              <ImageSlot label="Upload" ratio="aspect-[3/2] w-28" className="rounded-xl" />
-              <Btn variant="ghost" type="button">Selecteer bestand</Btn>
-              <span className="text-xs text-forest-600/60">Koppeling volgt via Media Sync</span>
+            <div className="flex items-center gap-4">
+              {imageUrl ? (
+                <img src={imageUrl} alt="Geüploade afbeelding" className="h-20 w-28 rounded-xl object-cover" />
+              ) : (
+                <ImageSlot label="Upload" ratio="aspect-[3/2] w-28" className="rounded-xl" />
+              )}
+              
+              <CldUploadWidget 
+                signatureEndpoint="/api/sign-cloudinary-params"
+                onSuccess={(result) => {
+                  if (result.event === 'success') {
+                    setImageUrl(result.info.secure_url);
+                  }
+                }}
+                options={{
+                  sources: ['local', 'url', 'camera'],
+                  multiple: false,
+                  folder: `cattery_media/news`,
+                  clientAllowedFormats: ['images']
+                }}
+              >
+                {({ open }) => (
+                  <Btn variant="ghost" type="button" onClick={() => open()}>
+                    Selecteer bestand
+                  </Btn>
+                )}
+              </CldUploadWidget>
+              {imageUrl && (
+                <button type="button" onClick={() => setImageUrl('')} className="text-xs text-red-500 hover:underline">
+                  Wis foto
+                </button>
+              )}
             </div>
           </Field>
 
           <div className="mt-6 flex gap-3">
             <Btn variant="brass" onClick={publish}>Publiceren</Btn>
-            <Btn variant="ghost" onClick={()=>{ setTitle(''); if(editorRef.current) editorRef.current.innerHTML=''; }}>Wissen</Btn>
+            <Btn variant="ghost" onClick={()=>{ setTitle(''); setImageUrl(''); if(editorRef.current) editorRef.current.innerHTML=''; }}>Wissen</Btn>
           </div>
         </Card>
 

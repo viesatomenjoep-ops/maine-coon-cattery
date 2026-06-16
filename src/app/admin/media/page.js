@@ -3,10 +3,12 @@ import { useState } from 'react';
 import { useStore } from '@/context/StoreContext';
 import { PageHead, Card, Select, Btn } from '@/components/admin';
 import { ImageSlot } from '@/components/ui';
+import { CldUploadWidget } from 'next-cloudinary';
 
 export default function MediaPage() {
   const { kittens } = useStore();
   const [target, setTarget] = useState(kittens[0]?.id || '');
+  const [uploadedMedia, setUploadedMedia] = useState([]);
 
   return (
     <>
@@ -28,9 +30,29 @@ export default function MediaPage() {
 
           <div className="mt-5 grid place-items-center rounded-2xl border-2 border-dashed border-forest-900/15 bg-white/60 p-10 text-center">
             <ImageSlot label="Sleep bestand" ratio="aspect-square w-24" className="rounded-xl" />
-            <p className="mt-4 text-sm text-forest-700">Sleep een afbeelding hierheen</p>
-            <p className="text-xs text-forest-600/60">of</p>
-            <Btn variant="ghost" className="mt-2">Bladeren</Btn>
+            <p className="mt-4 text-sm text-forest-700">Selecteer of sleep afbeeldingen</p>
+            <p className="text-xs text-forest-600/60">maximaal 10 per keer</p>
+            
+            <CldUploadWidget 
+              signatureEndpoint="/api/sign-cloudinary-params"
+              onSuccess={(result) => {
+                if (result.event === 'success') {
+                  setUploadedMedia(prev => [result.info.secure_url, ...prev]);
+                }
+              }}
+              options={{
+                sources: ['local', 'url', 'camera'],
+                multiple: true,
+                folder: `cattery_media/${target || 'general'}`,
+                clientAllowedFormats: ['images', 'video']
+              }}
+            >
+              {({ open }) => (
+                <Btn variant="ghost" className="mt-4" onClick={() => open()}>
+                  Bladeren / Open Camera
+                </Btn>
+              )}
+            </CldUploadWidget>
           </div>
 
           <div className="mt-5 rounded-xl border border-dashed border-brass-300 bg-brass-50 p-4 text-xs text-brass-900">
@@ -42,6 +64,9 @@ export default function MediaPage() {
         <Card>
           <h2 className="mb-4 font-display text-xl text-forest-900">Mediabibliotheek (preview)</h2>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+            {uploadedMedia.map((url, i) => (
+              <img key={i} src={url} alt="Geüpload" className="aspect-square w-full rounded-xl object-cover" />
+            ))}
             {['Hero', 'Castor profiel', 'Pollux spelen', 'Lyra vacht', 'Nest 4wk', 'Vega'].map((l) => (
               <ImageSlot key={l} label={l} ratio="aspect-square" className="rounded-xl" />
             ))}
