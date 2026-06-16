@@ -10,6 +10,9 @@ export default function MediaPage() {
   const [target, setTarget] = useState(kittens[0]?.id || '');
   const [uploadedMedia, setUploadedMedia] = useState([]);
 
+  let hasCloudinary = false;
+  try { hasCloudinary = Boolean(process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME); } catch (e) {}
+
   return (
     <>
       <PageHead label="Media" title="Media Sync" />
@@ -33,7 +36,7 @@ export default function MediaPage() {
             <p className="mt-4 text-sm text-forest-700">Selecteer of sleep afbeeldingen</p>
             <p className="text-xs text-forest-600/60">maximaal 10 per keer</p>
             
-            {process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME ? (
+            {hasCloudinary ? (
               <CldUploadWidget 
                 signatureEndpoint="/api/sign-cloudinary-params"
                 onSuccess={(result) => {

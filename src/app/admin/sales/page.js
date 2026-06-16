@@ -10,6 +10,9 @@ const eur = (n) => new Intl.NumberFormat('nl-NL', { style: 'currency', currency:
 export default function SalesPage() {
   const { kittens, updateKitten } = useStore();
 
+  let hasCloudinary = false;
+  try { hasCloudinary = Boolean(process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME); } catch (e) {}
+
   const handleCopyLink = (token) => {
     navigator.clipboard.writeText(`https://mainecoon-app.vercel.app/k/${token}`);
     alert('Klantenlink gekopieerd naar klembord!');
@@ -34,7 +37,7 @@ export default function SalesPage() {
               )}
               
               <div className="absolute inset-0 bg-ink/40 opacity-0 transition group-hover:opacity-100 flex items-center justify-center gap-2">
-                {process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME ? (
+                {hasCloudinary ? (
                   <CldUploadWidget 
                     signatureEndpoint="/api/sign-cloudinary-params"
                     onSuccess={(result) => {

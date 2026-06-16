@@ -10,6 +10,9 @@ export default function CatDossier({ params }) {
   const router = useRouter();
   const { kittens, deleteKitten } = useStore();
   const isNew = params.id === 'new';
+
+  let hasCloudinary = false;
+  try { hasCloudinary = Boolean(process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME); } catch (e) {}
   
   // States voor de verschillende tabbladen of secties
   const [activeTab, setActiveTab] = useState('paspoort');
@@ -151,7 +154,7 @@ export default function CatDossier({ params }) {
               
               <div className="col-span-full mt-6 rounded-xl border border-brass-200 bg-brass-50 p-4">
                 <p className="mb-2 text-sm font-semibold text-brass-900">Digitale Kluis (PDF / Scans van Dierenarts)</p>
-                {process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME ? (
+                {hasCloudinary ? (
                   <CldUploadWidget 
                     signatureEndpoint="/api/sign-cloudinary-params"
                     onSuccess={(res) => { if(res.event === 'success') alert('Document succesvol geüpload naar de kluis!'); }}
