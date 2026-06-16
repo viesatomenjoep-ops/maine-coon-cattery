@@ -62,7 +62,7 @@ export default function AdminDashboard() {
             {news.slice(0, 4).map((n) => (
               <div key={n.id} className="border-b border-forest-900/8 pb-3 last:border-0">
                 <p className="text-sm font-medium text-forest-900">{n.title}</p>
-                <p className="text-xs text-forest-600/70">{new Date(n.published_at).toLocaleDateString('nl-NL')} · {n.tag}</p>
+                <p className="text-xs text-forest-600/70" suppressHydrationWarning>{new Date(n.published_at).toLocaleDateString('nl-NL')} · {n.tag}</p>
               </div>
             ))}
           </div>
