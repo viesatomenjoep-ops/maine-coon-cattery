@@ -23,25 +23,31 @@ export default function MediaUpload({ catId, onUploadSuccess }) {
       <p className="mt-1 text-sm text-forest-600">Voeg foto's of video's toe vanaf je apparaat (max 5)</p>
       
       <div className="mt-6 flex justify-center gap-3">
-        <CldUploadWidget 
-          signatureEndpoint="/api/sign-cloudinary-params"
-          onSuccess={handleUpload}
-          options={{
-            sources: ['local', 'url', 'camera'],
-            multiple: true,
-            maxFiles: 5,
-            folder: `cattery_media/${catId || 'general'}`,
-            clientAllowedFormats: ['images', 'video']
-          }}
-        >
-          {({ open }) => {
-            return (
-              <Btn type="button" onClick={() => open()} variant="solid">
-                Kies Bestand(en)
-              </Btn>
-            );
-          }}
-        </CldUploadWidget>
+        {process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME ? (
+          <CldUploadWidget 
+            signatureEndpoint="/api/sign-cloudinary-params"
+            onSuccess={handleUpload}
+            options={{
+              sources: ['local', 'url', 'camera'],
+              multiple: true,
+              maxFiles: 5,
+              folder: `cattery_media/${catId || 'general'}`,
+              clientAllowedFormats: ['images', 'video']
+            }}
+          >
+            {({ open }) => {
+              return (
+                <Btn type="button" onClick={(e) => { e.preventDefault(); open(); }} variant="solid">
+                  Kies Bestand(en)
+                </Btn>
+              );
+            }}
+          </CldUploadWidget>
+        ) : (
+          <div className="bg-red-50 text-red-600 px-4 py-2 rounded-xl text-sm font-medium">
+            Cloudinary niet gekoppeld (ENV)
+          </div>
+        )}
       </div>
 
       <div className="mt-4 text-xs text-forest-500">

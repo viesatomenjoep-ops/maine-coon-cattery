@@ -34,21 +34,27 @@ export default function SalesPage() {
               )}
               
               <div className="absolute inset-0 bg-ink/40 opacity-0 transition group-hover:opacity-100 flex items-center justify-center gap-2">
-                <CldUploadWidget 
-                  signatureEndpoint="/api/sign-cloudinary-params"
-                  onSuccess={(result) => {
-                    if (result.event === 'success') {
-                      updateKitten(k.id, { cover_image: result.info.secure_url });
-                    }
-                  }}
-                  options={{ sources: ['local', 'url', 'camera'], multiple: false, folder: `cattery_sales/${k.id}`, clientAllowedFormats: ['images'] }}
-                >
-                  {({ open }) => (
-                    <button type="button" onClick={(e) => { e.preventDefault(); open(); }} className="rounded-lg bg-white/90 px-3 py-1.5 text-xs font-semibold text-forest-900 shadow hover:bg-white">
-                      Upload
-                    </button>
-                  )}
-                </CldUploadWidget>
+                {process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME ? (
+                  <CldUploadWidget 
+                    signatureEndpoint="/api/sign-cloudinary-params"
+                    onSuccess={(result) => {
+                      if (result.event === 'success') {
+                        updateKitten(k.id, { cover_image: result.info.secure_url });
+                      }
+                    }}
+                    options={{ sources: ['local', 'url', 'camera'], multiple: false, folder: `cattery_sales/${k.id}`, clientAllowedFormats: ['images'] }}
+                  >
+                    {({ open }) => (
+                      <button type="button" onClick={(e) => { e.preventDefault(); open(); }} className="rounded-lg bg-white/90 px-3 py-1.5 text-xs font-semibold text-forest-900 shadow hover:bg-white">
+                        Upload
+                      </button>
+                    )}
+                  </CldUploadWidget>
+                ) : (
+                  <button type="button" className="rounded-lg bg-red-100 px-3 py-1.5 text-xs font-semibold text-red-900 shadow" disabled>
+                    ENV Ontbreekt
+                  </button>
+                )}
                 {k.cover_image && (
                   <button onClick={() => updateKitten(k.id, { cover_image: null })} className="rounded-lg bg-red-500/90 px-3 py-1.5 text-xs font-semibold text-white shadow hover:bg-red-500">
                     Wis

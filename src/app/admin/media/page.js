@@ -33,30 +33,36 @@ export default function MediaPage() {
             <p className="mt-4 text-sm text-forest-700">Selecteer of sleep afbeeldingen</p>
             <p className="text-xs text-forest-600/60">maximaal 10 per keer</p>
             
-            <CldUploadWidget 
-              signatureEndpoint="/api/sign-cloudinary-params"
-              onSuccess={(result) => {
-                if (result.event === 'success') {
-                  setUploadedMedia(prev => [result.info.secure_url, ...prev]);
-                }
-              }}
-              options={{
-                sources: ['local', 'url', 'camera'],
-                multiple: true,
-                folder: `cattery_media/${target || 'general'}`,
-                clientAllowedFormats: ['images', 'video']
-              }}
-            >
-              {({ open }) => (
-                <button 
-                  type="button"
-                  className="mt-4 rounded-xl border border-forest-900/10 bg-forest-900/5 px-5 py-2.5 text-sm font-semibold text-forest-900 transition hover:bg-forest-900/10"
-                  onClick={(e) => { e.preventDefault(); open(); }}
-                >
-                  Bladeren / Open Camera
-                </button>
-              )}
-            </CldUploadWidget>
+            {process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME ? (
+              <CldUploadWidget 
+                signatureEndpoint="/api/sign-cloudinary-params"
+                onSuccess={(result) => {
+                  if (result.event === 'success') {
+                    setUploadedMedia(prev => [result.info.secure_url, ...prev]);
+                  }
+                }}
+                options={{
+                  sources: ['local', 'url', 'camera'],
+                  multiple: true,
+                  folder: `cattery_media/${target || 'general'}`,
+                  clientAllowedFormats: ['images', 'video']
+                }}
+              >
+                {({ open }) => (
+                  <button 
+                    type="button"
+                    className="mt-4 rounded-xl border border-forest-900/10 bg-forest-900/5 px-5 py-2.5 text-sm font-semibold text-forest-900 transition hover:bg-forest-900/10"
+                    onClick={(e) => { e.preventDefault(); open(); }}
+                  >
+                    Bladeren / Open Camera
+                  </button>
+                )}
+              </CldUploadWidget>
+            ) : (
+              <p className="mt-4 text-xs font-bold text-red-600 bg-red-50 p-2 rounded">
+                Cloudinary is niet gekoppeld op Vercel (NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME ontbreekt).
+              </p>
+            )}
           </div>
 
           <div className="mt-5 rounded-xl border border-dashed border-brass-300 bg-brass-50 p-4 text-xs text-brass-900">
