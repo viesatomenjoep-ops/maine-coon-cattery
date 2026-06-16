@@ -244,9 +244,9 @@ export default function CatDossier({ params }) {
                 <p className="mb-4 text-xs text-forest-700">Deel deze link via WhatsApp. Niemand anders kan deze pagina zien.</p>
                 <div className="flex gap-2">
                   <div className="flex-1 min-w-0">
-                    <Input readOnly value={`https://mainecoon-app.vercel.app/k/${formData.secretToken}`} className="w-full bg-white font-mono text-xs text-forest-600" />
+                    <Input readOnly value={`https://mainecoon-app.vercel.app/k/${formData.secret_token || formData.secretToken}`} className="w-full bg-white font-mono text-xs text-forest-600" />
                   </div>
-                  <Btn type="button" variant="ghost" onClick={() => { navigator.clipboard.writeText(`https://mainecoon-app.vercel.app/k/${formData.secretToken}`); alert('Link gekopieerd!'); }} className="whitespace-nowrap shrink-0">Kopieer</Btn>
+                  <Btn type="button" variant="ghost" onClick={() => { navigator.clipboard.writeText(`https://mainecoon-app.vercel.app/k/${formData.secret_token || formData.secretToken}`); alert('Link gekopieerd!'); }} className="whitespace-nowrap shrink-0">Kopieer</Btn>
                 </div>
               </div>
               <div className="col-span-full"><ActionBar /></div>
