@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { notFound } from 'next/navigation';
 import { Logo, PawMark } from '@/components/ui';
+import { useStore } from '@/context/StoreContext';
 
 export default function CustomerPortal({ params }) {
   const { kittens, parents } = useStore();
