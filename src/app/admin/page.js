@@ -36,7 +36,7 @@ export default function AdminDashboard() {
         <Card>
           <div className="mb-4 flex items-center justify-between">
             <h2 className="font-display text-xl text-forest-900">Kittens</h2>
-            <Link href="/admin/litters" className="text-sm text-brass-600 hover:underline">Beheren →</Link>
+            <Link href="/admin/cats" className="text-sm text-brass-600 hover:underline">Beheren →</Link>
           </div>
           <div className="space-y-2">
             {kittens.map((k) => (
