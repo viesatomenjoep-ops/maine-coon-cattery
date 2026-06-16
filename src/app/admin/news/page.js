@@ -113,7 +113,9 @@ export default function NewsEditor() {
               <div key={n.id} className="flex items-start justify-between gap-3 rounded-xl border border-forest-900/8 p-3">
                 <div>
                   <p className="text-sm font-medium text-forest-900">{n.title}</p>
-                  <p className="text-xs text-forest-600/70">{new Date(n.published_at).toLocaleDateString('nl-NL')} · {n.tag}</p>
+                  <p suppressHydrationWarning className="text-xs text-forest-600/70">
+                    {new Date(n.published_at).toLocaleDateString('nl-NL')} · {n.tag}
+                  </p>
                 </div>
                 <button onClick={()=>deleteNews(n.id)} className="text-xs text-red-600 hover:underline">Verwijder</button>
               </div>
