@@ -2,7 +2,11 @@
 import { useStore } from '@/context/StoreContext';
 import { PageHead, Card, Input, Select, Btn } from '@/components/admin';
 import { StatusPill, ImageSlot } from '@/components/ui';
-import { CldUploadWidget } from 'next-cloudinary';
+// import { CldUploadWidget } from 'next-cloudinary';
+
+const CldUploadWidget = ({ children }) => {
+  return children({ open: () => alert('Cloudinary upload widget is momenteel in mock-modus. Bij de livegang (Viesa Automations Stack) opent hier de Cloudinary camera/galerij.') });
+};
 
 const STATUSES = ['Beschikbaar', 'Gereserveerd', 'Verkocht'];
 const eur = (n) => new Intl.NumberFormat('nl-NL', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(n || 0);
@@ -37,7 +41,7 @@ export default function SalesPage() {
               )}
               
               <div className="absolute inset-0 bg-ink/40 opacity-0 transition group-hover:opacity-100 flex items-center justify-center gap-2">
-                {hasCloudinary ? (
+                {true ? (
                   <CldUploadWidget 
                     signatureEndpoint="/api/sign-cloudinary-params"
                     onSuccess={(result) => {

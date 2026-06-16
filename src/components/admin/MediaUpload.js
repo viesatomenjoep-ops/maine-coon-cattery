@@ -1,5 +1,9 @@
 'use client';
-import { CldUploadWidget } from 'next-cloudinary';
+// import { CldUploadWidget } from 'next-cloudinary';
+
+const CldUploadWidget = ({ children }) => {
+  return children({ open: () => alert('Cloudinary upload widget is momenteel in mock-modus. Bij de livegang (Viesa Automations Stack) opent hier de Cloudinary camera/galerij.') });
+};
 import { Btn } from '@/components/admin';
 
 export default function MediaUpload({ catId, onUploadSuccess }) {
@@ -25,7 +29,7 @@ export default function MediaUpload({ catId, onUploadSuccess }) {
       <p className="mt-1 text-sm text-forest-600">Voeg foto's of video's toe vanaf je apparaat (max 5)</p>
       
       <div className="mt-6 flex justify-center gap-3">
-        {hasCloudinary ? (
+        {true ? (
           <CldUploadWidget 
             signatureEndpoint="/api/sign-cloudinary-params"
             onSuccess={handleUpload}

@@ -4,7 +4,11 @@ import { useRouter } from 'next/navigation';
 import { PageHead, Card, Field, Input, Select, Textarea, Btn } from '@/components/admin';
 import MediaUpload from '@/components/admin/MediaUpload';
 import { useStore } from '@/context/StoreContext';
-import { CldUploadWidget } from 'next-cloudinary';
+// import { CldUploadWidget } from 'next-cloudinary';
+
+const CldUploadWidget = ({ children }) => {
+  return children({ open: () => alert('Cloudinary upload widget is momenteel in mock-modus. Bij de livegang (Viesa Automations Stack) opent hier de Cloudinary camera/galerij.') });
+};
 
 export default function CatDossier({ params }) {
   const router = useRouter();
@@ -76,7 +80,7 @@ export default function CatDossier({ params }) {
   const ActionBar = () => (
     <div className="mt-8 flex items-center justify-between border-t border-forest-900/10 pt-5">
       <Btn type="button" variant="danger" onClick={handleDelete} className="bg-white text-red-600 border-red-200 hover:bg-red-50">Dossier Verwijderen</Btn>
-      <Btn type="button" variant="brass" onClick={handleSave}>Wijzigingen Opslaan</Btn>
+      <Btn type="button" variant="ghost" onClick={handleSave} className="bg-white text-emerald-600 border border-emerald-200 hover:bg-emerald-50">Wijzigingen Opslaan</Btn>
     </div>
   );
 
@@ -154,7 +158,7 @@ export default function CatDossier({ params }) {
               
               <div className="col-span-full mt-6 rounded-xl border border-brass-200 bg-brass-50 p-4">
                 <p className="mb-2 text-sm font-semibold text-brass-900">Digitale Kluis (PDF / Scans van Dierenarts)</p>
-                {hasCloudinary ? (
+                {true ? (
                   <CldUploadWidget 
                     signatureEndpoint="/api/sign-cloudinary-params"
                     onSuccess={(res) => { if(res.event === 'success') alert('Document succesvol geüpload naar de kluis!'); }}
@@ -205,21 +209,23 @@ export default function CatDossier({ params }) {
               </Field>
               <Field label="Klant Naam"><Input name="customerName" value={formData.customerName} onChange={handleChange} placeholder="Bv. Jan & Lisa" /></Field>
               
-              <div className="col-span-full flex gap-4">
-                <div className="flex-1">
-                  <Field label="Prijs Nederland (€)"><Input type="number" name="priceNL" value={formData.priceNL} onChange={handleChange} /></Field>
-                </div>
-                <div className="flex-1">
-                  <Field label="Prijs België (€)"><Input type="number" name="priceBE" value={formData.priceBE} onChange={handleChange} /></Field>
-                </div>
+              <div className="col-span-full grid grid-cols-2 gap-4 items-end">
+                <Field label="Prijs NL (€)">
+                  <Input type="number" name="priceNL" value={formData.priceNL} onChange={handleChange} />
+                </Field>
+                <Field label="Prijs BE (€)">
+                  <Input type="number" name="priceBE" value={formData.priceBE} onChange={handleChange} />
+                </Field>
               </div>
 
               <div className="col-span-full mt-4 rounded-xl border-2 border-forest-900/10 bg-forest-900/5 p-4">
                 <p className="mb-2 text-sm font-bold text-forest-900">Verborgen Klantenlink</p>
                 <p className="mb-4 text-xs text-forest-700">Deel deze link via WhatsApp. Niemand anders kan deze pagina zien.</p>
                 <div className="flex gap-2">
-                  <Input readOnly value={`https://mainecoon-app.vercel.app/k/${formData.secretToken}`} className="bg-white font-mono text-xs text-forest-600" />
-                  <Btn type="button" variant="ghost" onClick={() => { navigator.clipboard.writeText(`https://mainecoon-app.vercel.app/k/${formData.secretToken}`); alert('Link gekopieerd!'); }}>Kopieer</Btn>
+                  <div className="flex-1 min-w-0">
+                    <Input readOnly value={`https://mainecoon-app.vercel.app/k/${formData.secretToken}`} className="w-full bg-white font-mono text-xs text-forest-600" />
+                  </div>
+                  <Btn type="button" variant="ghost" onClick={() => { navigator.clipboard.writeText(`https://mainecoon-app.vercel.app/k/${formData.secretToken}`); alert('Link gekopieerd!'); }} className="whitespace-nowrap shrink-0">Kopieer</Btn>
                 </div>
               </div>
               <div className="col-span-full"><ActionBar /></div>

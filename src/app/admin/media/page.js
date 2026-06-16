@@ -3,7 +3,11 @@ import { useState } from 'react';
 import { useStore } from '@/context/StoreContext';
 import { PageHead, Card, Select, Btn } from '@/components/admin';
 import { ImageSlot } from '@/components/ui';
-import { CldUploadWidget } from 'next-cloudinary';
+// import { CldUploadWidget } from 'next-cloudinary';
+
+const CldUploadWidget = ({ children }) => {
+  return children({ open: () => alert('Cloudinary upload widget is momenteel in mock-modus. Bij de livegang (Viesa Automations Stack) opent hier de Cloudinary camera/galerij.') });
+};
 
 export default function MediaPage() {
   const { kittens } = useStore();
@@ -36,7 +40,7 @@ export default function MediaPage() {
             <p className="mt-4 text-sm text-forest-700">Selecteer of sleep afbeeldingen</p>
             <p className="text-xs text-forest-600/60">maximaal 10 per keer</p>
             
-            {hasCloudinary ? (
+            {true ? (
               <CldUploadWidget 
                 signatureEndpoint="/api/sign-cloudinary-params"
                 onSuccess={(result) => {
