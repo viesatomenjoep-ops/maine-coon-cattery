@@ -1,18 +1,15 @@
 'use client';
-import { useState } from 'react';
+import { CldUploadWidget } from 'next-cloudinary';
 import { Btn } from '@/components/admin';
 
 export default function MediaUpload({ catId, onUploadSuccess }) {
-  const [isUploading, setIsUploading] = useState(false);
-
-  // Dit is een placeholder. Straks implementeren we next-cloudinary of de Cloudinary Upload Widget.
-  const handleMockUpload = () => {
-    setIsUploading(true);
-    setTimeout(() => {
-      alert('Mock: Foto/Video succesvol geüpload naar Cloudinary!');
-      setIsUploading(false);
-      if (onUploadSuccess) onUploadSuccess('https://res.cloudinary.com/demo/image/upload/sample.jpg');
-    }, 1500);
+  
+  const handleUpload = (result) => {
+    if (result.event === 'success') {
+      const url = result.info.secure_url;
+      // Stuur de geüploade image URL direct terug naar de form (of sla lokaal op)
+      if (onUploadSuccess) onUploadSuccess(url);
+    }
   };
 
   return (
@@ -22,17 +19,33 @@ export default function MediaUpload({ catId, onUploadSuccess }) {
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
         </svg>
       </div>
-      <h3 className="font-display text-lg text-forest-900">Upload Media naar Cloudinary</h3>
-      <p className="mt-1 text-sm text-forest-600">Selecteer een foto of video (max 5 per kitten)</p>
+      <h3 className="font-display text-lg text-forest-900">Media Uploaden</h3>
+      <p className="mt-1 text-sm text-forest-600">Voeg foto's of video's toe vanaf je apparaat (max 5)</p>
       
       <div className="mt-6 flex justify-center gap-3">
-        <Btn type="button" onClick={handleMockUpload} disabled={isUploading} variant={isUploading ? 'ghost' : 'solid'}>
-          {isUploading ? 'Bezig met uploaden...' : 'Kies Bestand'}
-        </Btn>
+        <CldUploadWidget 
+          signatureEndpoint="/api/sign-cloudinary-params"
+          onSuccess={handleUpload}
+          options={{
+            sources: ['local', 'url', 'camera'],
+            multiple: true,
+            maxFiles: 5,
+            folder: `cattery_media/${catId || 'general'}`,
+            clientAllowedFormats: ['images', 'video']
+          }}
+        >
+          {({ open }) => {
+            return (
+              <Btn type="button" onClick={() => open()} variant="solid">
+                Kies Bestand(en)
+              </Btn>
+            );
+          }}
+        </CldUploadWidget>
       </div>
 
       <div className="mt-4 text-xs text-forest-500">
-        <p>Tip: Voor lange video's adviseren we een (verborgen) YouTube/Vimeo link.</p>
+        <p>Tip: Klik op de knop om direct op je telefoon de camera/galerij te openen.</p>
       </div>
     </div>
   );

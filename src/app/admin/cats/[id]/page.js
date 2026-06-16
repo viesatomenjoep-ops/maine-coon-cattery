@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { PageHead, Card, Field, Input, Select, Textarea, Btn } from '@/components/admin';
+import MediaUpload from '@/components/admin/MediaUpload';
 import { useStore } from '@/context/StoreContext';
 
 export default function CatDossier({ params }) {
@@ -66,7 +67,8 @@ export default function CatDossier({ params }) {
     { id: 'chip', label: '2. Identificatie & Chip' },
     { id: 'medisch', label: '3. Inentingen & Medisch' },
     { id: 'stamboom', label: '4. Stamboom' },
-    { id: 'verkoop', label: '5. Portaal & Verkoop' }
+    { id: 'media', label: '5. Media & Galerij' },
+    { id: 'verkoop', label: '6. Portaal & Verkoop' }
   ];
 
   return (
@@ -182,6 +184,14 @@ export default function CatDossier({ params }) {
                   <Btn type="button" variant="ghost" onClick={() => { navigator.clipboard.writeText(`https://mainecoon-app.vercel.app/k/${formData.secretToken}`); alert('Link gekopieerd!'); }}>Kopieer</Btn>
                 </div>
               </div>
+            </div>
+          )}
+
+          {/* TAB 6: MEDIA */}
+          {activeTab === 'media' && (
+            <div className="space-y-4">
+              <h2 className="font-display text-xl text-forest-900">Media Galerij</h2>
+              <MediaUpload catId={formData.secretToken} onUploadSuccess={(url) => console.log("Geüpload:", url)} />
             </div>
           )}
 
