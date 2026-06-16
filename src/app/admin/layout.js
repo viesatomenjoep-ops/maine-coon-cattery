@@ -47,24 +47,24 @@ export default function AdminLayout({ children }) {
     <StoreProvider>
     <div className="relative z-10 min-h-screen bg-cream-100 lg:grid lg:grid-cols-[260px_1fr]">
       {/* sidebar */}
-      <aside className={`fixed inset-y-0 left-0 z-40 w-[260px] transform border-r border-forest-900/10 bg-forest-950 transition-transform lg:static lg:translate-x-0 ${open ? 'translate-x-0' : '-translate-x-full'}`}>
+      <aside className={`fixed inset-y-0 left-0 z-40 w-[260px] transform border-r border-forest-900/10 bg-white transition-transform lg:static lg:translate-x-0 ${open ? 'translate-x-0' : '-translate-x-full'}`}>
         <div className="flex h-full flex-col">
-          <div className="p-6"><Logo light /></div>
+          <div className="p-6"><Logo /></div>
           <nav className="flex-1 space-y-1 px-4">
             {NAV.map((item) => {
               const active = pathname === item.href;
               return (
                 <Link key={item.href} href={item.href} onClick={() => setOpen(false)}
-                  className={`flex items-center gap-3 rounded-xl px-4 py-3 text-sm transition ${active ? 'bg-brass-400 text-forest-950 font-medium' : 'text-cream-100/70 hover:bg-forest-900 hover:text-cream-100'}`}>
+                  className={`flex items-center gap-3 rounded-xl px-4 py-3 text-sm transition ${active ? 'bg-brass-400 text-forest-950 font-medium' : 'text-forest-900 hover:bg-forest-50 hover:text-forest-950'}`}>
                   <Icon name={item.icon} />
                   {item.label}
                 </Link>
               );
             })}
           </nav>
-          <div className="border-t border-cream-100/10 p-4">
-            <p className="px-2 text-xs text-cream-100/50">{user.name}</p>
-            <button onClick={() => { logout(); router.push('/'); }} className="mt-2 w-full rounded-xl px-4 py-2.5 text-left text-sm text-cream-100/70 transition hover:bg-forest-900">
+          <div className="border-t border-forest-900/10 p-4">
+            <p className="px-2 text-xs text-forest-600">{user.name}</p>
+            <button onClick={() => { logout(); router.push('/'); }} className="mt-2 w-full rounded-xl px-4 py-2.5 text-left text-sm text-forest-900 transition hover:bg-forest-50">
               Uitloggen
             </button>
           </div>
