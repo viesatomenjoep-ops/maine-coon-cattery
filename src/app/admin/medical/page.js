@@ -38,7 +38,7 @@ export default function MedicalPage() {
           <h2 className="mb-4 font-display text-xl text-forest-900">Groepsbehandeling registreren</h2>
           <div className="grid gap-4">
             <Field label="Nestje"><Select value={litterId} onChange={(e)=>{setLitterId(e.target.value); setSelected([]);}}>{litters.map(l=><option key={l.id} value={l.id}>{l.name}</option>)}</Select></Field>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Field label="Type"><Select value={entry.type} onChange={(e)=>setEntry({...entry, type:e.target.value})}>{TYPES.map(t=><option key={t}>{t}</option>)}</Select></Field>
               <Field label="Datum"><Input type="date" value={entry.date} onChange={(e)=>setEntry({...entry, date:e.target.value})} /></Field>
             </div>
@@ -49,12 +49,12 @@ export default function MedicalPage() {
                 <span className="text-xs font-medium uppercase tracking-wide text-forest-700">Toepassen op kittens</span>
                 <span className="text-xs"><button onClick={all} className="text-brass-600 hover:underline">Alle</button> · <button onClick={none} className="text-forest-600 hover:underline">Geen</button></span>
               </div>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 {inLitter.map((k) => (
                   <button key={k.id} onClick={()=>toggle(k.id)}
                     className={`rounded-xl border px-3 py-2 text-left text-sm transition ${selected.includes(k.id) ? 'border-brass-400 bg-brass-50 text-forest-900' : 'border-forest-900/15 text-forest-700 hover:bg-forest-100'}`}>
                     <span className={`mr-2 inline-block h-3 w-3 rounded-sm border ${selected.includes(k.id)?'bg-brass-400 border-brass-400':'border-forest-900/30'}`} />
-                    {k.name}
+                    <span className="truncate">{k.name}</span>
                   </button>
                 ))}
                 {inLitter.length === 0 && <p className="text-sm text-forest-600/60">Nog geen kittens in dit nest.</p>}
