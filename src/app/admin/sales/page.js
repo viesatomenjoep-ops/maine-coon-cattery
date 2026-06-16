@@ -44,7 +44,7 @@ export default function SalesPage() {
                   options={{ sources: ['local', 'url', 'camera'], multiple: false, folder: `cattery_sales/${k.id}`, clientAllowedFormats: ['images'] }}
                 >
                   {({ open }) => (
-                    <button onClick={() => open()} className="rounded-lg bg-white/90 px-3 py-1.5 text-xs font-semibold text-forest-900 shadow hover:bg-white">
+                    <button type="button" onClick={(e) => { e.preventDefault(); open(); }} className="rounded-lg bg-white/90 px-3 py-1.5 text-xs font-semibold text-forest-900 shadow hover:bg-white">
                       Upload
                     </button>
                   )}

@@ -14,6 +14,11 @@ const StoreContext = createContext(null);
 let idc = 1000;
 const nid = (p) => `${p}${++idc}`;
 
+const generateId = () => {
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID();
+  return Math.random().toString(36).substring(2) + Date.now().toString(36);
+};
+
 export function StoreProvider({ children }) {
   const [news, setNews] = useState(seedNews);
   const [litters, setLitters] = useState(seedLitters);
@@ -33,7 +38,7 @@ export function StoreProvider({ children }) {
     setKittens((s) => [...s, {
       id: nid('k'), published: false, price_nl: 0, price_be: 0, status: 'Beschikbaar',
       weights: [], medical: [], chip: '', cover_image: null,
-      customer_nationality: 'NL', secret_token: crypto.randomUUID(), ...kit,
+      customer_nationality: 'NL', secret_token: generateId(), ...kit,
     }]);
   const updateKitten = (id, patch) =>
     setKittens((s) => s.map((k) => (k.id === id ? { ...k, ...patch } : k)));

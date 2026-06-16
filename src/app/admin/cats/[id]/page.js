@@ -29,7 +29,7 @@ export default function CatDossier({ params }) {
     priceNL: '',
     priceBE: '',
     customerName: '',
-    secretToken: isNew ? crypto.randomUUID() : '123e4567-e89b-12d3-a456-426614174000',
+    secretToken: isNew ? ((typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : Math.random().toString(36).substring(2) + Date.now().toString(36)) : '123e4567-e89b-12d3-a456-426614174000',
     // Vaccinations
     vaccineName: '',
     vaccineBatch: '',

@@ -48,9 +48,13 @@ export default function MediaPage() {
               }}
             >
               {({ open }) => (
-                <Btn variant="ghost" className="mt-4" onClick={() => open()}>
+                <button 
+                  type="button"
+                  className="mt-4 rounded-xl border border-forest-900/10 bg-forest-900/5 px-5 py-2.5 text-sm font-semibold text-forest-900 transition hover:bg-forest-900/10"
+                  onClick={(e) => { e.preventDefault(); open(); }}
+                >
                   Bladeren / Open Camera
-                </Btn>
+                </button>
               )}
             </CldUploadWidget>
           </div>
