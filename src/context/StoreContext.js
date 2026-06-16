@@ -31,8 +31,9 @@ export function StoreProvider({ children }) {
   // ---- kittens ----
   const addKitten = (kit) =>
     setKittens((s) => [...s, {
-      id: nid('k'), published: false, price: 0, status: 'Beschikbaar',
-      weights: [], medical: [], chip: '', ...kit,
+      id: nid('k'), published: false, price_nl: 0, price_be: 0, status: 'Beschikbaar',
+      weights: [], medical: [], chip: '', cover_image: null,
+      customer_nationality: 'NL', secret_token: crypto.randomUUID(), ...kit,
     }]);
   const updateKitten = (id, patch) =>
     setKittens((s) => s.map((k) => (k.id === id ? { ...k, ...patch } : k)));

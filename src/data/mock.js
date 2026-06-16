@@ -76,7 +76,8 @@ export const litters = [
 export const kittens = [
   {
     id: 'k1', litter_id: 'l1', name: 'Castor', sex: 'Reu', color: 'Brown Tabby',
-    pattern: 'Classic Tabby', status: 'Beschikbaar', price: 1450, published: true,
+    pattern: 'Classic Tabby', status: 'Beschikbaar', price_nl: 1450, price_be: 1450, published: true,
+    customer_nationality: 'NL', secret_token: '123e4567-e89b-12d3-a456-426614174001', cover_image: null,
     born: '2026-03-15', chip: '528210002345678',
     weights: [
       { week: 0, g: 118 }, { week: 1, g: 195 }, { week: 2, g: 290 },
@@ -90,7 +91,8 @@ export const kittens = [
   },
   {
     id: 'k2', litter_id: 'l1', name: 'Pollux', sex: 'Reu', color: 'Brown Tabby',
-    pattern: 'Mackerel', status: 'Gereserveerd', price: 1450, published: true,
+    pattern: 'Mackerel', status: 'Gereserveerd', price_nl: 1450, price_be: 1450, published: true,
+    customer_nationality: 'NL', secret_token: '123e4567-e89b-12d3-a456-426614174002', cover_image: null,
     born: '2026-03-15', chip: '528210002345679',
     weights: [
       { week: 0, g: 124 }, { week: 1, g: 205 }, { week: 2, g: 305 },
@@ -103,7 +105,8 @@ export const kittens = [
   },
   {
     id: 'k3', litter_id: 'l1', name: 'Lyra', sex: 'Poes', color: 'Silver Tabby',
-    pattern: 'Classic Tabby', status: 'Verkocht', price: 1550, published: true,
+    pattern: 'Classic Tabby', status: 'Verkocht', price_nl: 1550, price_be: 1550, published: true,
+    customer_nationality: 'BE', secret_token: '123e4567-e89b-12d3-a456-426614174003', cover_image: null,
     born: '2026-03-15', chip: '528210002345680',
     weights: [
       { week: 0, g: 110 }, { week: 1, g: 180 }, { week: 2, g: 270 },
@@ -116,7 +119,8 @@ export const kittens = [
   },
   {
     id: 'k4', litter_id: 'l1', name: 'Vega', sex: 'Poes', color: 'Silver Tabby',
-    pattern: 'Mackerel', status: 'Beschikbaar', price: 1550, published: true,
+    pattern: 'Mackerel', status: 'Beschikbaar', price_nl: 1550, price_be: 1550, published: true,
+    customer_nationality: 'NL', secret_token: '123e4567-e89b-12d3-a456-426614174004', cover_image: null,
     born: '2026-03-15', chip: '528210002345681',
     weights: [
       { week: 0, g: 115 }, { week: 1, g: 188 }, { week: 2, g: 280 },

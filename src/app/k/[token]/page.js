@@ -4,37 +4,37 @@ import { notFound } from 'next/navigation';
 import { Logo, PawMark } from '@/components/ui';
 
 export default function CustomerPortal({ params }) {
-  // In de toekomst wordt dit een Supabase fetch op basis van de token
+  const { kittens, parents } = useStore();
   const token = params.token;
   const [kittenData, setKittenData] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Mock data ophalen (straks: SELECT * FROM cats WHERE secret_token = token)
     setTimeout(() => {
-      // Fake token validatie
-      if (token !== '123e4567-e89b-12d3-a456-426614174000') {
+      const cat = kittens.find(k => k.secret_token === token);
+      if (!cat) {
         setKittenData(null);
       } else {
+        const price = cat.customer_nationality === 'BE' ? cat.price_be : cat.price_nl;
         setKittenData({
-          name: "Big Giant Resort's Dajana",
-          customerName: "Jan & Lisa",
+          name: cat.name,
+          customerName: cat.customer_nationality === 'BE' ? 'Beste zuiderbuur' : 'Beste klant',
           breed: "Maine Coon",
-          color: "blue-silver-torbie",
-          dateOfBirth: "08-06-2025",
+          color: cat.color,
+          dateOfBirth: cat.born || "Onbekend",
+          price: price,
           updates: [
-            { id: 1, date: "15-09-2025", title: "Eerste inenting gehad!", text: "Dajana was heel dapper bij de dierenarts. Ze heeft haar eerste prikje gehad en is nu lekker aan het slapen." },
-            { id: 2, date: "02-09-2025", title: "Spelen met het muisje", text: "Vandaag ontdekte Dajana haar favoriete speeltje. Ze rent er het hele huis mee door." }
+            { id: 1, date: "15-09-2025", title: "Eerste inenting gehad!", text: `${cat.name} was heel dapper bij de dierenarts. Ze heeft haar eerste prikje gehad en is nu lekker aan het slapen.` },
+            { id: 2, date: "02-09-2025", title: "Spelen met het muisje", text: `Vandaag ontdekte ${cat.name} haar favoriete speeltje. Ze rent er het hele huis mee door.` }
           ],
-          images: [
-            "https://images.unsplash.com/photo-1513245543132-31f507417b26?auto=format&fit=crop&q=80&w=800",
-            "https://images.unsplash.com/photo-1533738363-b7f9aef128ce?auto=format&fit=crop&q=80&w=800"
+          images: cat.cover_image ? [cat.cover_image] : [
+            "https://images.unsplash.com/photo-1513245543132-31f507417b26?auto=format&fit=crop&q=80&w=800"
           ]
         });
       }
       setLoading(false);
     }, 800);
-  }, [token]);
+  }, [token, kittens]);
 
   if (loading) {
     return <div className="grid min-h-screen place-items-center bg-cream-50 text-forest-700">Laden van jouw kitten...</div>;

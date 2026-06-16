@@ -22,6 +22,8 @@ CREATE TABLE cats (
     status VARCHAR(50) DEFAULT 'beschikbaar', -- 'beschikbaar', 'gereserveerd', 'verkocht', 'eigen'
     price_nl NUMERIC(10, 2),
     price_be NUMERIC(10, 2),
+    customer_nationality VARCHAR(5), -- 'NL' of 'BE'
+    cover_image TEXT, -- Hoofdfoto voor de advertentie
     pedigree_data JSONB, -- JSON opslag voor de stamboom structuur (ouders, grootouders, etc)
     secret_token UUID DEFAULT uuid_generate_v4() UNIQUE, -- Voor de unieke klant-link
     customer_name VARCHAR(255),
