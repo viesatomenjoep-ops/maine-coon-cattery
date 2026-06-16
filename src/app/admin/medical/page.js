@@ -1,5 +1,6 @@
 'use client';
 import { useState } from 'react';
+import Link from 'next/link';
 import { useStore } from '@/context/StoreContext';
 import { PageHead, Card, Field, Input, Select, Btn } from '@/components/admin';
 
@@ -67,24 +68,32 @@ export default function MedicalPage() {
 
         <Card>
           <h2 className="mb-4 font-display text-xl text-forest-900">Medische historie per kitten</h2>
-          <div className="space-y-4">
+          <div className="space-y-3">
             {inLitter.map((k) => (
-              <div key={k.id} className="rounded-xl border border-forest-900/8 p-4">
-                <p className="font-medium text-forest-900">{k.name}</p>
-                {k.medical.length === 0 ? (
-                  <p className="mt-1 text-xs text-forest-600/60">Nog geen registraties.</p>
-                ) : (
-                  <ul className="mt-2 space-y-1.5">
-                    {k.medical.map((m, i) => (
-                      <li key={i} className="flex items-center gap-2 text-xs text-forest-700">
-                        <span className="rounded-full bg-forest-100 px-2 py-0.5 font-medium">{m.type}</span>
-                        <span className="text-forest-600/70">{m.date}</span>
-                        <span>· {m.note}</span>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </div>
+              <Link key={k.id} href={`/admin/cats/${k.id}`} className="block group">
+                <div className="rounded-2xl border border-forest-900/10 bg-white p-4 transition duration-300 hover:border-brass-400 hover:shadow-md">
+                  <div className="flex items-center justify-between mb-3">
+                    <p className="font-display text-lg font-semibold text-forest-950 group-hover:text-brass-600 transition">{k.name}</p>
+                    <span className="text-xs font-medium text-forest-600/70 bg-forest-50 px-2 py-1 rounded-lg">Bekijk dossier →</span>
+                  </div>
+                  
+                  {k.medical.length === 0 ? (
+                    <p className="text-xs text-forest-600/60 italic">Nog geen medische historie.</p>
+                  ) : (
+                    <div className="flex flex-wrap gap-2">
+                      {k.medical.map((m, i) => {
+                        const icon = m.type === 'Vaccinatie' ? '💉' : m.type === 'Ontworming' ? '💊' : '🩺';
+                        return (
+                          <div key={i} className="flex items-center gap-1.5 rounded-lg border border-forest-900/5 bg-cream-50 px-2.5 py-1.5 text-xs text-forest-800" title={`${m.type}: ${m.note}`}>
+                            <span className="text-sm">{icon}</span>
+                            <span suppressHydrationWarning className="font-medium">{new Date(m.date).toLocaleDateString('nl-NL', { day:'numeric', month:'short' })}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              </Link>
             ))}
           </div>
         </Card>
