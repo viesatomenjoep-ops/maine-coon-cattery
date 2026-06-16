@@ -15,44 +15,27 @@ export default function CatsAdmin() {
         </Link>
       </PageHead>
 
-      <Card>
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm">
-            <thead className="border-b border-forest-900/10 text-xs uppercase tracking-wide text-forest-700">
-              <tr>
-                <th className="pb-3 pl-2 font-medium">Naam</th>
-                <th className="pb-3 font-medium">Geslacht</th>
-                <th className="pb-3 font-medium">Kleur</th>
-                <th className="pb-3 font-medium">Status</th>
-                <th className="pb-3 text-right font-medium">Actie</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-forest-900/10">
-              {kittens.map((k) => (
-                <tr key={k.id} className="transition hover:bg-forest-900/5">
-                  <td className="py-3 pl-2 font-medium text-forest-900">{k.name}</td>
-                  <td className="py-3 text-forest-600">{k.sex}</td>
-                  <td className="py-3 text-forest-600">{k.color}</td>
-                  <td className="py-3">
-                    <StatusPill status={k.status} />
-                  </td>
-                  <td className="py-3 text-right">
-                    <Link href={`/admin/cats/${k.id}`} className="text-brass-600 hover:text-brass-700 hover:underline">
-                      Beheer Dossier →
-                    </Link>
-                  </td>
-                </tr>
-              ))}
-              {kittens.length === 0 && (
-                <tr>
-                  <td colSpan="5" className="py-6 text-center text-forest-500">
-                    Geen katten gevonden in de database.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+      <Card className="bg-transparent border-none p-0 shadow-none">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {kittens.map((k) => (
+            <div key={k.id} className="flex items-center justify-between gap-4 rounded-2xl border border-forest-900/15 bg-white p-5 shadow-soft transition hover:border-brass-400 hover:shadow-md">
+              <div>
+                <p className="font-display text-xl font-semibold text-forest-950">{k.name}</p>
+                <p className="text-xs font-bold uppercase tracking-widest text-forest-500 mt-1">{k.sex}</p>
+              </div>
+              <Link href={`/admin/cats/${k.id}`}>
+                <Btn variant="brass" className="whitespace-nowrap px-4 py-2.5 text-sm shadow-sm">
+                  Beheer Dossier →
+                </Btn>
+              </Link>
+            </div>
+          ))}
         </div>
+        {kittens.length === 0 && (
+          <div className="rounded-2xl border border-forest-900/10 bg-white py-12 text-center text-forest-600">
+            Geen katten gevonden in de database.
+          </div>
+        )}
       </Card>
     </>
   );
