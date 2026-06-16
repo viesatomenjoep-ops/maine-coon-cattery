@@ -9,7 +9,8 @@ import { Logo, PawMark } from '@/components/ui';
 const NAV = [
   { href: '/admin', label: 'Dashboard', icon: 'grid' },
   { href: '/admin/news', label: 'Nieuws Editor', icon: 'edit' },
-  { href: '/admin/litters', label: 'Nestjes & Kittens', icon: 'cat' },
+  { href: '/admin/cats', label: 'Kattenbeheer', icon: 'cat' },
+  { href: '/admin/litters', label: 'Nestjes Overzicht', icon: 'cat' },
   { href: '/admin/medical', label: 'Medisch Dashboard', icon: 'health' },
   { href: '/admin/sales', label: 'Advertentie & Sales', icon: 'tag' },
   { href: '/admin/media', label: 'Media Sync', icon: 'image' },

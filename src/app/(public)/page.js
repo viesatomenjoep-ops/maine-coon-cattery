@@ -74,10 +74,10 @@ export default function HomePage() {
           <span className="text-xs font-semibold uppercase tracking-[0.3em] text-terracotta-600">
             {mounted ? t('logo_subtext') : 'Maine Coon Cattery'}
           </span>
-          <h1 className="font-display text-5xl md:text-6xl font-light text-ink leading-[1.15]">
+          <h1 className="font-display text-4xl md:text-6xl font-light text-ink leading-[1.15]">
             {currentSlideData.title}
           </h1>
-          <p className="max-w-md text-base md:text-lg text-ink/80 font-light leading-relaxed">
+          <p className="max-w-md text-sm md:text-lg text-ink/80 font-light leading-relaxed">
             {currentSlideData.text}
           </p>
           <div className="pt-4 flex flex-wrap gap-4">
@@ -111,7 +111,7 @@ export default function HomePage() {
         </div>
 
         {/* Right side: Edge-to-edge dromerige slider image, completely visible! */}
-        <div className="relative w-full aspect-[4/5] rounded-[2.5rem] overflow-hidden shadow-lux bg-cream-200">
+        <div className="relative w-full aspect-[4/5] rounded-[2.5rem] overflow-hidden shadow-lux bg-cream-200 md:-translate-y-8 lg:-translate-y-12 xl:-translate-y-16">
           {fallbackSlides.map((slide, idx) => (
             <img
               key={idx}
@@ -150,7 +150,7 @@ export default function HomePage() {
             
             {/* Left Column: Asymmetric Image Spread */}
             <div className="relative space-y-6 animate-fade-in">
-              <div className="relative rounded-[2.5rem] overflow-hidden aspect-[4/5] shadow-lux">
+              <div className="relative rounded-[2.5rem] overflow-hidden aspect-square md:aspect-[4/5] shadow-lux">
                 <img
                   src="/images/litter_terrace.png"
                   alt="Maine Coon kittens"
@@ -174,7 +174,7 @@ export default function HomePage() {
               </h2>
 
               {/* Tabs Navigation */}
-              <div className="mt-8 flex border-b border-terracotta-900/10 gap-6">
+              <div className="mt-8 flex flex-wrap border-b border-terracotta-900/10 gap-x-4 md:gap-x-6 gap-y-4">
                 {[
                   { id: 'oorsprong', label: mounted ? t('breed_tab_oorsprong') : 'Oorsprong' },
                   { id: 'karakter', label: mounted ? t('breed_tab_karakter') : 'Karakter' },
@@ -310,7 +310,7 @@ export default function HomePage() {
       </section>
 
       {/* 5. CTA PORTAL ACCESS */}
-      <section className="mx-auto py-20 px-6 max-w-7xl">
+      <section id="contact" className="mx-auto py-20 px-6 max-w-7xl">
         <div className="relative overflow-hidden rounded-[3rem] bg-ink px-8 py-16 text-center shadow-lux md:px-16 md:py-24">
           <div className="absolute inset-0 bg-grain opacity-20" />
           <div className="absolute -left-32 -bottom-32 h-96 w-96 rounded-full bg-terracotta-500/10 blur-3xl" />

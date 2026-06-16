@@ -1,15 +1,39 @@
 'use client';
 import Link from 'next/link';
+import { useState, useEffect } from 'react';
 
 export function Logo({ light = false }) {
+  const [scrollY, setScrollY] = useState(0);
+
+  useEffect(() => {
+    const handleScroll = () => setScrollY(window.scrollY);
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const isScrolled = scrollY > 50;
+  // Smooth, playful wiggle effect based on scroll position
+  const rotation = Math.sin(scrollY * 0.005) * 10;
+
   return (
-    <Link href="/" className="group inline-flex items-center gap-3">
-      <span className={`grid h-11 w-11 place-items-center rounded-full border ${light ? 'border-cream-100/30' : 'border-terracotta-900/10'} transition group-hover:border-terracotta-500`}>
-        <PawMark className={light ? 'text-cream-100' : 'text-terracotta-600'} />
-      </span>
-      <span className="leading-none">
-        <span className={`block font-display text-3xl font-medium tracking-tight ${light ? 'text-cream-100' : 'text-ink'}`}>Wendy's Dream</span>
-        <span className={`block text-[11px] font-semibold uppercase tracking-[0.32em] mt-1.5 ${light ? 'text-cream-100/70' : 'text-terracotta-600'}`}>Maine Coon Cattery</span>
+    <Link href="/" className="group flex flex-row items-center justify-start transition-all duration-500 z-[60]">
+      <img 
+        src="/logo.png" 
+        alt="Wendy's Dream Logo" 
+        className={`w-auto object-contain transition-[height,opacity] duration-500 ease-out h-14 ${isScrolled ? 'md:h-12' : 'md:h-24'} ${light ? 'brightness-0 invert opacity-90' : 'opacity-90'}`} 
+        style={{ transform: `rotate(${rotation}deg)` }}
+      />
+      <span 
+        className={`flex flex-col justify-center overflow-hidden transition-[max-height,max-width,opacity,margin] duration-500 ease-out max-h-[150px] max-w-[300px] opacity-100 ml-2 md:ml-0 ${
+          isScrolled 
+            ? 'md:max-w-0 md:opacity-0 md:ml-0' 
+            : 'md:max-w-[500px] md:opacity-100 md:ml-6'
+        }`}
+      >
+        <span className={`block text-left whitespace-nowrap transition-transform duration-500 group-hover:scale-[1.02]`}>
+          <span className={`block font-display text-xl md:text-5xl font-semibold tracking-tight ${light ? 'text-cream-100' : 'text-ink'}`}>Wendy's Dream</span>
+          <span className={`block text-[8px] md:text-sm font-bold uppercase tracking-[0.25em] md:tracking-[0.35em] mt-0.5 md:mt-2 ${light ? 'text-cream-100/80' : 'text-terracotta-700'}`}>Maine Coon Cattery</span>
+        </span>
       </span>
     </Link>
   );
