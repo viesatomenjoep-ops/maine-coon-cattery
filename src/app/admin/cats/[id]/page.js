@@ -6,8 +6,24 @@ import MediaUpload from '@/components/admin/MediaUpload';
 import { useStore } from '@/context/StoreContext';
 // import { CldUploadWidget } from 'next-cloudinary';
 
-const CldUploadWidget = ({ children }) => {
-  return children({ open: () => alert('Cloudinary upload widget is momenteel in mock-modus. Bij de livegang (Viesa Automations Stack) opent hier de Cloudinary camera/galerij.') });
+import { useRef } from 'react';
+
+const CldUploadWidget = ({ children, onSuccess, options }) => {
+  const ref = useRef(null);
+  const handleFile = (e) => {
+    const files = Array.from(e.target.files);
+    files.forEach(file => {
+      const url = URL.createObjectURL(file);
+      if (onSuccess) onSuccess({ event: 'success', info: { secure_url: url } });
+    });
+    e.target.value = '';
+  };
+  return (
+    <>
+      <input type="file" ref={ref} className="hidden" multiple={options?.multiple} accept={options?.clientAllowedFormats?.join(',') || "image/*,video/*,application/pdf"} onChange={handleFile} />
+      {children({ open: () => ref.current?.click() })}
+    </>
+  );
 };
 
 export default function CatDossier({ params }) {
