@@ -1,5 +1,15 @@
--- Extensie voor UUIDs
+-- 1. DROP oude tabellen (zodat we 100% schoon beginnen)
+DROP TABLE IF EXISTS media CASCADE;
+DROP TABLE IF EXISTS timeline_updates CASCADE;
+DROP TABLE IF EXISTS vaccinations CASCADE;
+DROP TABLE IF EXISTS documents CASCADE;
+DROP TABLE IF EXISTS cats CASCADE;
+DROP TABLE IF EXISTS litters CASCADE;
+
+-- 2. Extensie voor UUIDs
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
+-- 3. Maak alle tabellen opnieuw aan
 
 -- Tabel: Nestjes (Litters)
 CREATE TABLE litters (
@@ -20,8 +30,8 @@ CREATE TABLE cats (
     color VARCHAR(255),
     chip_number VARCHAR(100),
     status VARCHAR(50) DEFAULT 'beschikbaar', -- 'beschikbaar', 'gereserveerd', 'verkocht', 'eigen'
-    price_nl NUMERIC(10, 2),
-    price_be NUMERIC(10, 2),
+    price_nl NUMERIC(10, 2), -- Prijs voor Nederland
+    price_be NUMERIC(10, 2), -- Prijs voor België
     customer_nationality VARCHAR(5), -- 'NL' of 'BE'
     cover_image TEXT, -- Hoofdfoto voor de advertentie
     pedigree_data JSONB, -- JSON opslag voor de stamboom structuur (ouders, grootouders, etc)
@@ -58,7 +68,7 @@ CREATE TABLE timeline_updates (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     cat_id UUID REFERENCES cats(id) ON DELETE CASCADE,
     title VARCHAR(255),
-    content TEXT, -- Dit kan door Gemini Pro worden gegenereerd/verrijkt
+    content TEXT, -- Bericht of foto tekst
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
