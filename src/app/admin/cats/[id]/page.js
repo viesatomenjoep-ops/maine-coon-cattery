@@ -80,8 +80,10 @@ export default function CatDossier({ params }) {
           <button
             key={t.id}
             onClick={() => setActiveTab(t.id)}
-            className={`whitespace-nowrap rounded-xl px-4 py-2 text-sm font-medium transition ${
-              activeTab === t.id ? 'bg-forest-900 text-cream-50' : 'bg-white text-forest-600 hover:bg-forest-100'
+            className={`whitespace-nowrap rounded-xl px-4 py-2 text-sm font-medium transition border ${
+              activeTab === t.id 
+                ? 'bg-white text-forest-950 border-brass-400 shadow-sm ring-1 ring-brass-400' 
+                : 'bg-white text-forest-600 border-forest-900/10 hover:bg-forest-50 hover:text-forest-900'
             }`}
           >
             {t.label}
