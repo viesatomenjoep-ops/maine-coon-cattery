@@ -12,10 +12,10 @@ export default function AdminDashboard() {
   const published = kittens.filter((k) => k.published).length;
 
   const stats = [
-    { label: 'Actieve nestjes', value: litters.filter((l) => !l.expected).length, sub: `${litters.filter((l)=>l.expected).length} verwacht` },
-    { label: 'Beschikbaar', value: available, sub: 'live in portaal' },
-    { label: 'Gereserveerd', value: reserved, sub: 'in proces' },
-    { label: 'Gepubliceerd', value: published, sub: 'advertenties' },
+    { label: 'Actieve nestjes', value: litters.filter((l) => !l.expected).length, sub: `${litters.filter((l)=>l.expected).length} verwacht`, href: '/admin/litters' },
+    { label: 'Beschikbaar', value: available, sub: 'live in portaal', href: '/admin/cats' },
+    { label: 'Gereserveerd', value: reserved, sub: 'in proces', href: '/admin/cats' },
+    { label: 'Gepubliceerd', value: published, sub: 'advertenties', href: '/admin/sales' },
   ];
 
   return (
@@ -24,11 +24,13 @@ export default function AdminDashboard() {
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {stats.map((s) => (
-          <Card key={s.label}>
-            <p className="text-xs uppercase tracking-wide text-forest-600/60">{s.label}</p>
-            <p className="mt-2 font-display text-4xl text-forest-950">{s.value}</p>
-            <p className="mt-1 text-xs text-forest-600/70">{s.sub}</p>
-          </Card>
+          <Link key={s.label} href={s.href} className="block group">
+            <Card className="h-full transition duration-300 hover:border-brass-400 hover:shadow-md group-hover:bg-white">
+              <p className="text-xs uppercase tracking-wide text-forest-600/60 transition group-hover:text-forest-800">{s.label}</p>
+              <p className="mt-2 font-display text-4xl text-forest-950 transition group-hover:text-brass-600">{s.value}</p>
+              <p className="mt-1 text-xs text-forest-600/70">{s.sub}</p>
+            </Card>
+          </Link>
         ))}
       </div>
 
