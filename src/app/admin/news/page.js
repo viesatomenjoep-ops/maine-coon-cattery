@@ -3,7 +3,25 @@ import { useRef, useState } from 'react';
 import { useStore } from '@/context/StoreContext';
 import { PageHead, Card, Field, Input, Select, Btn } from '@/components/admin';
 import { ImageSlot } from '@/components/ui';
-import { CldUploadWidget } from 'next-cloudinary';
+// import { CldUploadWidget } from 'next-cloudinary';
+
+const CldUploadWidget = ({ children, onSuccess, options }) => {
+  const ref = useRef(null);
+  const handleFile = (e) => {
+    const files = Array.from(e.target.files);
+    files.forEach(file => {
+      const url = URL.createObjectURL(file);
+      if (onSuccess) onSuccess({ event: 'success', info: { secure_url: url } });
+    });
+    e.target.value = '';
+  };
+  return (
+    <>
+      <input type="file" ref={ref} className="hidden" multiple={options?.multiple} accept={options?.clientAllowedFormats?.join(',') || "image/*,video/*"} onChange={handleFile} />
+      {children({ open: () => ref.current?.click() })}
+    </>
+  );
+};
 
 const TAGS = ['Aankondiging', 'Update', 'Medisch', 'Show'];
 
