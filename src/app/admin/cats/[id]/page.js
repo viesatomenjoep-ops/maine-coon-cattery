@@ -83,9 +83,9 @@ export default function CatDossier({ params }) {
   };
 
   const ActionBar = () => (
-    <div className="mt-8 flex items-center justify-between border-t border-forest-900/10 pt-5">
-      <Btn type="button" variant="danger" onClick={handleDelete} className="bg-white text-red-600 border-red-200 hover:bg-red-50">Dossier Verwijderen</Btn>
-      <Btn type="button" variant="ghost" onClick={handleSave} className="bg-white text-emerald-600 border border-emerald-200 hover:bg-emerald-50">Wijzigingen Opslaan</Btn>
+    <div className="mt-8 flex flex-wrap items-center justify-between gap-4 border-t border-forest-900/10 pt-5">
+      <Btn type="button" variant="danger" onClick={handleDelete} className="px-3 py-2 text-xs bg-white text-red-600 border-red-200 hover:bg-red-50">Verwijderen</Btn>
+      <Btn type="button" variant="ghost" onClick={handleSave} className="px-3 py-2 text-xs bg-white text-emerald-600 border border-emerald-200 hover:bg-emerald-50">Opslaan</Btn>
     </div>
   );
 
