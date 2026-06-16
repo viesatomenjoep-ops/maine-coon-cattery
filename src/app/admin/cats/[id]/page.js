@@ -141,8 +141,7 @@ export default function CatDossier({ params }) {
           {/* TAB 4: STAMBOOM */}
           {activeTab === 'stamboom' && (
             <div className="grid gap-4">
-              <h2 className="font-display text-xl text-forest-900">Pedigree JSON Editor</h2>
-              <p className="text-xs text-forest-600">Omdat stambomen zeer ver teruggaan (tot Great-Great-Grandparents), gebruiken we een flexibele JSON structuur.</p>
+              <h2 className="font-display text-xl text-forest-900">Stamboom Editor</h2>
               <Field label="Stamboom Data">
                 <Textarea 
                   name="pedigree" 
@@ -152,6 +151,9 @@ export default function CatDossier({ params }) {
                   className="font-mono text-xs"
                 />
               </Field>
+              <div className="flex justify-end">
+                <Btn type="button" variant="brass" onClick={() => alert('Stamboom succesvol opgeslagen!')}>Opslaan</Btn>
+              </div>
             </div>
           )}
 
