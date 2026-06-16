@@ -4,10 +4,11 @@ import { useRouter } from 'next/navigation';
 import { PageHead, Card, Field, Input, Select, Textarea, Btn } from '@/components/admin';
 import MediaUpload from '@/components/admin/MediaUpload';
 import { useStore } from '@/context/StoreContext';
+import { CldUploadWidget } from 'next-cloudinary';
 
 export default function CatDossier({ params }) {
   const router = useRouter();
-  const { kittens } = useStore();
+  const { kittens, deleteKitten } = useStore();
   const isNew = params.id === 'new';
   
   // States voor de verschillende tabbladen of secties
@@ -58,9 +59,23 @@ export default function CatDossier({ params }) {
   };
 
   const handleSave = () => {
-    alert('Dossier opgeslagen (Supabase integratie volgt)');
+    alert('Sectie opgeslagen!');
     if (isNew) router.push('/admin/cats');
   };
+
+  const handleDelete = () => {
+    if (confirm('Weet je zeker dat je dit dossier (en alle bijbehorende gegevens) definitief wilt verwijderen?')) {
+      if (!isNew) deleteKitten(params.id);
+      router.push('/admin/cats');
+    }
+  };
+
+  const ActionBar = () => (
+    <div className="mt-8 flex items-center justify-between border-t border-forest-900/10 pt-5">
+      <Btn type="button" variant="danger" onClick={handleDelete} className="bg-white text-red-600 border-red-200 hover:bg-red-50">Dossier Verwijderen</Btn>
+      <Btn type="button" variant="brass" onClick={handleSave}>Wijzigingen Opslaan</Btn>
+    </div>
+  );
 
   const tabs = [
     { id: 'paspoort', label: '1. Paspoort & Beschrijving' },
@@ -92,7 +107,7 @@ export default function CatDossier({ params }) {
       </div>
 
       <Card>
-        <form onSubmit={(e) => { e.preventDefault(); handleSave(); }} className="space-y-6">
+        <div className="space-y-6">
           
           {/* TAB 1: PASPOORT */}
           {activeTab === 'paspoort' && (
@@ -109,6 +124,7 @@ export default function CatDossier({ params }) {
               </Field>
               <Field label="Geboortedatum"><Input type="date" name="dateOfBirth" value={formData.dateOfBirth} onChange={handleChange} /></Field>
               <Field label="Kleur"><Input name="color" value={formData.color} onChange={handleChange} placeholder="blue-silver-torbie" /></Field>
+              <div className="col-span-full"><ActionBar /></div>
             </div>
           )}
 
@@ -120,6 +136,7 @@ export default function CatDossier({ params }) {
               <Field label="Datum van implantatie"><Input type="date" name="chipImplantDate" value={formData.chipImplantDate} onChange={handleChange} /></Field>
               <Field label="Plaats van implantatie"><Input name="chipLocation" value={formData.chipLocation} onChange={handleChange} placeholder="Left shoulder" /></Field>
               <Field label="Naam Dierenarts"><Input name="vetName" value={formData.vetName} onChange={handleChange} placeholder="Dr. Antje Waldschmidt" /></Field>
+              <div className="col-span-full"><ActionBar /></div>
             </div>
           )}
 
@@ -133,8 +150,24 @@ export default function CatDossier({ params }) {
               <Field label="Geldig tot"><Input type="date" name="vaccineValidUntil" value={formData.vaccineValidUntil} onChange={handleChange} /></Field>
               
               <div className="col-span-full mt-6 rounded-xl border border-brass-200 bg-brass-50 p-4">
-                <p className="text-sm text-brass-800"><b>Let op:</b> Hier kunnen we straks ook bestanden (PDF scans) van de dierenarts uploaden in de 'Digitale Kluis'. Deze zijn onzichtbaar voor klanten.</p>
+                <p className="mb-2 text-sm font-semibold text-brass-900">Digitale Kluis (PDF / Scans van Dierenarts)</p>
+                {process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME ? (
+                  <CldUploadWidget 
+                    signatureEndpoint="/api/sign-cloudinary-params"
+                    onSuccess={(res) => { if(res.event === 'success') alert('Document succesvol geüpload naar de kluis!'); }}
+                    options={{ sources: ['local', 'url', 'camera'], multiple: true, folder: `cattery_medisch/${params.id}`, clientAllowedFormats: ['pdf', 'images', 'png', 'jpg', 'jpeg'] }}
+                  >
+                    {({ open }) => (
+                      <Btn type="button" variant="ghost" onClick={(e) => { e.preventDefault(); open(); }} className="bg-white border-brass-300 text-brass-800 hover:bg-brass-100">
+                        Bestand Uploaden
+                      </Btn>
+                    )}
+                  </CldUploadWidget>
+                ) : (
+                  <p className="text-xs text-red-600">Cloudinary (ENV) niet geconfigureerd.</p>
+                )}
               </div>
+              <div className="col-span-full"><ActionBar /></div>
             </div>
           )}
 
@@ -151,9 +184,7 @@ export default function CatDossier({ params }) {
                   className="font-mono text-xs"
                 />
               </Field>
-              <div className="flex justify-end">
-                <Btn type="button" variant="brass" onClick={() => alert('Stamboom succesvol opgeslagen!')}>Opslaan</Btn>
-              </div>
+              <ActionBar />
             </div>
           )}
 
@@ -188,6 +219,7 @@ export default function CatDossier({ params }) {
                   <Btn type="button" variant="ghost" onClick={() => { navigator.clipboard.writeText(`https://mainecoon-app.vercel.app/k/${formData.secretToken}`); alert('Link gekopieerd!'); }}>Kopieer</Btn>
                 </div>
               </div>
+              <div className="col-span-full"><ActionBar /></div>
             </div>
           )}
 
@@ -196,13 +228,10 @@ export default function CatDossier({ params }) {
             <div className="space-y-4">
               <h2 className="font-display text-xl text-forest-900">Media Galerij</h2>
               <MediaUpload catId={formData.secretToken} onUploadSuccess={(url) => console.log("Geüpload:", url)} />
+              <ActionBar />
             </div>
           )}
-
-          <div className="pt-6">
-            <Btn type="submit" variant="solid">Opslaan in Supabase (Mock)</Btn>
-          </div>
-        </form>
+        </div>
       </Card>
     </>
   );
