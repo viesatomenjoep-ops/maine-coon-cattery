@@ -32,22 +32,28 @@ const NativeUploadWidget = ({ children, onSuccess, folder, accept }) => {
 };
 
 export default function MediaDocumentenPage() {
-  const { kittens } = useStore();
+  const { kittens, documents, media, addDocument, deleteDocument, addMedia, deleteMedia } = useStore();
   const [targetMedical, setTargetMedical] = useState(kittens[0]?.id || '');
   const [targetContract, setTargetContract] = useState(kittens[0]?.id || '');
-  
-  // Lokale state om de zojuist geüploade bestanden te laten zien in de preview
-  const [uploadedDocs, setUploadedDocs] = useState([]);
 
-  const handleUploadSuccess = (category, kittenId, result) => {
-    const kitten = kittens.find(k => k.id === kittenId) || { name: 'Algemeen' };
-    setUploadedDocs(prev => [{
-      url: result.info.secure_url,
-      name: result.info.name || 'Document',
-      category,
-      kittenName: kitten.name
-    }, ...prev]);
+  const handleUploadSuccess = async (category, kittenId, result) => {
+    if (category === 'Galerij') {
+      await addMedia({ url: result.info.secure_url, name: result.info.name });
+    } else {
+      await addDocument({ 
+        url: result.info.secure_url, 
+        name: result.info.name || 'Document',
+        category,
+        cat_id: kittenId || null 
+      });
+    }
   };
+
+  // Combineer documenten en media voor het overzicht, zodat we alles zien
+  const allUploads = [
+    ...documents.map(d => ({ ...d, isDoc: true, kittenName: kittens.find(k=>k.id===d.cat_id)?.name || 'Algemeen', label: d.document_type })),
+    ...media.map(m => ({ ...m, isDoc: false, kittenName: 'Galerij', label: 'Algemeen' }))
+  ].sort((a,b) => new Date(b.created_at) - new Date(a.created_at));
 
   return (
     <>
@@ -85,7 +91,7 @@ export default function MediaDocumentenPage() {
               {({ open }) => (
                 <button type="button" onClick={(e) => { e.preventDefault(); open(); }} className="w-full flex flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed border-blue-200 bg-blue-50/50 p-8 transition hover:bg-blue-50">
                   <span className="rounded-full bg-blue-100 px-4 py-2 text-sm font-semibold text-blue-700 shadow-sm">Bladeren / Open Camera</span>
-                  <span className="text-xs text-blue-600/70">Upload PDF of Foto</span>
+                  <span className="text-xs text-blue-600/70">Upload PDF of Foto (Auto-Save)</span>
                 </button>
               )}
             </NativeUploadWidget>
@@ -119,7 +125,7 @@ export default function MediaDocumentenPage() {
               {({ open }) => (
                 <button type="button" onClick={(e) => { e.preventDefault(); open(); }} className="w-full flex flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed border-terracotta-200 bg-terracotta-50/50 p-8 transition hover:bg-terracotta-50">
                   <span className="rounded-full bg-terracotta-100 px-4 py-2 text-sm font-semibold text-terracotta-700 shadow-sm">Bladeren / Open Camera</span>
-                  <span className="text-xs text-terracotta-600/70">Upload Ondertekend Contract (PDF of Foto)</span>
+                  <span className="text-xs text-terracotta-600/70">Upload Ondertekend Contract (Auto-Save)</span>
                 </button>
               )}
             </NativeUploadWidget>
@@ -144,7 +150,7 @@ export default function MediaDocumentenPage() {
             {({ open }) => (
               <button type="button" onClick={(e) => { e.preventDefault(); open(); }} className="w-full flex flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed border-brass-300 bg-brass-50/50 p-8 transition hover:bg-brass-50">
                 <span className="rounded-full bg-brass-200 px-4 py-2 text-sm font-semibold text-brass-800 shadow-sm">Meerdere Bestanden Selecteren</span>
-                <span className="text-xs text-brass-700/70">Upload hoge resolutie foto's en video's</span>
+                <span className="text-xs text-brass-700/70">Upload hoge resolutie foto's en video's (Auto-Save)</span>
               </button>
             )}
           </NativeUploadWidget>
@@ -153,24 +159,31 @@ export default function MediaDocumentenPage() {
 
       {/* Recente Uploads Overzicht */}
       <div className="mt-12 space-y-6">
-        <h2 className="font-display text-2xl text-forest-900">Recente Uploads</h2>
-        {uploadedDocs.length === 0 ? (
-          <p className="text-forest-700">Nog geen documenten geüpload in deze sessie.</p>
+        <h2 className="font-display text-2xl text-forest-900">Documenten & Media Archief</h2>
+        {allUploads.length === 0 ? (
+          <p className="text-forest-700">Nog geen documenten of media geüpload in de database.</p>
         ) : (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {uploadedDocs.map((doc, i) => (
-              <div key={i} className="flex items-center gap-4 rounded-xl border border-forest-900/10 bg-white p-3 shadow-sm">
-                <div className="h-12 w-12 shrink-0 rounded-lg bg-forest-50 overflow-hidden relative">
-                  {doc.url.endsWith('.pdf') ? (
-                    <div className="absolute inset-0 flex items-center justify-center text-xs font-bold text-red-500">PDF</div>
+            {allUploads.map((doc) => (
+              <div key={doc.id} className="flex items-center gap-4 rounded-xl border border-forest-900/10 bg-white p-3 shadow-sm hover:border-forest-900/20 transition">
+                <div className="h-12 w-12 shrink-0 rounded-lg bg-forest-50 overflow-hidden relative border border-forest-900/5">
+                  {(doc.file_url || doc.media_url).endsWith('.pdf') ? (
+                    <div className="absolute inset-0 flex items-center justify-center text-[10px] font-bold text-red-500 bg-red-50">PDF</div>
                   ) : (
-                    <img src={doc.url} alt="" className="h-full w-full object-cover" />
+                    <img src={doc.file_url || doc.media_url} alt="" className="h-full w-full object-cover" />
                   )}
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-semibold text-forest-900">{doc.category}: {doc.kittenName}</p>
-                  <a href={doc.url} target="_blank" className="text-xs text-brass-600 hover:underline truncate block mt-0.5">{doc.name}</a>
+                  <p className="truncate text-sm font-semibold text-forest-900">{doc.label}: {doc.kittenName}</p>
+                  <a href={doc.file_url || doc.media_url} target="_blank" className="text-xs text-brass-600 hover:underline truncate block mt-0.5">{doc.notes || 'Bekijk bestand'}</a>
                 </div>
+                <button 
+                  onClick={() => doc.isDoc ? deleteDocument(doc.id) : deleteMedia(doc.id)} 
+                  className="shrink-0 p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition"
+                  title="Verwijder"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+                </button>
               </div>
             ))}
           </div>

@@ -9,6 +9,8 @@ export function StoreProvider({ children }) {
   const [news, setNews] = useState([]);
   const [litters, setLitters] = useState([]);
   const [kittens, setKittens] = useState([]);
+  const [documents, setDocuments] = useState([]);
+  const [media, setMedia] = useState([]);
 
   // Initiele data fetch
   useEffect(() => {
@@ -22,6 +24,12 @@ export function StoreProvider({ children }) {
 
         const { data: kData } = await supabase.from('cats').select('*').order('created_at', { ascending: false });
         if (kData) setKittens(kData);
+
+        const { data: dData } = await supabase.from('documents').select('*').order('created_at', { ascending: false });
+        if (dData) setDocuments(dData);
+
+        const { data: mData } = await supabase.from('media').select('*').order('created_at', { ascending: false });
+        if (mData) setMedia(mData);
       } catch (err) {
         console.error("Supabase fetch error:", err);
       }
@@ -98,11 +106,44 @@ export function StoreProvider({ children }) {
     setKittens(s => s.filter(k => k.id !== id));
   };
 
+  // ---- documents ----
+  const addDocument = async (doc) => {
+    const { data, error } = await supabase.from('documents').insert([{
+      cat_id: doc.cat_id || null,
+      document_type: doc.category,
+      file_url: doc.url,
+      notes: doc.name,
+      is_private: true
+    }]).select();
+    if (!error && data) setDocuments(s => [data[0], ...s]);
+    return data?.[0];
+  };
+  const deleteDocument = async (id) => {
+    await supabase.from('documents').delete().eq('id', id);
+    setDocuments(s => s.filter(d => d.id !== id));
+  };
+
+  // ---- media (gallery) ----
+  const addMedia = async (med) => {
+    const { data, error } = await supabase.from('media').insert([{
+      media_url: med.url,
+      media_type: 'image',
+      is_public: true
+    }]).select();
+    if (!error && data) setMedia(s => [data[0], ...s]);
+    return data?.[0];
+  };
+  const deleteMedia = async (id) => {
+    await supabase.from('media').delete().eq('id', id);
+    setMedia(s => s.filter(m => m.id !== id));
+  };
+
   return (
     <StoreContext.Provider value={{
-      news, litters, kittens, parents,
+      news, litters, kittens, parents, documents, media,
       addNews, deleteNews, addLitter, updateLitter, deleteLitter,
       addKitten, updateKitten, deleteKitten,
+      addDocument, deleteDocument, addMedia, deleteMedia
     }}>
       {children}
     </StoreContext.Provider>
