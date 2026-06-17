@@ -30,6 +30,15 @@ export const Input = (p) => <input {...p} className={`${base} ${p.className || '
 export const Select = (p) => <select {...p} className={`${base} ${p.className || ''}`} />;
 export const Textarea = (p) => <textarea {...p} className={`${base} ${p.className || ''}`} />;
 
+export const Combobox = ({ options, id, ...p }) => (
+  <>
+    <input {...p} list={id} className={`${base} ${p.className || ''}`} />
+    <datalist id={id}>
+      {options.map((opt, i) => <option key={i} value={opt} />)}
+    </datalist>
+  </>
+);
+
 export function Btn({ children, variant = 'solid', ...p }) {
   const styles = {
     solid: 'bg-forest-800 text-cream-100 hover:bg-forest-900',

@@ -11,23 +11,24 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 -- 3. Maak alle tabellen opnieuw aan
 
--- Tabel: Nestjes (Litters)
 CREATE TABLE litters (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    name VARCHAR(255) NOT NULL, -- Bijv. "Nestje Lente 2025"
+    name VARCHAR(255) NOT NULL,
     date_of_birth DATE,
     description TEXT,
+    sire_name VARCHAR(255),
+    dam_name VARCHAR(255),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Tabel: Katten / Kittens (Cats)
 CREATE TABLE cats (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     litter_id UUID REFERENCES litters(id) ON DELETE SET NULL,
     name VARCHAR(255) NOT NULL,
     date_of_birth DATE,
-    gender VARCHAR(50), -- Kater / Poes
+    gender VARCHAR(50),
     color VARCHAR(255),
+    pattern VARCHAR(255),
     chip_number VARCHAR(100),
     status VARCHAR(50) DEFAULT 'beschikbaar', -- 'beschikbaar', 'gereserveerd', 'verkocht', 'eigen'
     price_nl NUMERIC(10, 2), -- Prijs voor Nederland

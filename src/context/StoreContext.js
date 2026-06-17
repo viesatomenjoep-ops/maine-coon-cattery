@@ -42,16 +42,33 @@ export function StoreProvider({ children }) {
 
   // ---- litters ----
   const addLitter = async (litter) => {
-    const { data, error } = await supabase.from('litters').insert([{ name: litter.name, date_of_birth: litter.born }]).select();
+    const { data, error } = await supabase.from('litters').insert([{ 
+      name: litter.name, 
+      date_of_birth: litter.born,
+      sire_name: litter.sire_name,
+      dam_name: litter.dam_name 
+    }]).select();
     if (!error && data) setLitters(s => [...s, data[0]]);
+  };
+  
+  const updateLitter = async (id, patch) => {
+    setLitters(s => s.map(l => (l.id === id ? { ...l, ...patch } : l)));
+    await supabase.from('litters').update(patch).eq('id', id);
+  };
+  
+  const deleteLitter = async (id) => {
+    await supabase.from('litters').delete().eq('id', id);
+    setLitters(s => s.filter(l => l.id !== id));
   };
 
   // ---- kittens ----
   const addKitten = async (kit) => {
     const dbKit = {
+      litter_id: kit.litter_id,
       name: kit.name || 'Naamloos',
-      gender: kit.sex,
+      gender: kit.gender || kit.sex,
       color: kit.color,
+      pattern: kit.pattern,
       status: kit.status || 'beschikbaar',
       price_nl: kit.price_nl || kit.priceNL || 0,
       price_be: kit.price_be || kit.priceBE || 0,
@@ -71,6 +88,7 @@ export function StoreProvider({ children }) {
     if (patch.priceNL !== undefined) dbPatch.price_nl = patch.priceNL;
     if (patch.priceBE !== undefined) dbPatch.price_be = patch.priceBE;
     if (patch.secretToken !== undefined) delete dbPatch.secretToken; // prevent updating token names wrong
+    if (patch.sex !== undefined) { dbPatch.gender = patch.sex; delete dbPatch.sex; }
     
     await supabase.from('cats').update(dbPatch).eq('id', id);
   };
@@ -83,7 +101,7 @@ export function StoreProvider({ children }) {
   return (
     <StoreContext.Provider value={{
       news, litters, kittens, parents,
-      addNews, deleteNews, addLitter,
+      addNews, deleteNews, addLitter, updateLitter, deleteLitter,
       addKitten, updateKitten, deleteKitten,
     }}>
       {children}
