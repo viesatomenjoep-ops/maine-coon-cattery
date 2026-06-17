@@ -10,12 +10,16 @@ import { useRef } from 'react';
 
 const CldUploadWidget = ({ children, onSuccess, options }) => {
   const ref = useRef(null);
-  const handleFile = (e) => {
+  const handleFile = async (e) => {
     const files = Array.from(e.target.files);
-    files.forEach(file => {
-      const url = URL.createObjectURL(file);
-      if (onSuccess) onSuccess({ event: 'success', info: { secure_url: url } });
-    });
+    for (const file of files) {
+      const formData = new FormData();
+      formData.append('file', file);
+      if (options?.folder) formData.append('folder', options.folder);
+      const res = await fetch('/api/upload', { method: 'POST', body: formData });
+      const data = await res.json();
+      if (data.url && onSuccess) onSuccess({ event: 'success', info: { secure_url: data.url } });
+    }
     e.target.value = '';
   };
   return (
@@ -243,14 +247,27 @@ export default function CatDossier({ params }) {
                 </Field>
               </div>
 
-              <div className="col-span-full mt-4 rounded-xl border-2 border-forest-900/10 bg-forest-900/5 p-4">
-                <p className="mb-2 text-sm font-bold text-forest-900">Verborgen Klantenlink</p>
-                <p className="mb-4 text-xs text-forest-700">Deel deze link via WhatsApp. Niemand anders kan deze pagina zien.</p>
-                <div className="flex gap-2">
-                  <div className="flex-1 min-w-0">
-                    <Input readOnly value={`https://mainecoon-app.vercel.app/k/${formData.secret_token || formData.secretToken}`} className="w-full bg-white font-mono text-xs text-forest-600" />
+              <div className="col-span-full rounded-2xl border border-forest-900/10 bg-forest-50 p-6 shadow-inner">
+                <div className="mb-4 flex items-center gap-3">
+                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white font-bold text-brass-600 shadow-sm">K</span>
+                  <h3 className="font-display text-lg text-forest-900">Verborgen Klantenlinks</h3>
+                </div>
+                <p className="mb-4 text-xs text-forest-700">Deel deze links via WhatsApp. Ze bevatten de specifieke prijs (NL of BE) per link.</p>
+                
+                <div className="space-y-4">
+                  <div className="flex gap-2">
+                    <div className="flex-1 min-w-0">
+                      <Input readOnly value={`https://mainecoon-app.vercel.app/k/${formData.secret_token_nl || 'Onbekend'}`} className="w-full bg-white font-mono text-[10px] text-forest-600" />
+                    </div>
+                    <Btn type="button" variant="ghost" onClick={() => { navigator.clipboard.writeText(`https://mainecoon-app.vercel.app/k/${formData.secret_token_nl}`); alert('NL Link gekopieerd!'); }} className="whitespace-nowrap shrink-0 text-xs px-3">Kopieer NL</Btn>
                   </div>
-                  <Btn type="button" variant="ghost" onClick={() => { navigator.clipboard.writeText(`https://mainecoon-app.vercel.app/k/${formData.secret_token || formData.secretToken}`); alert('Link gekopieerd!'); }} className="whitespace-nowrap shrink-0">Kopieer</Btn>
+                  
+                  <div className="flex gap-2">
+                    <div className="flex-1 min-w-0">
+                      <Input readOnly value={`https://mainecoon-app.vercel.app/k/${formData.secret_token_be || 'Onbekend'}`} className="w-full bg-white font-mono text-[10px] text-forest-600" />
+                    </div>
+                    <Btn type="button" variant="ghost" onClick={() => { navigator.clipboard.writeText(`https://mainecoon-app.vercel.app/k/${formData.secret_token_be}`); alert('BE Link gekopieerd!'); }} className="whitespace-nowrap shrink-0 text-xs px-3">Kopieer BE</Btn>
+                  </div>
                 </div>
               </div>
               <div className="col-span-full"><ActionBar /></div>

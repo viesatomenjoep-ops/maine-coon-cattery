@@ -5,14 +5,21 @@ import { Btn } from '@/components/admin';
 export default function MediaUpload({ catId, onUploadSuccess }) {
   const fileInputRef = useRef(null);
 
-  const handleFileChange = (e) => {
+  const handleFileChange = async (e) => {
     const files = Array.from(e.target.files);
     if (!files.length) return;
     
-    files.forEach(file => {
-      const url = URL.createObjectURL(file);
-      if (onUploadSuccess) onUploadSuccess(url);
-    });
+    for (const file of files) {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('folder', `cattery_media/${catId || 'general'}`);
+      
+      const res = await fetch('/api/upload', { method: 'POST', body: formData });
+      const data = await res.json();
+      if (data.url && onUploadSuccess) {
+        onUploadSuccess(data.url);
+      }
+    }
     
     e.target.value = ''; // Reset
   };

@@ -35,7 +35,9 @@ CREATE TABLE cats (
     customer_nationality VARCHAR(5), -- 'NL' of 'BE'
     cover_image TEXT, -- Hoofdfoto voor de advertentie
     pedigree_data JSONB, -- JSON opslag voor de stamboom structuur (ouders, grootouders, etc)
-    secret_token UUID DEFAULT uuid_generate_v4() UNIQUE, -- Voor de unieke klant-link
+    secret_token_nl UUID DEFAULT uuid_generate_v4() UNIQUE, -- Voor de unieke klant-link (Nederland)
+    secret_token_be UUID DEFAULT uuid_generate_v4() UNIQUE, -- Voor de unieke klant-link (België)
+    published BOOLEAN DEFAULT FALSE,
     customer_name VARCHAR(255),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );

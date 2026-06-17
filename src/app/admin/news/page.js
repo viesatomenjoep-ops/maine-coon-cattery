@@ -7,12 +7,16 @@ import { ImageSlot } from '@/components/ui';
 
 const CldUploadWidget = ({ children, onSuccess, options }) => {
   const ref = useRef(null);
-  const handleFile = (e) => {
+  const handleFile = async (e) => {
     const files = Array.from(e.target.files);
-    files.forEach(file => {
-      const url = URL.createObjectURL(file);
-      if (onSuccess) onSuccess({ event: 'success', info: { secure_url: url } });
-    });
+    for (const file of files) {
+      const formData = new FormData();
+      formData.append('file', file);
+      if (options?.folder) formData.append('folder', options.folder);
+      const res = await fetch('/api/upload', { method: 'POST', body: formData });
+      const data = await res.json();
+      if (data.url && onSuccess) onSuccess({ event: 'success', info: { secure_url: data.url } });
+    }
     e.target.value = '';
   };
   return (

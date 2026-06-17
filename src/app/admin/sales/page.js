@@ -8,12 +8,16 @@ import { useRef } from 'react';
 
 const CldUploadWidget = ({ children, onSuccess, options }) => {
   const ref = useRef(null);
-  const handleFile = (e) => {
+  const handleFile = async (e) => {
     const files = Array.from(e.target.files);
-    files.forEach(file => {
-      const url = URL.createObjectURL(file);
-      if (onSuccess) onSuccess({ event: 'success', info: { secure_url: url } });
-    });
+    for (const file of files) {
+      const formData = new FormData();
+      formData.append('file', file);
+      if (options?.folder) formData.append('folder', options.folder);
+      const res = await fetch('/api/upload', { method: 'POST', body: formData });
+      const data = await res.json();
+      if (data.url && onSuccess) onSuccess({ event: 'success', info: { secure_url: data.url } });
+    }
     e.target.value = '';
   };
   return (
@@ -120,14 +124,21 @@ export default function SalesPage() {
               </div>
             </div>
 
-            <div className="mt-4 rounded-xl border border-forest-900/10 bg-forest-50 p-3">
-               <div className="flex items-center justify-between">
-                 <span className="text-xs font-medium uppercase text-forest-700">Private Access Link</span>
-                 <button onClick={() => handleCopyLink(k.secret_token)} className="text-xs font-semibold text-brass-600 hover:underline">
-                   Kopieer Link
-                 </button>
+            <div className="mt-4 rounded-xl border border-forest-900/10 bg-forest-50 p-3 space-y-3">
+               <div>
+                 <div className="flex items-center justify-between">
+                   <span className="text-xs font-medium uppercase text-forest-700">Link NL Klant</span>
+                   <button onClick={() => handleCopyLink(k.secret_token_nl)} className="text-xs font-semibold text-brass-600 hover:underline">Kopieer</button>
+                 </div>
+                 <p className="mt-1 truncate text-[10px] text-forest-600 font-mono">.../k/{k.secret_token_nl?.split('-')[0]}...</p>
                </div>
-               <p className="mt-1 truncate text-[10px] text-forest-600 font-mono">.../k/{k.secret_token?.split('-')[0]}...</p>
+               <div className="border-t border-forest-900/10 pt-2">
+                 <div className="flex items-center justify-between">
+                   <span className="text-xs font-medium uppercase text-forest-700">Link BE Klant</span>
+                   <button onClick={() => handleCopyLink(k.secret_token_be)} className="text-xs font-semibold text-brass-600 hover:underline">Kopieer</button>
+                 </div>
+                 <p className="mt-1 truncate text-[10px] text-forest-600 font-mono">.../k/{k.secret_token_be?.split('-')[0]}...</p>
+               </div>
             </div>
 
             <div className="mt-4 flex items-center justify-between border-t border-forest-900/8 pt-4">

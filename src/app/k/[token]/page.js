@@ -11,30 +11,36 @@ export default function CustomerPortal({ params }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    setTimeout(() => {
-      const cat = kittens.find(k => k.secret_token === token);
-      if (!cat) {
-        setKittenData(null);
-      } else {
-        const price = cat.customer_nationality === 'BE' ? cat.price_be : cat.price_nl;
-        setKittenData({
-          name: cat.name,
-          customerName: cat.customer_nationality === 'BE' ? 'Beste zuiderbuur' : 'Beste klant',
-          breed: "Maine Coon",
-          color: cat.color,
-          dateOfBirth: cat.born || "Onbekend",
-          price: price,
-          updates: [
-            { id: 1, date: "15-09-2025", title: "Eerste inenting gehad!", text: `${cat.name} was heel dapper bij de dierenarts. Ze heeft haar eerste prikje gehad en is nu lekker aan het slapen.` },
-            { id: 2, date: "02-09-2025", title: "Spelen met het muisje", text: `Vandaag ontdekte ${cat.name} haar favoriete speeltje. Ze rent er het hele huis mee door.` }
-          ],
-          images: cat.cover_image ? [cat.cover_image] : [
-            "https://images.unsplash.com/photo-1513245543132-31f507417b26?auto=format&fit=crop&q=80&w=800"
-          ]
-        });
-      }
-      setLoading(false);
-    }, 800);
+    // Als de globale state nog leeg is (aan het fetchen), doe nog niks
+    if (!kittens || kittens.length === 0) {
+      // Zet een fallback timeout voor als er na 3 seconden echt niks is
+      const timer = setTimeout(() => setLoading(false), 3000);
+      return () => clearTimeout(timer);
+    }
+
+    const cat = kittens.find(k => k.secret_token_nl === token || k.secret_token_be === token);
+    if (!cat) {
+      setKittenData(null);
+    } else {
+      const isBE = cat.secret_token_be === token;
+      const price = isBE ? cat.price_be : cat.price_nl;
+      setKittenData({
+        name: cat.name,
+        customerName: isBE ? 'Beste zuiderbuur' : 'Beste klant',
+        breed: "Maine Coon",
+        color: cat.color,
+        dateOfBirth: cat.born || cat.date_of_birth || "Onbekend",
+        price: price,
+        updates: [
+          { id: 1, date: "15-09-2025", title: "Eerste inenting gehad!", text: `${cat.name} was heel dapper bij de dierenarts. Ze heeft haar eerste prikje gehad en is nu lekker aan het slapen.` },
+          { id: 2, date: "02-09-2025", title: "Spelen met het muisje", text: `Vandaag ontdekte ${cat.name} haar favoriete speeltje. Ze rent er het hele huis mee door.` }
+        ],
+        images: cat.cover_image ? [cat.cover_image] : [
+          "https://images.unsplash.com/photo-1513245543132-31f507417b26?auto=format&fit=crop&q=80&w=800"
+        ]
+      });
+    }
+    setLoading(false);
   }, [token, kittens]);
 
   if (loading) {
