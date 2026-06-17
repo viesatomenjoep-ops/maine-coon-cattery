@@ -6,7 +6,6 @@ import { createContext, useContext, useState, useCallback, useEffect } from 'rea
 const AuthContext = createContext(null);
 
 const MOCK_USERS = {
-  'klant@voorbeeld.nl': { password: 'kitten', role: 'customer', name: 'Familie de Vries' },
   'admin@wendysdreams.nl': { password: 'admin', role: 'admin', name: 'Cattery beheer' },
 };
 
