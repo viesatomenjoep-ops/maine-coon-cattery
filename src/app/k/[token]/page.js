@@ -5,7 +5,7 @@ import { Logo, PawMark } from '@/components/ui';
 import { useStore } from '@/context/StoreContext';
 
 export default function CustomerPortal({ params }) {
-  const { kittens, parents } = useStore();
+  const { kittens, news, media } = useStore();
   const token = params.token;
   const [kittenData, setKittenData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -24,24 +24,43 @@ export default function CustomerPortal({ params }) {
     } else {
       const isBE = cat.secret_token_be === token;
       const price = isBE ? cat.price_be : cat.price_nl;
+
+      // Koppel actuele tijdlijn updates (sorteren op nieuwste eerst of oplopend)
+      // We gaan er vanuit dat news.cat_id de koppeling is (moeten we toevoegen aan admin/news)
+      const catNews = news.filter(n => n.cat_id === cat.id).map(n => ({
+        id: n.id,
+        date: n.created_at ? new Date(n.created_at).toLocaleDateString('nl-NL') : 'Onbekend',
+        title: n.title,
+        text: n.content
+      }));
+
+      // Fallback updates als er geen zijn
+      const displayUpdates = catNews.length > 0 ? catNews : [
+        { id: 'start', date: cat.created_at ? new Date(cat.created_at).toLocaleDateString('nl-NL') : 'Vandaag', title: 'Dossier Aangemaakt', text: `Het digitale dossier voor ${cat.name} is geopend.` }
+      ];
+
+      // Koppel actuele media
+      const catMediaUrls = media.filter(m => m.cat_id === cat.id || m.media_url?.includes(cat.id)).map(m => m.media_url);
+      const displayImages = cat.cover_image 
+        ? [cat.cover_image, ...catMediaUrls] 
+        : catMediaUrls.length > 0 
+          ? catMediaUrls 
+          : ["https://images.unsplash.com/photo-1513245543132-31f507417b26?auto=format&fit=crop&q=80&w=800"];
+
       setKittenData({
         name: cat.name,
         customerName: isBE ? 'Beste zuiderbuur' : 'Beste klant',
         breed: "Maine Coon",
         color: cat.color,
-        dateOfBirth: cat.born || cat.date_of_birth || "Onbekend",
+        dateOfBirth: cat.born || cat.date_of_birth ? new Date(cat.born || cat.date_of_birth).toLocaleDateString('nl-NL') : "Onbekend",
         price: price,
-        updates: [
-          { id: 1, date: "15-09-2025", title: "Eerste inenting gehad!", text: `${cat.name} was heel dapper bij de dierenarts. Ze heeft haar eerste prikje gehad en is nu lekker aan het slapen.` },
-          { id: 2, date: "02-09-2025", title: "Spelen met het muisje", text: `Vandaag ontdekte ${cat.name} haar favoriete speeltje. Ze rent er het hele huis mee door.` }
-        ],
-        images: cat.cover_image ? [cat.cover_image] : [
-          "https://images.unsplash.com/photo-1513245543132-31f507417b26?auto=format&fit=crop&q=80&w=800"
-        ]
+        updates: displayUpdates,
+        images: displayImages.filter(Boolean), // remove any nulls
+        medical: cat.medical || []
       });
     }
     setLoading(false);
-  }, [token, kittens]);
+  }, [token, kittens, news, media]);
 
   if (loading) {
     return <div className="grid min-h-screen place-items-center bg-cream-50 text-forest-700">Laden van jouw kitten...</div>;
@@ -79,18 +98,35 @@ export default function CustomerPortal({ params }) {
         </div>
 
         <div className="mt-12">
+          <h2 className="font-display text-2xl text-forest-900">Medisch Overzicht</h2>
+          <div className="mt-4 overflow-hidden rounded-2xl border border-forest-900/10 bg-white shadow-soft p-6">
+            {kittenData.medical.length > 0 ? (
+              <ul className="space-y-3">
+                {kittenData.medical.map((med, i) => (
+                  <li key={i} className="flex justify-between border-b border-forest-900/5 pb-2 last:border-0 text-sm">
+                    <span className="font-medium text-forest-900">{med.type}</span>
+                    <span className="text-forest-600">{new Date(med.date).toLocaleDateString('nl-NL')} - {med.note}</span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-sm text-forest-700 italic">Nog geen medische gegevens geregistreerd.</p>
+            )}
+          </div>
+        </div>
+
+        <div className="mt-12">
           <h2 className="font-display text-2xl text-forest-900">Tijdlijn & Updates</h2>
           <div className="mt-6 space-y-8">
             {kittenData.updates.map((update) => (
               <div key={update.id} className="relative pl-6">
                 <div className="absolute left-0 top-1.5 h-3 w-3 rounded-full bg-brass-400 border-[3px] border-cream-50"></div>
-                {/* Lijn ertussen (dit kan nog mooier met absolute borders, we houden het nu simpel) */}
                 <div className="absolute left-1.5 top-5 -bottom-8 w-px bg-forest-900/10 last:hidden"></div>
                 
                 <p className="text-xs font-bold uppercase tracking-wide text-brass-600">{update.date}</p>
                 <div className="mt-2 rounded-xl bg-white p-5 shadow-sm border border-forest-900/5">
                   <h3 className="font-display text-lg text-forest-900">{update.title}</h3>
-                  <p className="mt-2 text-sm leading-relaxed text-forest-700">{update.text}</p>
+                  <div className="mt-2 text-sm leading-relaxed text-forest-700 whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: update.text }}></div>
                 </div>
               </div>
             ))}

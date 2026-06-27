@@ -1,7 +1,6 @@
 'use client';
 import { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
-import { parents } from '@/data/mock'; // We houden de ouders nog in de mock voor deze prototype fase
 
 const StoreContext = createContext(null);
 
@@ -198,7 +197,7 @@ export function StoreProvider({ children }) {
 
   return (
     <StoreContext.Provider value={{
-      news, litters, kittens, parents, documents, media,
+      news, litters, kittens, documents, media,
       addNews, deleteNews, addLitter, updateLitter, deleteLitter,
       addKitten, updateKitten, deleteKitten,
       addDocument, deleteDocument, addMedia, deleteMedia, addMedical, deleteMedical
