@@ -10,21 +10,38 @@ export function AuthProvider({ children }) {
   const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
+    // Check local bypass first
+    const bypassed = localStorage.getItem('cattery_bypass_auth');
+    if (bypassed) {
+      setUser(JSON.parse(bypassed));
+      setIsInitialized(true);
+      return;
+    }
+
     // Check active session on mount
     supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user || null);
+      if (!bypassed) setUser(session?.user || null);
       setIsInitialized(true);
     });
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user || null);
+      if (!localStorage.getItem('cattery_bypass_auth')) {
+        setUser(session?.user || null);
+      }
     });
 
     return () => subscription.unsubscribe();
   }, []);
 
   const login = async (email, password) => {
+    // BYPASS AUTHENTICATION AS REQUESTED BY USER
+    const sessionUser = { role: 'admin', email: email || 'admin@wendysdreams.nl', name: 'Cattery beheer' };
+    setUser(sessionUser);
+    localStorage.setItem('cattery_bypass_auth', JSON.stringify(sessionUser));
+    return { ok: true, role: 'admin' };
+    
+    /* ORIGINELE SUPABASE AUTH CODE:
     const { data, error } = await supabase.auth.signInWithPassword({
       email: email.trim(),
       password,
@@ -35,9 +52,12 @@ export function AuthProvider({ children }) {
     }
     
     return { ok: true, role: 'admin' };
+    */
   };
 
   const logout = async () => {
+    setUser(null);
+    localStorage.removeItem('cattery_bypass_auth');
     await supabase.auth.signOut();
   };
 
