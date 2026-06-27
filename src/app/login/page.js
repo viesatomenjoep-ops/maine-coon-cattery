@@ -94,22 +94,6 @@ export default function LoginPage() {
               {mounted ? t('login_btn') : 'Inloggen'}
             </button>
           </form>
-
-          {/* demo helper — prototype only — text-size increased by 20% + Wendy's Dream styling */}
-          <div className="mt-8 rounded-2xl border border-dashed border-terracotta-300 bg-terracotta-50/50 p-6 text-sm text-terracotta-950">
-            <p className="font-semibold uppercase tracking-wider text-xs mb-3 text-terracotta-800">
-              {mounted ? t('login_demo') : 'Demo-toegang'}
-            </p>
-
-            <button
-              onClick={() => fill('admin@wendysdreams.nl', 'admin')}
-              className="mt-3 block w-full rounded-xl bg-white/60 px-4 py-3.5 text-left text-base transition hover:bg-white border border-terracotta-200/20 hover:border-terracotta-300"
-            >
-              <span className="font-semibold text-terracotta-800">
-                {mounted ? t('login_demo_admin') : 'Beheerder'}
-              </span> · admin@wendysdreams.nl / admin
-            </button>
-          </div>
         </div>
       </div>
     </div>
