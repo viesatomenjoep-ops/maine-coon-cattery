@@ -82,55 +82,16 @@ CREATE TABLE media (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- 4. INSERT VOORBEELD DATA (4 Nestjes x 8 Kittens)
+-- 4. INSERT VOORBEELD DATA (1 Nestje x 4 Kittens)
 
 -- Definieer vaste ID's voor de nestjes zodat we de kittens eraan kunnen koppelen
-INSERT INTO litters (id, name, date_of_birth, sire_name, dam_name) VALUES 
-('11111111-1111-4111-a111-111111111111', 'Nestje Olympus', '2025-02-15', 'Aslan van Maelduin', 'Luna van Maelduin'),
-('22222222-2222-4222-a222-222222222222', 'Nestje Galactisch', '2025-04-10', 'King Arthur of the North', 'Queen Guinevere'),
-('33333333-3333-4333-a333-333333333333', 'Nestje Edelstenen', '2025-05-01', 'Aslan van Maelduin', 'Bella Donna'),
-('44444444-4444-4444-a444-444444444444', 'Nestje Natuur', '2025-06-20', 'Thor van Asgard', 'Luna van Maelduin');
+INSERT INTO litters (id, name, date_of_birth, sire_name, dam_name, description) VALUES 
+('11111111-1111-4111-a111-111111111111', 'Nestje Olympus', '2025-02-15', 'Aslan van Maelduin', 'Luna van Maelduin', 'Een prachtig, speels nestje met uitstekende stamboomlijnen. Beide ouders zijn uitgebreid getest en volledig gezond verklaard. De kittens groeien op in de huiskamer en zijn zeer aanhankelijk.');
 
--- Nestje Olympus (8 Kittens)
-INSERT INTO cats (litter_id, name, date_of_birth, gender, color, pattern, status, price_nl, price_be, cover_image) VALUES
-('11111111-1111-4111-a111-111111111111', 'Zeus', '2025-02-15', 'Kater', 'Black (Zwart)', 'Solid (Effen)', 'beschikbaar', 1250, 1300, 'https://images.unsplash.com/photo-1513245543132-31f507417b26?auto=format&fit=crop&q=80&w=800'),
-('11111111-1111-4111-a111-111111111111', 'Apollo', '2025-02-15', 'Kater', 'Red (Rood)', 'Classic Tabby', 'gereserveerd', 1250, 1300, 'https://images.unsplash.com/photo-1533738363-b7f9aef128ce?auto=format&fit=crop&q=80&w=800'),
-('11111111-1111-4111-a111-111111111111', 'Hermes', '2025-02-15', 'Kater', 'Cream (Crème)', 'Mackerel Tabby', 'beschikbaar', 1250, 1300, 'https://images.unsplash.com/photo-1615397323144-8848d5423fdb?auto=format&fit=crop&q=80&w=800'),
-('11111111-1111-4111-a111-111111111111', 'Ares', '2025-02-15', 'Kater', 'Black (Zwart)', 'Smoke', 'verkocht', 1250, 1300, 'https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?auto=format&fit=crop&q=80&w=800'),
-('11111111-1111-4111-a111-111111111111', 'Athena', '2025-02-15', 'Poes', 'Blue Tortie', 'Solid (Effen)', 'beschikbaar', 1350, 1400, 'https://images.unsplash.com/photo-1573865526739-10659fec78a5?auto=format&fit=crop&q=80&w=800'),
-('11111111-1111-4111-a111-111111111111', 'Hera', '2025-02-15', 'Poes', 'Black Tortie', 'Classic Tabby', 'evaluatie', 1500, 1500, 'https://images.unsplash.com/photo-1543852786-1cf6624b9987?auto=format&fit=crop&q=80&w=800'),
-('11111111-1111-4111-a111-111111111111', 'Artemis', '2025-02-15', 'Poes', 'White (Wit)', 'Solid (Effen)', 'gereserveerd', 1350, 1400, 'https://images.unsplash.com/photo-1533743983669-94fa5c4338ec?auto=format&fit=crop&q=80&w=800'),
-('11111111-1111-4111-a111-111111111111', 'Aphrodite', '2025-02-15', 'Poes', 'Blue (Blauw)', 'Smoke', 'beschikbaar', 1350, 1400, 'https://images.unsplash.com/photo-1592194996308-7b43878e84a6?auto=format&fit=crop&q=80&w=800');
+-- Nestje Olympus (4 Kittens)
+INSERT INTO cats (litter_id, name, date_of_birth, gender, color, pattern, status, price_nl, price_be, cover_image, published) VALUES
+('11111111-1111-4111-a111-111111111111', 'Zeus', '2025-02-15', 'Kater', 'Black (Zwart)', 'Solid (Effen)', 'beschikbaar', 1250, 1300, 'https://images.unsplash.com/photo-1513245543132-31f507417b26?auto=format&fit=crop&q=80&w=800', TRUE),
+('11111111-1111-4111-a111-111111111111', 'Apollo', '2025-02-15', 'Kater', 'Red (Rood)', 'Classic Tabby', 'gereserveerd', 1250, 1300, 'https://images.unsplash.com/photo-1533738363-b7f9aef128ce?auto=format&fit=crop&q=80&w=800', TRUE),
+('11111111-1111-4111-a111-111111111111', 'Athena', '2025-02-15', 'Poes', 'Blue Tortie', 'Solid (Effen)', 'beschikbaar', 1350, 1400, 'https://images.unsplash.com/photo-1573865526739-10659fec78a5?auto=format&fit=crop&q=80&w=800', TRUE),
+('11111111-1111-4111-a111-111111111111', 'Hera', '2025-02-15', 'Poes', 'Black Tortie', 'Classic Tabby', 'evaluatie', 1500, 1500, 'https://images.unsplash.com/photo-1543852786-1cf6624b9987?auto=format&fit=crop&q=80&w=800', TRUE);
 
--- Nestje Galactisch (8 Kittens)
-INSERT INTO cats (litter_id, name, date_of_birth, gender, color, pattern, status, price_nl, price_be) VALUES
-('22222222-2222-4222-a222-222222222222', 'Orion', '2025-04-10', 'Kater', 'Blue (Blauw)', 'Classic Tabby', 'beschikbaar', 1250, 1300),
-('22222222-2222-4222-a222-222222222222', 'Sirius', '2025-04-10', 'Kater', 'Black (Zwart)', 'Bicolor', 'beschikbaar', 1250, 1300),
-('22222222-2222-4222-a222-222222222222', 'Cosmo', '2025-04-10', 'Kater', 'Red (Rood)', 'Solid (Effen)', 'beschikbaar', 1250, 1300),
-('22222222-2222-4222-a222-222222222222', 'Nova', '2025-04-10', 'Poes', 'Black Tortie', 'Harlequin', 'beschikbaar', 1350, 1400),
-('22222222-2222-4222-a222-222222222222', 'Lyra', '2025-04-10', 'Poes', 'White (Wit)', 'Solid (Effen)', 'evaluatie', 1500, 1500),
-('22222222-2222-4222-a222-222222222222', 'Vega', '2025-04-10', 'Poes', 'Blue Tortie', 'Bicolor', 'beschikbaar', 1350, 1400),
-('22222222-2222-4222-a222-222222222222', 'Stella', '2025-04-10', 'Poes', 'Cream (Crème)', 'Spotted Tabby', 'beschikbaar', 1350, 1400),
-('22222222-2222-4222-a222-222222222222', 'Luna', '2025-04-10', 'Poes', 'Black (Zwart)', 'Smoke', 'beschikbaar', 1350, 1400);
-
--- Nestje Edelstenen (8 Kittens)
-INSERT INTO cats (litter_id, name, date_of_birth, gender, color, pattern, status, price_nl, price_be) VALUES
-('33333333-3333-4333-a333-333333333333', 'Onyx', '2025-05-01', 'Kater', 'Black (Zwart)', 'Solid (Effen)', 'beschikbaar', 1250, 1300),
-('33333333-3333-4333-a333-333333333333', 'Jasper', '2025-05-01', 'Kater', 'Red (Rood)', 'Mackerel Tabby', 'beschikbaar', 1250, 1300),
-('33333333-3333-4333-a333-333333333333', 'Topaz', '2025-05-01', 'Kater', 'Cream (Crème)', 'Classic Tabby', 'beschikbaar', 1250, 1300),
-('33333333-3333-4333-a333-333333333333', 'Garnet', '2025-05-01', 'Kater', 'Blue (Blauw)', 'Smoke', 'beschikbaar', 1250, 1300),
-('33333333-3333-4333-a333-333333333333', 'Ruby', '2025-05-01', 'Poes', 'Red (Rood)', 'Classic Tabby', 'beschikbaar', 1350, 1400),
-('33333333-3333-4333-a333-333333333333', 'Sapphire', '2025-05-01', 'Poes', 'Blue (Blauw)', 'Solid (Effen)', 'evaluatie', 1500, 1500),
-('33333333-3333-4333-a333-333333333333', 'Emerald', '2025-05-01', 'Poes', 'Black Tortie', 'Spotted Tabby', 'beschikbaar', 1350, 1400),
-('33333333-3333-4333-a333-333333333333', 'Amber', '2025-05-01', 'Poes', 'Cream (Crème)', 'Shaded', 'beschikbaar', 1350, 1400);
-
--- Nestje Natuur (8 Kittens)
-INSERT INTO cats (litter_id, name, date_of_birth, gender, color, pattern, status, price_nl, price_be) VALUES
-('44444444-4444-4444-a444-444444444444', 'River', '2025-06-20', 'Kater', 'Blue (Blauw)', 'Bicolor', 'beschikbaar', 1250, 1300),
-('44444444-4444-4444-a444-444444444444', 'Forest', '2025-06-20', 'Kater', 'Black (Zwart)', 'Smoke', 'beschikbaar', 1250, 1300),
-('44444444-4444-4444-a444-444444444444', 'Ash', '2025-06-20', 'Kater', 'Cream (Crème)', 'Solid (Effen)', 'beschikbaar', 1250, 1300),
-('44444444-4444-4444-a444-444444444444', 'Rowan', '2025-06-20', 'Kater', 'Red (Rood)', 'Classic Tabby', 'beschikbaar', 1250, 1300),
-('44444444-4444-4444-a444-444444444444', 'Willow', '2025-06-20', 'Poes', 'Blue Tortie', 'Van', 'beschikbaar', 1350, 1400),
-('44444444-4444-4444-a444-444444444444', 'Hazel', '2025-06-20', 'Poes', 'Black Tortie', 'Spotted Tabby', 'evaluatie', 1500, 1500),
-('44444444-4444-4444-a444-444444444444', 'Ivy', '2025-06-20', 'Poes', 'White (Wit)', 'Solid (Effen)', 'beschikbaar', 1350, 1400),
-('44444444-4444-4444-a444-444444444444', 'Fern', '2025-06-20', 'Poes', 'Black (Zwart)', 'Classic Tabby', 'beschikbaar', 1350, 1400);

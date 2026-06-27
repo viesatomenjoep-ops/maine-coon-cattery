@@ -2,6 +2,8 @@
 
 // Lightweight inline SVG growth chart — no external deps.
 export default function WeightCurve({ weights }) {
+  if (!weights || weights.length === 0) return null;
+
   const w = 520, h = 200, pad = 32;
   const maxG = Math.max(...weights.map((d) => d.g));
   const maxWk = Math.max(...weights.map((d) => d.week));

@@ -1,8 +1,9 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
-import { getKitten, getLitter, getParent } from '@/data/mock';
+import { supabase } from '@/lib/supabase';
 import { StatusPill, SectionLabel } from '@/components/ui';
 import WeightCurve from '@/components/WeightCurve';
 import { useLanguage } from '@/context/LanguageContext';
@@ -12,14 +13,16 @@ const eur = (n) =>
     style: 'currency',
     currency: 'EUR',
     maximumFractionDigits: 0,
-  }).format(n);
+  }).format(n || 0);
 
-const fmt = (iso) =>
-  new Date(iso).toLocaleDateString('nl-NL', {
+const fmt = (iso) => {
+  if (!iso) return 'Onbekend';
+  return new Date(iso).toLocaleDateString('nl-NL', {
     day: 'numeric',
     month: 'long',
     year: 'numeric',
   });
+}
 
 function GeneRow({ label, value }) {
   const ok = value?.toLowerCase().includes('negatief');
@@ -33,8 +36,34 @@ function GeneRow({ label, value }) {
 
 export default function KittenDossier() {
   const { id } = useParams();
-  const k = getKitten(id);
+  const [k, setK] = useState(null);
+  const [litter, setLitter] = useState(null);
+  const [loading, setLoading] = useState(true);
   const { t, mounted } = useLanguage();
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const { data: catData } = await supabase.from('cats').select('*').eq('id', id).single();
+        if (catData) {
+          setK(catData);
+          if (catData.litter_id) {
+            const { data: litterData } = await supabase.from('litters').select('*').eq('id', catData.litter_id).single();
+            if (litterData) setLitter(litterData);
+          }
+        }
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    if (id) fetchData();
+  }, [id]);
+
+  if (loading) {
+    return <div className="p-8 text-ink/50">Laden...</div>;
+  }
 
   if (!k) {
     return (
@@ -47,20 +76,15 @@ export default function KittenDossier() {
     );
   }
 
-  const litter = getLitter(k.litter_id);
-  const sire = getParent(litter?.sire_id);
-  const dam = getParent(litter?.dam_id);
+  const sire = { name: litter?.sire_name, role: 'Vader', color: 'Onbekend', titles: '', hcm: 'Negatief', sma: 'Negatief', pkdef: 'Negatief' };
+  const dam = { name: litter?.dam_name, role: 'Moeder', color: 'Onbekend', titles: '', hcm: 'Negatief', sma: 'Negatief', pkdef: 'Negatief' };
 
-  const PHASES = ['Beschikbaar', 'Gereserveerd', 'Verkocht'];
-  const phaseIdx = PHASES.indexOf(k.status);
+  const PHASES = ['beschikbaar', 'gereserveerd', 'verkocht', 'evaluatie'];
+  const phaseIdx = PHASES.indexOf(k.status?.toLowerCase() || 'beschikbaar');
 
   // Gallery images mapping
-  const primaryImage = `/images/kitten_${k.name.toLowerCase()}.png`;
-  const thumbnails = [
-    '/images/kitten_playful.png',
-    '/images/kitten_sleepy.png',
-    '/images/kitten_curious.png',
-  ];
+  const primaryImage = k.cover_image || `/images/kitten_${k.name.toLowerCase()}.png`;
+  const thumbnails = [];
 
   return (
     <div className="w-full">
@@ -106,10 +130,10 @@ export default function KittenDossier() {
           </div>
           <h1 className="mt-4 font-display text-5xl text-ink font-light">{k.name}</h1>
           <p className="mt-2 text-lg text-ink/75 font-light">
-            {k.sex} · {k.color} · {k.pattern}
+            {k.gender} · {k.color} · {k.pattern}
           </p>
           <p className="mt-6 font-display text-3xl font-semibold text-terracotta-600">
-            {eur(k.price)}
+            {eur(k.price_nl)}
           </p>
 
           {/* purchase phase tracker */}
@@ -152,7 +176,7 @@ export default function KittenDossier() {
               <dt className="text-xs uppercase tracking-wider font-semibold text-terracotta-500">
                 {mounted ? t('dossier_sex') : 'Geslacht'}
               </dt>
-              <dd className="mt-1 text-ink font-light">{k.sex}</dd>
+              <dd className="mt-1 text-ink font-light">{k.gender}</dd>
             </div>
             <div>
               <dt className="text-xs uppercase tracking-wider font-semibold text-terracotta-500">
@@ -171,7 +195,7 @@ export default function KittenDossier() {
           {mounted ? t('dossier_growth') : 'Groei sinds de geboorte'}
         </h2>
         <div className="mt-6 rounded-[2rem] border border-terracotta-900/10 bg-cream-50 p-6 shadow-soft">
-          <WeightCurve weights={k.weights} />
+          <WeightCurve weights={k.weights || []} />
         </div>
       </section>
 
@@ -183,7 +207,7 @@ export default function KittenDossier() {
             {mounted ? t('dossier_health') : 'Gezondheid'}
           </h2>
           <div className="mt-6 space-y-3">
-            {k.medical.map((m, i) => (
+            {(k.medical || []).map((m, i) => (
               <div
                 key={i}
                 className="flex items-start gap-4 rounded-[2rem] border border-terracotta-900/10 bg-cream-50 p-5 shadow-soft"
@@ -197,6 +221,7 @@ export default function KittenDossier() {
                 </div>
               </div>
             ))}
+            {(!k.medical || k.medical.length === 0) && <p className="text-sm text-ink/50 italic">Nog geen medische gegevens ingevoerd.</p>}
           </div>
         </section>
 

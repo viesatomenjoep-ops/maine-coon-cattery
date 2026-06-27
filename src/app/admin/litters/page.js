@@ -22,19 +22,37 @@ export default function LittersPage() {
   const damNames = Array.from(new Set([...parents.filter(p => p.gender === 'Poes').map(d => d.name), ...kittens.filter(k => k.gender === 'Poes').map(k => k.name)]));
   const sireNames = Array.from(new Set([...parents.filter(p => p.gender === 'Kater').map(d => d.name), ...kittens.filter(k => k.gender === 'Kater').map(k => k.name)]));
 
-  const [litter, setLitter] = useState({ name: '', sire_name: '', dam_name: '', born: '' });
-  const [kit, setKit] = useState({ litter_id: litters[0]?.id || '', name: '', sex: 'Kater', color: '', pattern: '', status: 'Beschikbaar' });
+  const [litter, setLitter] = useState({ name: '', sire_name: '', dam_name: '', born: '', description: '' });
+  const [kit, setKit] = useState({ litter_id: litters[0]?.id || '', name: '', sex: 'Kater', color: '', pattern: '', status: 'Beschikbaar', priceNL: 1250, priceBE: 1300, cover_image: '' });
+  const [uploading, setUploading] = useState(false);
+
+  const handleUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setUploading(true);
+    const fd = new FormData();
+    fd.append('file', file);
+    fd.append('folder', 'cattery_media');
+    try {
+      const res = await fetch('/api/upload', { method: 'POST', body: fd });
+      const data = await res.json();
+      if (data.url) setKit(k => ({ ...k, cover_image: data.url }));
+    } catch (err) {
+      console.error(err);
+    }
+    setUploading(false);
+  };
 
   const saveLitter = () => {
     if (!litter.name.trim()) return;
     addLitter({ ...litter });
-    setLitter({ name: '', sire_name: '', dam_name: '', born: '' });
+    setLitter({ name: '', sire_name: '', dam_name: '', born: '', description: '' });
   };
   
   const saveKitten = () => {
     if (!kit.name.trim() || !kit.litter_id) return;
     addKitten({ ...kit, gender: kit.sex });
-    setKit({ ...kit, name: '', color: '', pattern: '' });
+    setKit({ ...kit, name: '', color: '', pattern: '', cover_image: '' });
   };
 
   return (
@@ -55,7 +73,12 @@ export default function LittersPage() {
                 <Combobox id="damsList" options={damNames} value={litter.dam_name} onChange={(e)=>setLitter({...litter, dam_name:e.target.value})} placeholder="Kies of typ" />
               </Field>
             </div>
-            <Field label="Geboortedatum"><Input type="date" value={litter.born} onChange={(e)=>setLitter({...litter, born:e.target.value})} /></Field>
+            <div className="grid grid-cols-2 gap-4">
+              <Field label="Geboortedatum"><Input type="date" value={litter.born} onChange={(e)=>setLitter({...litter, born:e.target.value})} /></Field>
+            </div>
+            <Field label="Beschrijving (Wervende tekst)">
+              <textarea value={litter.description} onChange={(e)=>setLitter({...litter, description:e.target.value})} className="w-full rounded-xl border-forest-900/20 bg-white/50 p-3 text-sm focus:border-forest-500 focus:ring-forest-500 min-h-[80px]" placeholder="Vertel iets leuks over dit nestje..." />
+            </Field>
           </div>
           <Btn variant="brass" onClick={saveLitter} className="mt-6">Nestje toevoegen</Btn>
         </Card>
@@ -82,7 +105,18 @@ export default function LittersPage() {
                 <Combobox id="patternsList" options={PATTERNS} value={kit.pattern} onChange={(e)=>setKit({...kit, pattern:e.target.value})} placeholder="Bijv. Classic Tabby" />
               </Field>
             </div>
-            <Field label="Status"><Select value={kit.status} onChange={(e)=>setKit({...kit, status:e.target.value})}>{STATUSES.map(s=><option key={s} value={s}>{s}</option>)}</Select></Field>
+            <div className="grid grid-cols-3 gap-4">
+              <Field label="Status"><Select value={kit.status} onChange={(e)=>setKit({...kit, status:e.target.value})}>{STATUSES.map(s=><option key={s} value={s}>{s}</option>)}</Select></Field>
+              <Field label="Prijs NL (€)"><Input type="number" value={kit.priceNL} onChange={(e)=>setKit({...kit, priceNL:Number(e.target.value)})} /></Field>
+              <Field label="Prijs BE (€)"><Input type="number" value={kit.priceBE} onChange={(e)=>setKit({...kit, priceBE:Number(e.target.value)})} /></Field>
+            </div>
+            <Field label="Cover Afbeelding (Optioneel)">
+              <div className="flex items-center gap-3">
+                <input type="file" accept="image/*" onChange={handleUpload} className="text-sm file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-forest-50 file:text-forest-700 hover:file:bg-forest-100" />
+                {uploading && <span className="text-xs text-forest-500">Uploaden...</span>}
+                {kit.cover_image && <img src={kit.cover_image} alt="Preview" className="h-10 w-10 object-cover rounded shadow" />}
+              </div>
+            </Field>
           </div>
           <Btn variant="brass" onClick={saveKitten} className="mt-6">Kitten toevoegen</Btn>
         </Card>
@@ -120,23 +154,35 @@ export default function LittersPage() {
                     <table className="w-full text-sm">
                       <thead>
                         <tr className="bg-white border-b border-forest-900/5 text-left text-xs uppercase tracking-wide text-forest-600/60">
-                          <th className="py-3 pl-5 pr-4">Kitten Naam</th>
+                          <th className="py-3 pl-5 pr-4 w-12">Foto</th>
+                          <th className="pr-4">Kitten Naam</th>
                           <th className="pr-4">Geslacht</th>
                           <th className="pr-4">Vacht (Kleur & Patroon)</th>
                           <th className="pr-4">Status</th>
+                          <th className="pr-4 text-right">Prijs (NL)</th>
                           <th className="pr-5 text-right">Acties</th>
                         </tr>
                       </thead>
                       <tbody className="bg-white">
                         {nestKittens.map((k) => (
                           <tr key={k.id} className="border-b border-forest-900/5 last:border-none hover:bg-forest-50/50 transition">
-                            <td className="py-3 pl-5 pr-4 font-semibold text-forest-900">{k.name}</td>
+                            <td className="py-2 pl-5 pr-4">
+                              {k.cover_image ? (
+                                <img src={k.cover_image} className="w-10 h-10 object-cover rounded bg-forest-100" alt="" />
+                              ) : (
+                                <div className="w-10 h-10 rounded bg-forest-50 border border-forest-100" />
+                              )}
+                            </td>
+                            <td className="pr-4 font-semibold text-forest-900">{k.name}</td>
                             <td className="pr-4 text-forest-700">{k.gender || k.sex}</td>
                             <td className="pr-4 text-forest-700">{[k.color, k.pattern].filter(Boolean).join(' ') || 'Onbekend'}</td>
                             <td className="pr-4">
                               <Select value={k.status} onChange={(e)=>updateKitten(k.id,{status:e.target.value})} className="!py-1 !text-xs !bg-transparent !border-none !px-0 cursor-pointer text-brass-700 font-medium">
                                 {STATUSES.map(s=><option key={s} value={s}>{s}</option>)}
                               </Select>
+                            </td>
+                            <td className="pr-4 text-right text-forest-800">
+                              € {k.price_nl || 0}
                             </td>
                             <td className="pr-5 text-right">
                               <button onClick={()=>deleteKitten(k.id)} className="text-xs text-red-500 hover:text-red-700 underline transition">Verwijder</button>

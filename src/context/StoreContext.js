@@ -53,6 +53,7 @@ export function StoreProvider({ children }) {
     const { data, error } = await supabase.from('litters').insert([{ 
       name: litter.name, 
       date_of_birth: litter.born,
+      description: litter.description || null,
       sire_name: litter.sire_name,
       dam_name: litter.dam_name 
     }]).select();
@@ -81,6 +82,7 @@ export function StoreProvider({ children }) {
       price_nl: kit.price_nl || kit.priceNL || 0,
       price_be: kit.price_be || kit.priceBE || 0,
       customer_nationality: kit.customer_nationality || 'NL',
+      cover_image: kit.cover_image || null,
       published: kit.published || false
     };
     const { data, error } = await supabase.from('cats').insert([dbKit]).select();
@@ -93,8 +95,8 @@ export function StoreProvider({ children }) {
     
     // DB Update: we map formData props naar db kolommen indien nodig
     let dbPatch = { ...patch };
-    if (patch.priceNL !== undefined) dbPatch.price_nl = patch.priceNL;
-    if (patch.priceBE !== undefined) dbPatch.price_be = patch.priceBE;
+    if (patch.priceNL !== undefined) { dbPatch.price_nl = patch.priceNL; delete dbPatch.priceNL; }
+    if (patch.priceBE !== undefined) { dbPatch.price_be = patch.priceBE; delete dbPatch.priceBE; }
     if (patch.secretToken !== undefined) delete dbPatch.secretToken; // prevent updating token names wrong
     if (patch.sex !== undefined) { dbPatch.gender = patch.sex; delete dbPatch.sex; }
     
