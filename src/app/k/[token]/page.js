@@ -2,11 +2,10 @@
 import { useState, useEffect } from 'react';
 import { notFound } from 'next/navigation';
 import { Logo, PawMark } from '@/components/ui';
-import { useStore } from '@/context/StoreContext';
+import { StoreProvider, useStore } from '@/context/StoreContext';
 
-export default function CustomerPortal({ params }) {
+function CustomerPortalInner({ token }) {
   const { kittens, news, media } = useStore();
-  const token = params.token;
   const [kittenData, setKittenData] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -138,5 +137,13 @@ export default function CustomerPortal({ params }) {
         </div>
       </main>
     </div>
+  );
+}
+
+export default function CustomerPortal({ params }) {
+  return (
+    <StoreProvider>
+      <CustomerPortalInner token={params.token} />
+    </StoreProvider>
   );
 }
