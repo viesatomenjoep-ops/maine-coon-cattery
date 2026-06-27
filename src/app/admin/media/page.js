@@ -35,10 +35,16 @@ export default function MediaDocumentenPage() {
   const { kittens, documents, media, addDocument, deleteDocument, addMedia, deleteMedia } = useStore();
   const [targetMedical, setTargetMedical] = useState(kittens[0]?.id || '');
   const [targetContract, setTargetContract] = useState(kittens[0]?.id || '');
+  
+  // States voor de previews na uploaden
+  const [previewMedical, setPreviewMedical] = useState(null);
+  const [previewContract, setPreviewContract] = useState(null);
+  const [previewGallery, setPreviewGallery] = useState(null);
 
   const handleUploadSuccess = async (category, kittenId, result) => {
     if (category === 'Galerij') {
       await addMedia({ url: result.info.secure_url, name: result.info.name });
+      setPreviewGallery({ url: result.info.secure_url, name: result.info.name });
     } else {
       await addDocument({ 
         url: result.info.secure_url, 
@@ -46,6 +52,11 @@ export default function MediaDocumentenPage() {
         category,
         cat_id: kittenId || null 
       });
+      if (category === 'Medisch') {
+        setPreviewMedical({ url: result.info.secure_url, name: result.info.name });
+      } else {
+        setPreviewContract({ url: result.info.secure_url, name: result.info.name });
+      }
     }
   };
 
@@ -95,6 +106,16 @@ export default function MediaDocumentenPage() {
                 </button>
               )}
             </NativeUploadWidget>
+            
+            {previewMedical && (
+              <div className="mt-3 flex items-center gap-3 p-3 rounded-xl border border-blue-200 bg-blue-50">
+                <span className="text-xl">✅</span>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-semibold text-blue-900 truncate">Geüpload: {previewMedical.name}</p>
+                  <a href={previewMedical.url} target="_blank" className="text-xs text-blue-600 hover:underline">Bekijk preview</a>
+                </div>
+              </div>
+            )}
           </div>
         </Card>
 
@@ -129,6 +150,16 @@ export default function MediaDocumentenPage() {
                 </button>
               )}
             </NativeUploadWidget>
+
+            {previewContract && (
+              <div className="mt-3 flex items-center gap-3 p-3 rounded-xl border border-terracotta-200 bg-terracotta-50">
+                <span className="text-xl">✅</span>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-semibold text-terracotta-900 truncate">Geüpload: {previewContract.name}</p>
+                  <a href={previewContract.url} target="_blank" className="text-xs text-terracotta-600 hover:underline">Bekijk preview</a>
+                </div>
+              </div>
+            )}
           </div>
         </Card>
 
@@ -154,6 +185,16 @@ export default function MediaDocumentenPage() {
               </button>
             )}
           </NativeUploadWidget>
+
+          {previewGallery && (
+            <div className="mt-4 flex items-center gap-3 p-3 rounded-xl border border-brass-200 bg-brass-50 max-w-sm">
+              <img src={previewGallery.url} alt="Preview" className="h-16 w-16 object-cover rounded-lg shadow-sm" />
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-semibold text-brass-900 truncate">Geüpload: {previewGallery.name}</p>
+                <span className="text-[10px] text-brass-700">In galerij geplaatst ✅</span>
+              </div>
+            </div>
+          )}
         </Card>
       </div>
 

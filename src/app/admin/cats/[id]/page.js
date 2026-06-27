@@ -32,8 +32,12 @@ const CldUploadWidget = ({ children, onSuccess, options }) => {
 
 export default function CatDossier({ params }) {
   const router = useRouter();
-  const { kittens, deleteKitten, updateKitten, addKitten } = useStore();
+  const { kittens, deleteKitten, updateKitten, addKitten, addDocument, addMedia, documents, media } = useStore();
   const isNew = params.id === 'new';
+
+  const catDocs = documents.filter(d => d.cat_id === params.id);
+  const catMedia = media.filter(m => m.media_url?.includes(params.id) || m.cat_id === params.id); // Or general media
+
 
   let hasCloudinary = false;
   try { hasCloudinary = Boolean(process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME); } catch (e) {}
@@ -190,7 +194,12 @@ export default function CatDossier({ params }) {
                 {true ? (
                   <CldUploadWidget 
                     signatureEndpoint="/api/sign-cloudinary-params"
-                    onSuccess={(res) => { if(res.event === 'success') alert('Document succesvol geüpload naar de kluis!'); }}
+                    onSuccess={async (res) => { 
+                      if(res.event === 'success') {
+                        await addDocument({ url: res.info.secure_url, name: 'Medisch Document', category: 'Medisch', cat_id: params.id });
+                        alert('Document succesvol geüpload en opgeslagen in de kluis!');
+                      } 
+                    }}
                     options={{ sources: ['local', 'url', 'camera'], multiple: true, folder: `cattery_medisch/${params.id}`, clientAllowedFormats: ['pdf', 'images', 'png', 'jpg', 'jpeg'] }}
                   >
                     {({ open }) => (
@@ -201,6 +210,16 @@ export default function CatDossier({ params }) {
                   </CldUploadWidget>
                 ) : (
                   <p className="text-xs text-red-600">Cloudinary (ENV) niet geconfigureerd.</p>
+                )}
+                
+                {catDocs.length > 0 && (
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {catDocs.map(d => (
+                      <a key={d.id} href={d.file_url} target="_blank" className="text-xs text-brass-700 bg-white border border-brass-200 px-2 py-1 rounded hover:bg-brass-100 transition truncate max-w-[200px]">
+                        📄 {d.notes || 'Document'}
+                      </a>
+                    ))}
+                  </div>
                 )}
               </div>
               <div className="col-span-full"><ActionBar /></div>
@@ -257,16 +276,16 @@ export default function CatDossier({ params }) {
                 <div className="space-y-4">
                   <div className="flex gap-2">
                     <div className="flex-1 min-w-0">
-                      <Input readOnly value={`https://mainecoon-app.vercel.app/k/${formData.secret_token_nl || 'Onbekend'}`} className="w-full bg-white font-mono text-[10px] text-forest-600" />
+                      <Input readOnly value={typeof window !== 'undefined' ? `${window.location.origin}/k/${formData.secret_token_nl || 'Onbekend'}` : `.../k/${formData.secret_token_nl || 'Onbekend'}`} className="w-full bg-white font-mono text-[10px] text-forest-600" />
                     </div>
-                    <Btn type="button" variant="ghost" onClick={() => { navigator.clipboard.writeText(`https://mainecoon-app.vercel.app/k/${formData.secret_token_nl}`); alert('NL Link gekopieerd!'); }} className="whitespace-nowrap shrink-0 text-xs px-3">Kopieer NL</Btn>
+                    <Btn type="button" variant="ghost" onClick={() => { navigator.clipboard.writeText(`${window.location.origin}/k/${formData.secret_token_nl}`); alert('NL Link gekopieerd!'); }} className="whitespace-nowrap shrink-0 text-xs px-3">Kopieer NL</Btn>
                   </div>
                   
                   <div className="flex gap-2">
                     <div className="flex-1 min-w-0">
-                      <Input readOnly value={`https://mainecoon-app.vercel.app/k/${formData.secret_token_be || 'Onbekend'}`} className="w-full bg-white font-mono text-[10px] text-forest-600" />
+                      <Input readOnly value={typeof window !== 'undefined' ? `${window.location.origin}/k/${formData.secret_token_be || 'Onbekend'}` : `.../k/${formData.secret_token_be || 'Onbekend'}`} className="w-full bg-white font-mono text-[10px] text-forest-600" />
                     </div>
-                    <Btn type="button" variant="ghost" onClick={() => { navigator.clipboard.writeText(`https://mainecoon-app.vercel.app/k/${formData.secret_token_be}`); alert('BE Link gekopieerd!'); }} className="whitespace-nowrap shrink-0 text-xs px-3">Kopieer BE</Btn>
+                    <Btn type="button" variant="ghost" onClick={() => { navigator.clipboard.writeText(`${window.location.origin}/k/${formData.secret_token_be}`); alert('BE Link gekopieerd!'); }} className="whitespace-nowrap shrink-0 text-xs px-3">Kopieer BE</Btn>
                   </div>
                 </div>
               </div>
@@ -278,7 +297,19 @@ export default function CatDossier({ params }) {
           {activeTab === 'media' && (
             <div className="space-y-4">
               <h2 className="font-display text-xl text-forest-900">Media Galerij</h2>
-              <MediaUpload catId={formData.secretToken} onUploadSuccess={(url) => console.log("Geüpload:", url)} />
+              <MediaUpload 
+                catId={params.id} 
+                onUploadSuccess={async (url) => {
+                   await addMedia({ url, name: formData.name });
+                   alert('Media succesvol geüpload!');
+                }} 
+              />
+              
+              <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3">
+                {media.filter(m => m.media_url?.includes(params.id)).map(m => (
+                  <img key={m.id} src={m.media_url} alt="" className="aspect-square w-full rounded-xl object-cover shadow-sm border border-forest-900/10" />
+                ))}
+              </div>
               <ActionBar />
             </div>
           )}

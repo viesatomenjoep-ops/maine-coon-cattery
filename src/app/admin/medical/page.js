@@ -7,11 +7,12 @@ import { PageHead, Card, Field, Input, Select, Btn } from '@/components/admin';
 const TYPES = ['Vaccinatie', 'Ontworming', 'Gezondheidscheck'];
 
 export default function MedicalPage() {
-  const { litters, kittens, addMedical } = useStore();
+  const { litters, kittens, addMedical, deleteMedical } = useStore();
   const [litterId, setLitterId] = useState('');
   const [selected, setSelected] = useState([]);
   const [entry, setEntry] = useState({ type: TYPES[0], date: '', note: '' });
   const [done, setDone] = useState(false);
+  const [singleEntry, setSingleEntry] = useState({}); // { catId: { type, date, note } }
 
   // Zorg dat we het eerste nestje selecteren als litters binnenkomen
   useEffect(() => {
@@ -87,18 +88,62 @@ export default function MedicalPage() {
                   {k.medical.length === 0 ? (
                     <p className="text-xs text-forest-600/60 italic">Nog geen medische historie.</p>
                   ) : (
-                    <div className="flex flex-wrap gap-2">
+                    <div className="flex flex-col gap-2 mt-2">
                       {k.medical.map((m, i) => {
                         const icon = m.type === 'Vaccinatie' ? '💉' : m.type === 'Ontworming' ? '💊' : '🩺';
                         return (
-                          <div key={i} className="flex items-center gap-1.5 rounded-lg border border-forest-900/5 bg-cream-50 px-2.5 py-1.5 text-xs text-forest-800" title={`${m.type}: ${m.note}`}>
-                            <span className="text-sm">{icon}</span>
-                            <span suppressHydrationWarning className="font-medium">{new Date(m.date).toLocaleDateString('nl-NL', { day:'numeric', month:'short' })}</span>
+                          <div key={i} className="flex items-center justify-between gap-1.5 rounded-lg border border-forest-900/5 bg-cream-50 px-3 py-2 text-xs text-forest-800">
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm">{icon}</span>
+                              <span suppressHydrationWarning className="font-medium min-w-[70px]">{new Date(m.date).toLocaleDateString('nl-NL', { day:'numeric', month:'short' })}</span>
+                              <span className="text-forest-600">{m.type}: {m.note}</span>
+                            </div>
+                            <button onClick={(e) => { e.preventDefault(); deleteMedical(k.id, i); }} className="text-red-500 hover:text-red-700 ml-2">Verwijder</button>
                           </div>
                         );
                       })}
                     </div>
                   )}
+
+                  <div className="mt-4 border-t border-forest-900/10 pt-3 flex flex-col gap-2">
+                    <p className="text-xs font-semibold text-forest-700 uppercase">Snelle Notitie Toevoegen</p>
+                    <div className="flex gap-2 text-xs">
+                      <Select 
+                        className="!text-xs !py-1 flex-1" 
+                        value={singleEntry[k.id]?.type || TYPES[0]} 
+                        onChange={(e)=>setSingleEntry(s=>({ ...s, [k.id]: { ...s[k.id], type: e.target.value } }))}
+                      >
+                        {TYPES.map(t=><option key={t}>{t}</option>)}
+                      </Select>
+                      <Input 
+                        type="date" 
+                        className="!text-xs !py-1 flex-1" 
+                        value={singleEntry[k.id]?.date || ''} 
+                        onChange={(e)=>setSingleEntry(s=>({ ...s, [k.id]: { ...s[k.id], date: e.target.value } }))}
+                      />
+                    </div>
+                    <div className="flex gap-2">
+                      <Input 
+                        placeholder="Notitie (bijv. Check-up)" 
+                        className="!text-xs !py-1 flex-[2]" 
+                        value={singleEntry[k.id]?.note || ''} 
+                        onChange={(e)=>setSingleEntry(s=>({ ...s, [k.id]: { ...s[k.id], note: e.target.value } }))}
+                      />
+                      <Btn 
+                        variant="brass" 
+                        className="!text-xs !py-1 flex-1 whitespace-nowrap"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          const se = singleEntry[k.id] || {};
+                          if (!se.date) return alert('Vul een datum in');
+                          addMedical(k.id, { type: se.type || TYPES[0], date: se.date, note: se.note || '' });
+                          setSingleEntry(s => ({ ...s, [k.id]: { type: TYPES[0], date: '', note: '' } }));
+                        }}
+                      >
+                        Opslaan
+                      </Btn>
+                    </div>
+                  </div>
                 </div>
               </Link>
             ))}

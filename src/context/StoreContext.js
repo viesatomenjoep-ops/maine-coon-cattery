@@ -34,6 +34,7 @@ export function StoreProvider({ children }) {
         if (kData) {
           const kittensWithMed = kData.map(k => {
             const med = vData?.filter(v => v.cat_id === k.id).map(v => ({
+              id: v.id,
               type: v.vaccine_name,
               date: v.vaccination_date,
               note: v.veterinarian_info
@@ -160,13 +161,39 @@ export function StoreProvider({ children }) {
       vaccination_date: entry.date,
       veterinarian_info: entry.note
     };
-    const { error } = await supabase.from('vaccinations').insert([post]);
-    if (!error) {
+    const { data, error } = await supabase.from('vaccinations').insert([post]).select();
+    if (!error && data) {
+      const dbEntry = { id: data[0].id, ...entry };
       setKittens(s => s.map(k => {
-        if (k.id === catId) return { ...k, medical: [...(k.medical || []), entry] };
+        if (k.id === catId) return { ...k, medical: [...(k.medical || []), dbEntry] };
         return k;
       }));
     }
+  };
+
+  const deleteMedical = async (catId, index) => {
+    // Vind the record ID
+    let recordId;
+    setKittens(s => {
+      const cat = s.find(k => k.id === catId);
+      if (cat && cat.medical[index]) {
+        recordId = cat.medical[index].id;
+      }
+      return s;
+    });
+    
+    if (recordId) {
+      await supabase.from('vaccinations').delete().eq('id', recordId);
+    }
+    
+    setKittens(s => s.map(k => {
+      if (k.id === catId) {
+        const newMed = [...k.medical];
+        newMed.splice(index, 1);
+        return { ...k, medical: newMed };
+      }
+      return k;
+    }));
   };
 
   return (
@@ -174,7 +201,7 @@ export function StoreProvider({ children }) {
       news, litters, kittens, parents, documents, media,
       addNews, deleteNews, addLitter, updateLitter, deleteLitter,
       addKitten, updateKitten, deleteKitten,
-      addDocument, deleteDocument, addMedia, deleteMedia, addMedical
+      addDocument, deleteDocument, addMedia, deleteMedia, addMedical, deleteMedical
     }}>
       {children}
     </StoreContext.Provider>

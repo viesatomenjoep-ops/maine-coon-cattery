@@ -1,5 +1,6 @@
 'use client';
 import { useState } from 'react';
+import Link from 'next/link';
 import { useStore } from '@/context/StoreContext';
 import { PageHead, Card, Field, Input, Select, Combobox, Btn } from '@/components/admin';
 
@@ -184,7 +185,8 @@ export default function LittersPage() {
                             <td className="pr-4 text-right text-forest-800">
                               € {k.price_nl || 0}
                             </td>
-                            <td className="pr-5 text-right">
+                            <td className="pr-5 text-right flex gap-3 justify-end items-center h-[57px]">
+                              <Link href={`/admin/cats/${k.id}`} className="text-xs text-emerald-600 hover:text-emerald-800 font-medium transition">Bewerk / Opslaan</Link>
                               <button onClick={()=>deleteKitten(k.id)} className="text-xs text-red-500 hover:text-red-700 underline transition">Verwijder</button>
                             </td>
                           </tr>
