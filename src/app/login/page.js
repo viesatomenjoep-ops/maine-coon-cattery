@@ -64,14 +64,14 @@ export default function LoginPage() {
           <form onSubmit={submit} className="mt-8 space-y-4">
             <div>
               <label className="text-xs font-semibold uppercase tracking-wide text-terracotta-800">
-                {mounted ? t('login_email') : 'E-mailadres'}
+                {mounted ? t('login_username') : 'Gebruikersnaam'}
               </label>
               <input
-                type="email"
+                type="text"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="mt-1.5 w-full rounded-xl border border-terracotta-900/10 bg-cream-50 px-4 py-3 text-base outline-none transition focus:border-terracotta-400 focus:ring-2 focus:ring-terracotta-200"
-                placeholder="naam@voorbeeld.nl"
+                placeholder="Vul uw gebruikersnaam in"
               />
             </div>
             <div>

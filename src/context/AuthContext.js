@@ -34,12 +34,16 @@ export function AuthProvider({ children }) {
     return () => subscription.unsubscribe();
   }, []);
 
-  const login = async (email, password) => {
-    // BYPASS AUTHENTICATION AS REQUESTED BY USER
-    const sessionUser = { role: 'admin', email: email || 'admin@wendysdreams.nl', name: 'Cattery beheer' };
-    setUser(sessionUser);
-    localStorage.setItem('cattery_bypass_auth', JSON.stringify(sessionUser));
-    return { ok: true, role: 'admin' };
+  const login = async (username, password) => {
+    // Aangepaste login zoals door gebruiker gevraagd
+    if (username === 'Willem11' && password === 'Maincoon11') {
+      const sessionUser = { role: 'admin', email: 'Willem11', name: 'Willem' };
+      setUser(sessionUser);
+      localStorage.setItem('cattery_bypass_auth', JSON.stringify(sessionUser));
+      return { ok: true, role: 'admin' };
+    }
+    
+    return { ok: false, error: 'Onjuiste gebruikersnaam of wachtwoord.' };
     
     /* ORIGINELE SUPABASE AUTH CODE:
     const { data, error } = await supabase.auth.signInWithPassword({
