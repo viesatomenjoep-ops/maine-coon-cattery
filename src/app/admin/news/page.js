@@ -43,10 +43,11 @@ function Toolbar({ exec }) {
 }
 
 export default function NewsEditor() {
-  const { news, addNews, deleteNews } = useStore();
+  const { news, kittens, addNews, deleteNews } = useStore();
   const editorRef = useRef(null);
   const [title, setTitle] = useState('');
   const [tag, setTag] = useState(TAGS[0]);
+  const [catId, setCatId] = useState('');
   const [imageUrl, setImageUrl] = useState('');
   const [saved, setSaved] = useState(false);
 
@@ -56,8 +57,8 @@ export default function NewsEditor() {
     const html = editorRef.current?.innerHTML?.trim();
     const text = editorRef.current?.innerText?.trim();
     if (!title.trim() || !text) return;
-    addNews({ title: title.trim(), body: text, html, tag, image: imageUrl });
-    setTitle(''); setTag(TAGS[0]); setImageUrl('');
+    addNews({ title: title.trim(), body: text, html, tag, image: imageUrl, cat_id: catId || null });
+    setTitle(''); setTag(TAGS[0]); setCatId(''); setImageUrl('');
     if (editorRef.current) editorRef.current.innerHTML = '';
     setSaved(true);
     setTimeout(() => setSaved(false), 2200);
@@ -71,9 +72,15 @@ export default function NewsEditor() {
 
       <div className="grid gap-6 lg:grid-cols-[1.2fr_1fr]">
         <Card>
-          <div className="grid gap-4 sm:grid-cols-[2fr_1fr]">
+          <div className="grid gap-4 sm:grid-cols-[2fr_1fr_1fr]">
             <Field label="Titel"><Input value={title} onChange={(e)=>setTitle(e.target.value)} placeholder="Bijv. Nieuw nestje verwacht!" /></Field>
             <Field label="Categorie"><Select value={tag} onChange={(e)=>setTag(e.target.value)}>{TAGS.map(t=><option key={t}>{t}</option>)}</Select></Field>
+            <Field label="Koppel aan Kitten">
+              <Select value={catId} onChange={(e)=>setCatId(e.target.value)}>
+                <option value="">Algemeen (Geen specifieke kat)</option>
+                {kittens.map(k => <option key={k.id} value={k.id}>{k.name}</option>)}
+              </Select>
+            </Field>
           </div>
 
           <div className="mt-4">
@@ -136,7 +143,8 @@ export default function NewsEditor() {
                 <div>
                   <p className="text-sm font-medium text-forest-900">{n.title}</p>
                   <p suppressHydrationWarning className="text-xs text-forest-600/70">
-                    {new Date(n.published_at).toLocaleDateString('nl-NL')} · {n.tag}
+                    {new Date(n.created_at).toLocaleDateString('nl-NL')} · {n.tag || 'Update'}
+                    {n.cat_id && ` · Gelinkt aan ${kittens.find(k => k.id === n.cat_id)?.name || 'Kitten'}`}
                   </p>
                 </div>
                 <button onClick={()=>deleteNews(n.id)} className="text-xs text-red-600 hover:underline">Verwijder</button>

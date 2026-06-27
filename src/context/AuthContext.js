@@ -1,47 +1,45 @@
 'use client';
-import { createContext, useContext, useState, useCallback, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabase';
 
-// Mock auth — mirrors Supabase Auth session shape { user: { role } }.
-// On migration, replace login/logout with supabase.auth.signInWithPassword / signOut.
+// Supabase Auth Context
 const AuthContext = createContext(null);
-
-const MOCK_USERS = {
-  'admin@wendysdreams.nl': { password: 'admin', role: 'admin', name: 'Cattery beheer' },
-};
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
-    // Laad opgeslagen inloggegevens bij het openen van de app
-    const stored = localStorage.getItem('cattery_mock_auth');
-    if (stored) {
-      try {
-        setUser(JSON.parse(stored));
-      } catch (e) {
-        console.error("Fout bij ophalen inloggegevens");
-      }
-    }
-    setIsInitialized(true);
+    // Check active session on mount
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user || null);
+      setIsInitialized(true);
+    });
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user || null);
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
-  const login = useCallback((email, password) => {
-    const found = MOCK_USERS[email?.toLowerCase().trim()];
-    if (found && found.password === password) {
-      const session = { email, role: found.role, name: found.name };
-      setUser(session);
-      // Bewaar lokaal
-      localStorage.setItem('cattery_mock_auth', JSON.stringify(session));
-      return { ok: true, role: found.role };
+  const login = async (email, password) => {
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: email.trim(),
+      password,
+    });
+    
+    if (error) {
+      return { ok: false, error: 'Onjuiste inloggegevens of account bestaat niet.' };
     }
-    return { ok: false, error: 'Onjuiste inloggegevens.' };
-  }, []);
+    
+    return { ok: true, role: 'admin' };
+  };
 
-  const logout = useCallback(() => {
-    setUser(null);
-    localStorage.removeItem('cattery_mock_auth');
-  }, []);
+  const logout = async () => {
+    await supabase.auth.signOut();
+  };
 
   // Wacht met renderen totdat we weten of iemand nog is ingelogd (voorkomt onnodige kicks naar /login)
   if (!isInitialized) return <div className="min-h-screen bg-cream-50" />;

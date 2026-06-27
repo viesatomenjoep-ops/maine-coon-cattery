@@ -51,7 +51,11 @@ export function StoreProvider({ children }) {
 
   // ---- news ----
   const addNews = async (post) => {
-    const newPost = { title: post.title, content: post.html || post.body }; // Mapping naar timeline_updates schema
+    const newPost = { 
+      title: post.title, 
+      content: post.html || post.body,
+      cat_id: post.cat_id || null
+    }; // Mapping naar timeline_updates schema
     const { data, error } = await supabase.from('timeline_updates').insert([newPost]).select();
     if (!error && data) setNews(s => [data[0], ...s]);
   };
