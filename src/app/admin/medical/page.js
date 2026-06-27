@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useStore } from '@/context/StoreContext';
 import { PageHead, Card, Field, Input, Select, Btn } from '@/components/admin';
@@ -8,10 +8,17 @@ const TYPES = ['Vaccinatie', 'Ontworming', 'Gezondheidscheck'];
 
 export default function MedicalPage() {
   const { litters, kittens, addMedical } = useStore();
-  const [litterId, setLitterId] = useState(litters[0]?.id || '');
+  const [litterId, setLitterId] = useState('');
   const [selected, setSelected] = useState([]);
   const [entry, setEntry] = useState({ type: TYPES[0], date: '', note: '' });
   const [done, setDone] = useState(false);
+
+  // Zorg dat we het eerste nestje selecteren als litters binnenkomen
+  useEffect(() => {
+    if (!litterId && litters.length > 0) {
+      setLitterId(litters[0].id);
+    }
+  }, [litters, litterId]);
 
   const inLitter = kittens.filter((k) => k.litter_id === litterId);
 

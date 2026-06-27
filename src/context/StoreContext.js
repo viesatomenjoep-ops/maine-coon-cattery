@@ -22,14 +22,26 @@ export function StoreProvider({ children }) {
         const { data: lData } = await supabase.from('litters').select('*');
         if (lData) setLitters(lData);
 
-        const { data: kData } = await supabase.from('cats').select('*').order('created_at', { ascending: false });
-        if (kData) setKittens(kData);
-
         const { data: dData } = await supabase.from('documents').select('*').order('created_at', { ascending: false });
         if (dData) setDocuments(dData);
 
         const { data: mData } = await supabase.from('media').select('*').order('created_at', { ascending: false });
         if (mData) setMedia(mData);
+
+        const { data: vData } = await supabase.from('vaccinations').select('*');
+
+        const { data: kData } = await supabase.from('cats').select('*').order('created_at', { ascending: false });
+        if (kData) {
+          const kittensWithMed = kData.map(k => {
+            const med = vData?.filter(v => v.cat_id === k.id).map(v => ({
+              type: v.vaccine_name,
+              date: v.vaccination_date,
+              note: v.veterinarian_info
+            })) || [];
+            return { ...k, medical: med };
+          });
+          setKittens(kittensWithMed);
+        }
       } catch (err) {
         console.error("Supabase fetch error:", err);
       }
@@ -140,12 +152,29 @@ export function StoreProvider({ children }) {
     setMedia(s => s.filter(m => m.id !== id));
   };
 
+  // ---- medical (vaccinations) ----
+  const addMedical = async (catId, entry) => {
+    const post = {
+      cat_id: catId,
+      vaccine_name: entry.type,
+      vaccination_date: entry.date,
+      veterinarian_info: entry.note
+    };
+    const { error } = await supabase.from('vaccinations').insert([post]);
+    if (!error) {
+      setKittens(s => s.map(k => {
+        if (k.id === catId) return { ...k, medical: [...(k.medical || []), entry] };
+        return k;
+      }));
+    }
+  };
+
   return (
     <StoreContext.Provider value={{
       news, litters, kittens, parents, documents, media,
       addNews, deleteNews, addLitter, updateLitter, deleteLitter,
       addKitten, updateKitten, deleteKitten,
-      addDocument, deleteDocument, addMedia, deleteMedia
+      addDocument, deleteDocument, addMedia, deleteMedia, addMedical
     }}>
       {children}
     </StoreContext.Provider>
