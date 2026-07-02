@@ -14,15 +14,30 @@ export default function CustomersPage() {
     name: '',
     email: '',
     whatsapp_number: '',
-    address: ''
+    street: '',
+    zipcode: '',
+    city: '',
+    country: 'Nederland'
   });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const newCustomer = await addCustomer(formData);
+    const addressStr = [
+      formData.street, 
+      formData.zipcode && formData.city ? `${formData.zipcode} ${formData.city}` : (formData.zipcode || formData.city), 
+      formData.country
+    ].filter(Boolean).join('\n');
+    
+    const newCustomer = await addCustomer({
+      name: formData.name,
+      email: formData.email,
+      whatsapp_number: formData.whatsapp_number,
+      address: addressStr
+    });
+    
     if (newCustomer) {
       setShowAdd(false);
-      setFormData({ name: '', email: '', whatsapp_number: '', address: '' });
+      setFormData({ name: '', email: '', whatsapp_number: '', street: '', zipcode: '', city: '', country: 'Nederland' });
       router.push(`/admin/customers/${newCustomer.id}`);
     }
   };
@@ -54,9 +69,31 @@ export default function CustomersPage() {
                 <input type="text" value={formData.whatsapp_number} onChange={e=>setFormData({...formData, whatsapp_number: e.target.value})} className="mt-1 block w-full rounded-xl border border-forest-900/10 p-3 shadow-sm focus:border-brass-400 focus:ring-brass-400" />
               </div>
             </div>
-            <div>
-              <label className="block text-sm font-medium text-forest-800">NAW / Adres</label>
-              <textarea value={formData.address} onChange={e=>setFormData({...formData, address: e.target.value})} rows={2} className="mt-1 block w-full rounded-xl border border-forest-900/10 p-3 shadow-sm focus:border-brass-400 focus:ring-brass-400" />
+            <div className="pt-2 border-t border-forest-900/10">
+              <label className="block text-sm font-bold text-forest-900 mb-3">NAW Gegevens</label>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-xs font-medium text-forest-800">Straat en Huisnummer</label>
+                  <input type="text" value={formData.street} onChange={e=>setFormData({...formData, street: e.target.value})} className="mt-1 block w-full rounded-xl border border-forest-900/10 p-3 shadow-sm focus:border-brass-400 focus:ring-brass-400" />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-medium text-forest-800">Postcode</label>
+                    <input type="text" value={formData.zipcode} onChange={e=>setFormData({...formData, zipcode: e.target.value})} className="mt-1 block w-full rounded-xl border border-forest-900/10 p-3 shadow-sm focus:border-brass-400 focus:ring-brass-400" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-forest-800">Woonplaats</label>
+                    <input type="text" value={formData.city} onChange={e=>setFormData({...formData, city: e.target.value})} className="mt-1 block w-full rounded-xl border border-forest-900/10 p-3 shadow-sm focus:border-brass-400 focus:ring-brass-400" />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-forest-800">Land</label>
+                  <select value={formData.country} onChange={e=>setFormData({...formData, country: e.target.value})} className="mt-1 block w-full rounded-xl border border-forest-900/10 p-3 shadow-sm focus:border-brass-400 focus:ring-brass-400">
+                    <option value="Nederland">Nederland</option>
+                    <option value="België">België</option>
+                  </select>
+                </div>
+              </div>
             </div>
             <div className="flex gap-3">
               <Btn variant="brass" type="submit">Aanmaken</Btn>
@@ -77,8 +114,17 @@ export default function CustomersPage() {
                   {c.whatsapp_number && <span>📱 {c.whatsapp_number}</span>}
                 </p>
               </div>
-              <div className="text-brass-600">
-                Beheren →
+              <div className="flex items-center gap-4 text-brass-600">
+                <span>Beheren →</span>
+                <button 
+                  onClick={(e) => { 
+                    e.preventDefault(); 
+                    if(confirm('Weet je zeker dat je deze klant wilt verwijderen?')) deleteCustomer(c.id); 
+                  }} 
+                  className="rounded bg-red-50 px-2 py-1 text-xs text-red-600 hover:bg-red-100 border border-red-100"
+                >
+                  Verwijder
+                </button>
               </div>
             </Card>
           </Link>
