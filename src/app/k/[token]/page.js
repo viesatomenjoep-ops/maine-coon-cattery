@@ -59,6 +59,15 @@ export default function CustomerPortal({ params }) {
         return { ...k, weights: catWeights };
       });
 
+      const { data: allMedia } = await supabase.from('media').select('*').order('created_at', { ascending: false });
+      const { data: allDocs } = await supabase.from('documents').select('*').order('created_at', { ascending: false });
+
+      const kittensWithEverything = kittensWithWeights.map(k => {
+        const catMedia = allMedia?.filter(m => m.media_url?.includes(k.id)) || [];
+        const catDocs = allDocs?.filter(d => d.cat_id === k.id) || [];
+        return { ...k, media: catMedia, documents: catDocs };
+      });
+
       const litterIds = (littersData || []).map(l => l.id);
 
       // Fetch gerelateerd nieuws (timeline_updates heeft hopelijk een cat_id of we halen gewoon alles op en filteren)
@@ -82,7 +91,7 @@ export default function CustomerPortal({ params }) {
       // 4. Bouw het dashboard object op
       setData({
         customer: customerData,
-        kittens: kittensWithWeights,
+        kittens: kittensWithEverything,
         litters: littersData || [],
         updates: customerUpdates
       });
@@ -162,6 +171,32 @@ export default function CustomerPortal({ params }) {
                             Bekijk Originele Stamboom →
                           </a>
                         )}
+                      </div>
+                    )}
+
+                    {/* Media Gallery */}
+                    {k.media && k.media.length > 0 && (
+                      <div className="mt-6 pt-6 border-t border-forest-900/10">
+                        <h4 className="text-sm font-bold uppercase tracking-wider text-forest-800 mb-4">Gallerij & Foto's</h4>
+                        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                          {k.media.map(m => (
+                            <img key={m.id} src={m.media_url} alt="Kitten foto" className="aspect-square w-full rounded-xl object-cover shadow-sm border border-forest-900/10 hover:opacity-90 transition cursor-pointer" onClick={() => window.open(m.media_url, '_blank')} />
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Documents */}
+                    {k.documents && k.documents.length > 0 && (
+                      <div className="mt-6 pt-6 border-t border-forest-900/10">
+                        <h4 className="text-sm font-bold uppercase tracking-wider text-forest-800 mb-4">Documenten (Medisch & Paspoort)</h4>
+                        <div className="flex flex-wrap gap-2">
+                          {k.documents.map(d => (
+                            <a key={d.id} href={d.file_url} target="_blank" rel="noreferrer" className="flex items-center gap-2 rounded-lg bg-forest-50 px-3 py-2 text-sm text-forest-800 hover:bg-forest-100 transition border border-forest-900/5 shadow-sm">
+                              📄 {d.notes || 'Document'}
+                            </a>
+                          ))}
+                        </div>
                       </div>
                     )}
                   </div>
