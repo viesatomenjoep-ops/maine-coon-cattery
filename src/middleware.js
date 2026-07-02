@@ -1,20 +1,13 @@
 import { NextResponse } from 'next/server'
 
 export function middleware(request) {
-  // Controleer of de request naar een klantportaal gaat (deze moeten altijd toegankelijk blijven zonder login)
-  const isCustomerPortal = request.nextUrl.pathname.startsWith('/k/');
-  
-  if (isCustomerPortal) {
-    return NextResponse.next()
-  }
-
-  // Controleer op Supabase sessie cookies (doorgaans in de vorm van sb-[id]-auth-token)
-  const hasSession = request.cookies.getAll().some(c => c.name.startsWith('sb-') && c.name.endsWith('-auth-token'));
-  
+  const isAdminRoute = request.nextUrl.pathname.startsWith('/admin')
   const isLoginPage = request.nextUrl.pathname === '/login'
 
-  // Als de gebruiker niet is ingelogd en niet op de loginpagina is: redirect naar /login
-  if (!hasSession && !isLoginPage) {
+  const hasSession = request.cookies.getAll().some(c => c.name.startsWith('sb-') && c.name.endsWith('-auth-token'));
+
+  // Als de gebruiker niet is ingelogd en een admin route probeert te openen: redirect naar /login
+  if (!hasSession && isAdminRoute) {
     return NextResponse.redirect(new URL('/login', request.url))
   }
 
@@ -26,7 +19,6 @@ export function middleware(request) {
   return NextResponse.next()
 }
 
-// Zorg dat de middleware op álle routes draait, behalve static bestanden en API's
 export const config = {
-  matcher: ['/((?!api|_next/static|_next/image|favicon.ico|images|logo.png).*)'],
+  matcher: ['/admin/:path*', '/login'],
 }
