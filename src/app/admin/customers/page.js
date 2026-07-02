@@ -76,7 +76,7 @@ export default function CustomersPage() {
                   <label className="block text-xs font-medium text-forest-800">Straat en Huisnummer</label>
                   <input type="text" value={formData.street} onChange={e=>setFormData({...formData, street: e.target.value})} className="mt-1 block w-full rounded-xl border border-forest-900/10 p-3 shadow-sm focus:border-brass-400 focus:ring-brass-400" />
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-xs font-medium text-forest-800">Postcode</label>
                     <input type="text" value={formData.zipcode} onChange={e=>setFormData({...formData, zipcode: e.target.value})} className="mt-1 block w-full rounded-xl border border-forest-900/10 p-3 shadow-sm focus:border-brass-400 focus:ring-brass-400" />
@@ -106,7 +106,7 @@ export default function CustomersPage() {
       <div className="grid gap-4">
         {customers.map((c) => (
           <Link key={c.id} href={`/admin/customers/${c.id}`} className="block group">
-            <Card className="flex items-center justify-between transition group-hover:border-brass-400 group-hover:shadow-md">
+            <Card className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 transition group-hover:border-brass-400 group-hover:shadow-md">
               <div>
                 <p className="font-display text-xl text-forest-900 group-hover:text-brass-600">{c.name}</p>
                 <p className="mt-1 text-sm text-forest-600">
@@ -114,7 +114,7 @@ export default function CustomersPage() {
                   {c.whatsapp_number && <span>📱 {c.whatsapp_number}</span>}
                 </p>
               </div>
-              <div className="flex items-center gap-4 text-brass-600">
+              <div className="flex items-center gap-4 text-brass-600 w-full sm:w-auto justify-end">
                 <span>Beheren →</span>
                 <button 
                   onClick={(e) => { 

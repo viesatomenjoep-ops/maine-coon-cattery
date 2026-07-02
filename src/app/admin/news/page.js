@@ -98,7 +98,7 @@ export default function NewsEditor() {
 
       <div className="grid gap-6 lg:grid-cols-[1.2fr_1fr]">
         <Card>
-          <div className="grid gap-4 sm:grid-cols-[2fr_1fr_1fr]">
+          <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-[2fr_1fr_1fr]">
             <Field label="Titel"><Input value={title} onChange={(e)=>setTitle(e.target.value)} placeholder="Bijv. Nieuw nestje verwacht!" /></Field>
             <Field label="Categorie"><Select value={tag} onChange={(e)=>setTag(e.target.value)}>{TAGS.map(t=><option key={t}>{t}</option>)}</Select></Field>
             <Field label="Koppel aan Kitten">
@@ -155,7 +155,7 @@ export default function NewsEditor() {
             </div>
           </Field>
 
-          <div className="mt-6 flex gap-3">
+          <div className="mt-6 flex flex-col sm:flex-row gap-3">
             <Btn variant="brass" onClick={publish}>{editingId ? 'Wijzigingen Opslaan' : 'Publiceren'}</Btn>
             {editingId ? (
               <Btn variant="ghost" onClick={cancelEdit}>Annuleren</Btn>
@@ -169,7 +169,7 @@ export default function NewsEditor() {
           <h2 className="mb-4 font-display text-xl text-forest-900">Gepubliceerd ({news.length})</h2>
           <div className="space-y-3">
             {news.map((n) => (
-              <div key={n.id} className="flex items-start justify-between gap-3 rounded-xl border border-forest-900/8 p-3">
+              <div key={n.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 rounded-xl border border-forest-900/8 p-3">
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-medium text-forest-900 truncate">{n.title}</p>
                   <p suppressHydrationWarning className="text-xs text-forest-600/70 truncate">

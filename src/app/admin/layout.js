@@ -7,16 +7,8 @@ import { StoreProvider } from '@/context/StoreContext';
 import { Logo, PawMark } from '@/components/ui';
 
 const NAV = [
-  { href: '/admin', label: 'Dashboard', icon: 'grid' },
-  { href: '/admin/news', label: 'Nieuws Editor', icon: 'edit' },
-  { href: '/admin/cats', label: 'Kattenbeheer', icon: 'cat' },
-  { href: '/admin/litters', label: 'Nestjes Overzicht', icon: 'cat' },
-  { href: '/admin/medical', label: 'Medisch Dashboard', icon: 'health' },
-  { href: '/admin/sales', label: 'Advertentie & Sales', icon: 'tag' },
-  { href: '/admin/customers', label: 'Klantenbestand', icon: 'customer' },
-  { href: '/admin/content', label: 'Website Editor', icon: 'layout' },
-  { href: '/admin/settings', label: 'Instellingen', icon: 'settings' },
-  { href: '/admin/media', label: 'Foto- en Videogalerij', icon: 'image' },
+  { href: '/admin', label: 'Startscherm', icon: 'grid' },
+  { href: '/admin/overview', label: 'Cattery Overzicht', icon: 'cat' },
 ];
 
 function Icon({ name, className = 'h-5 w-5' }) {

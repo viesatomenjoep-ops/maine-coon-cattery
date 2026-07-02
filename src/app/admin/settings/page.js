@@ -39,7 +39,7 @@ export default function SettingsPage() {
       <form onSubmit={handleSave} className="space-y-8 max-w-4xl">
         <Card>
           <h2 className="font-display text-xl text-forest-900 mb-6 border-b border-forest-900/10 pb-4">Cattery Informatie</h2>
-          <div className="grid gap-6 sm:grid-cols-2">
+          <div className="grid gap-6 grid-cols-1 sm:grid-cols-2">
             <Field label="Naam van de Cattery *">
               <Input required name="catteryName" value={formData.catteryName} onChange={handleChange} placeholder="Wendy's Dream" />
             </Field>
@@ -60,7 +60,7 @@ export default function SettingsPage() {
 
         <Card>
           <h2 className="font-display text-xl text-forest-900 mb-6 border-b border-forest-900/10 pb-4">Contactgegevens</h2>
-          <div className="grid gap-6 sm:grid-cols-2">
+          <div className="grid gap-6 grid-cols-1 sm:grid-cols-2">
             <Field label="Openbaar E-mailadres">
               <Input type="email" name="email" value={formData.email} onChange={handleChange} placeholder="info@voorbeeld.nl" />
             </Field>
@@ -75,7 +75,7 @@ export default function SettingsPage() {
 
         <Card>
           <h2 className="font-display text-xl text-forest-900 mb-6 border-b border-forest-900/10 pb-4">Social Media Links</h2>
-          <div className="grid gap-6 sm:grid-cols-2">
+          <div className="grid gap-6 grid-cols-1 sm:grid-cols-2">
             <Field label="Facebook Pagina URL">
               <Input type="url" name="facebook" value={formData.facebook} onChange={handleChange} placeholder="https://facebook.com/..." />
             </Field>
@@ -85,7 +85,7 @@ export default function SettingsPage() {
           </div>
         </Card>
 
-        <div className="flex justify-end gap-4 mt-8">
+        <div className="flex flex-col sm:flex-row justify-end gap-4 mt-8">
           <Btn variant="ghost" type="button" onClick={() => window.location.reload()}>Wijzigingen Annuleren</Btn>
           <Btn variant="brass" type="submit">Instellingen Opslaan</Btn>
         </div>

@@ -110,7 +110,7 @@ export default function ContentEditor() {
       {/* 1. HERO SLIDER EDITOR */}
       <div className="mb-16">
         <h3 className="text-xl font-semibold mb-4 text-forest-900 border-b pb-2">1. Hero Slider (Bovenaan website)</h3>
-        <div className="grid gap-8 md:grid-cols-3">
+        <div className="grid gap-8 grid-cols-1 md:grid-cols-3">
           {data.hero_slides.map((slide, idx) => (
             <div key={idx} className="bg-cream-50 rounded-[2rem] p-6 shadow-soft border border-forest-900/5">
               <ImageUploadBox 
@@ -185,9 +185,9 @@ export default function ContentEditor() {
                   />
                 </div>
                 <div className="w-full md:w-1/2 space-y-4">
-                  <div className="flex gap-2">
-                    <VisualInput value={stage.stage} onChange={(v) => { const n = [...data.timeline_stages]; n[idx].stage = v; setData({...data, timeline_stages: n}); }} className="text-xs font-semibold uppercase tracking-[0.2em] text-terracotta-500 w-1/2" />
-                    <VisualInput value={stage.age} onChange={(v) => { const n = [...data.timeline_stages]; n[idx].age = v; setData({...data, timeline_stages: n}); }} className="text-xs font-semibold uppercase tracking-[0.2em] text-terracotta-500 w-1/2" />
+                  <div className="flex flex-col sm:flex-row gap-2">
+                    <VisualInput value={stage.stage} onChange={(v) => { const n = [...data.timeline_stages]; n[idx].stage = v; setData({...data, timeline_stages: n}); }} className="text-xs font-semibold uppercase tracking-[0.2em] text-terracotta-500 w-full sm:w-1/2" />
+                    <VisualInput value={stage.age} onChange={(v) => { const n = [...data.timeline_stages]; n[idx].age = v; setData({...data, timeline_stages: n}); }} className="text-xs font-semibold uppercase tracking-[0.2em] text-terracotta-500 w-full sm:w-1/2" />
                   </div>
                   <VisualInput value={stage.title} onChange={(v) => { const n = [...data.timeline_stages]; n[idx].title = v; setData({...data, timeline_stages: n}); }} className="font-display text-3xl font-light text-ink" />
                   <VisualInput value={stage.desc} onChange={(v) => { const n = [...data.timeline_stages]; n[idx].desc = v; setData({...data, timeline_stages: n}); }} type="textarea" className="text-sm md:text-base font-light leading-relaxed text-ink/80" />

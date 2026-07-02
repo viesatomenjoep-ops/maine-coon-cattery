@@ -62,13 +62,13 @@ export default function LittersPage() {
     <>
       <PageHead label="Fokkerij" title="Nestjes & Kittens" />
 
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid gap-6 grid-cols-1 lg:grid-cols-2">
         {/* New litter */}
         <Card className="flex flex-col">
           <h2 className="mb-4 font-display text-xl text-forest-900">Nieuw nestje aanmaken</h2>
           <div className="grid gap-4 flex-1">
             <Field label="Naam nestje"><Input value={litter.name} onChange={(e)=>setLitter({...litter, name:e.target.value})} placeholder="Bijv. Noorderlicht" /></Field>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Field label="Vader (Sire)">
                 <Combobox id="siresList" options={sireNames} value={litter.sire_name} onChange={(e)=>setLitter({...litter, sire_name:e.target.value})} placeholder="Kies of typ" />
               </Field>
@@ -96,11 +96,11 @@ export default function LittersPage() {
                 {litters.map(l=><option key={l.id} value={l.id}>{l.name}</option>)}
               </Select>
             </Field>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Field label="Naam"><Input value={kit.name} onChange={(e)=>setKit({...kit, name:e.target.value})} placeholder="Bijv. Orion" /></Field>
               <Field label="Geslacht"><Select value={kit.sex} onChange={(e)=>setKit({...kit, sex:e.target.value})}>{SEXES.map(s=><option key={s} value={s}>{s}</option>)}</Select></Field>
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Field label="Kleurslag (Color)">
                 <Combobox id="colorsList" options={COLORS} value={kit.color} onChange={(e)=>setKit({...kit, color:e.target.value})} placeholder="Bijv. Black Solid" />
               </Field>
@@ -108,7 +108,7 @@ export default function LittersPage() {
                 <Combobox id="patternsList" options={PATTERNS} value={kit.pattern} onChange={(e)=>setKit({...kit, pattern:e.target.value})} placeholder="Bijv. Classic Tabby" />
               </Field>
             </div>
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <Field label="Status"><Select value={kit.status} onChange={(e)=>setKit({...kit, status:e.target.value})}>{STATUSES.map(s=><option key={s} value={s}>{s}</option>)}</Select></Field>
               <Field label="Prijs NL (€)"><Input type="number" value={kit.priceNL} onChange={(e)=>setKit({...kit, priceNL:Number(e.target.value)})} /></Field>
               <Field label="Prijs BE (€)"><Input type="number" value={kit.priceBE} onChange={(e)=>setKit({...kit, priceBE:Number(e.target.value)})} /></Field>
@@ -187,8 +187,8 @@ export default function LittersPage() {
                             <td className="pr-4 text-right text-forest-800">
                               € {k.price_nl || 0}
                             </td>
-                            <td className="pr-5 text-right flex gap-3 justify-end items-center h-[57px]">
-                              <Link href={`/admin/cats/${k.id}`} className="text-xs text-emerald-600 hover:text-emerald-800 font-medium transition">Bewerk / Opslaan</Link>
+                            <td className="pr-5 text-right flex flex-col sm:flex-row gap-2 sm:gap-3 justify-end items-start sm:items-center py-2 sm:py-0 h-auto sm:h-[57px]">
+                              <Link href={`/admin/cats/${k.id}`} className="text-xs text-emerald-600 hover:text-emerald-800 font-medium transition">Open Dossier</Link>
                               <button onClick={()=>{ if(confirm('Weet je zeker dat je dit kitten wilt verwijderen?')) deleteKitten(k.id); }} className="text-xs text-red-500 hover:text-red-700 underline transition">Verwijder</button>
                             </td>
                           </tr>
