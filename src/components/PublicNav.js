@@ -34,11 +34,17 @@ export default function PublicNav() {
   return (
     <>
       <header className="sticky top-0 z-50 bg-sand-50/95 backdrop-blur-md border-b border-terracotta-900/5 transition-all duration-300">
-      <nav className={`mx-auto relative flex max-w-7xl items-center justify-between px-4 transition-all duration-300 py-2 ${isScrolled ? 'md:py-4' : 'md:py-6'} md:px-12`}>
-        <Logo />
+      <nav className={`mx-auto relative flex max-w-7xl items-center px-4 transition-all duration-300 py-2 ${isScrolled ? 'md:py-4' : 'md:py-6'} md:px-12`}>
+        {/* Left Spacer for perfect desktop centering */}
+        <div className="hidden md:flex flex-1"></div>
+
+        {/* Centered Logo wrapper */}
+        <div className="flex-1 flex justify-center md:flex-none z-10">
+          <Logo />
+        </div>
 
         {/* Right side controls */}
-        <div className={`absolute right-6 top-1/2 -translate-y-1/2 md:relative md:right-0 md:top-auto md:translate-y-0 flex items-center gap-6 transition-all duration-300`}>
+        <div className={`absolute right-4 top-1/2 -translate-y-1/2 md:relative md:right-0 md:top-auto md:translate-y-0 md:flex-1 flex items-center justify-end gap-6 transition-all duration-300 z-20`}>
           {/* Desktop Language Selector */}
           {mounted && (
             <div className="hidden md:flex items-center gap-3 border border-terracotta-900/10 rounded-full px-4 py-1.5 bg-cream-50/50 shadow-soft">

@@ -16,23 +16,23 @@ export function Logo({ light = false }) {
   const rotation = Math.sin(scrollY * 0.005) * 10;
 
   return (
-    <Link href="/" className="group flex flex-row items-center justify-start transition-all duration-500 z-[60]">
+    <Link href="/" className="group flex flex-col md:flex-row items-center justify-center transition-all duration-500 z-[60]">
       <img 
         src="/logo.png" 
         alt="Wendy's Dream Logo" 
-        className={`w-auto object-contain transition-[height,opacity] duration-500 ease-out h-14 ${isScrolled ? 'md:h-12' : 'md:h-24'} ${light ? 'brightness-0 invert opacity-90' : 'opacity-90'}`} 
+        className={`w-auto object-contain transition-[height,opacity] duration-500 ease-out h-10 ${isScrolled ? 'md:h-12' : 'md:h-20'} ${light ? 'brightness-0 invert opacity-90' : 'opacity-90'}`} 
         style={{ transform: `rotate(${rotation}deg)` }}
       />
       <span 
-        className={`flex flex-col justify-center overflow-hidden transition-[max-height,max-width,opacity,margin] duration-500 ease-out max-h-[150px] max-w-[300px] opacity-100 ml-2 md:ml-0 ${
+        className={`flex flex-col justify-center items-center md:items-start overflow-hidden transition-[max-height,max-width,opacity,margin] duration-500 ease-out max-h-[150px] max-w-[300px] opacity-100 mt-1 md:mt-0 ml-0 md:ml-4 ${
           isScrolled 
             ? 'md:max-w-0 md:opacity-0 md:ml-0' 
-            : 'md:max-w-[500px] md:opacity-100 md:ml-6'
+            : 'md:max-w-[500px] md:opacity-100'
         }`}
       >
-        <span className={`block text-left whitespace-nowrap transition-transform duration-500 group-hover:scale-[1.02]`}>
-          <span className={`block font-display text-xl md:text-5xl font-semibold tracking-tight ${light ? 'text-cream-100' : 'text-ink'}`}>Wendy's Dream</span>
-          <span className={`block text-[8px] md:text-sm font-bold uppercase tracking-[0.25em] md:tracking-[0.35em] mt-0.5 md:mt-2 ${light ? 'text-cream-100/80' : 'text-terracotta-700'}`}>Maine Coon Cattery</span>
+        <span className={`block text-center md:text-left whitespace-nowrap transition-transform duration-500 group-hover:scale-[1.02]`}>
+          <span className={`block font-display text-[1.1rem] md:text-4xl font-semibold tracking-tight leading-tight ${light ? 'text-cream-100' : 'text-ink'}`}>Wendy's Dream</span>
+          <span className={`block text-[8px] md:text-xs font-bold uppercase tracking-[0.2em] md:tracking-[0.35em] mt-0 md:mt-1 ${light ? 'text-cream-100/80' : 'text-terracotta-700'}`}>Maine Coon Cattery</span>
         </span>
       </span>
     </Link>
