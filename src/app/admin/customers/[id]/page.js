@@ -89,13 +89,13 @@ export default function CustomerDetailPage({ params }) {
         title={customer.name} 
         label="Klantprofiel"
         action={
-          <div className="flex gap-3">
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 mt-4 sm:mt-0 w-full sm:w-auto">
             {customer.whatsapp_number && (
-              <Btn onClick={sendWhatsApp} className="bg-green-600 hover:bg-green-700 text-white">
+              <Btn onClick={sendWhatsApp} className="bg-green-600 hover:bg-green-700 text-white w-full sm:w-auto justify-center">
                 WhatsApp Sturen
               </Btn>
             )}
-            <Btn onClick={handleDelete} className="bg-red-50 text-red-700 border border-red-200 hover:bg-red-100">
+            <Btn onClick={handleDelete} className="bg-red-50 text-red-700 border border-red-200 hover:bg-red-100 w-full sm:w-auto justify-center">
               Klant Verwijderen
             </Btn>
           </div>
@@ -123,10 +123,11 @@ export default function CustomerDetailPage({ params }) {
               <p className="whitespace-pre-wrap">{customer.address || '-'}</p>
             </div>
             <div className="pt-4 border-t border-forest-900/10">
-              <span className="block font-semibold text-forest-900 mb-1">Unieke Klantenlink (Magisch Portaal)</span>
-              <code className="text-xs bg-forest-50 p-2 rounded block break-all text-brass-600">
-                {typeof window !== 'undefined' ? window.location.origin : ''}/k/{customer.token}
-              </code>
+              <span className="block font-semibold text-forest-900 mb-2">Unieke Klantenlink (Magisch Portaal)</span>
+              <div className="flex flex-col sm:flex-row gap-2">
+                <input readOnly value={typeof window !== 'undefined' ? `${window.location.origin}/k/${customer.token}` : ''} className="text-xs bg-forest-50 p-2.5 rounded-xl block flex-1 w-full text-brass-700 border border-forest-900/10 font-mono outline-none" />
+                <Btn variant="brass" onClick={() => { navigator.clipboard.writeText(`${window.location.origin}/k/${customer.token}`); alert('Link gekopieerd!'); }} className="text-xs shrink-0 w-full sm:w-auto justify-center py-2">Kopieer</Btn>
+              </div>
             </div>
           </div>
         </Card>
@@ -136,12 +137,12 @@ export default function CustomerDetailPage({ params }) {
           <Card>
             <h2 className="mb-4 font-display text-2xl text-forest-900">Gekoppelde Kittens</h2>
             
-            <div className="flex gap-2 mb-6">
-              <select value={selectedKitten} onChange={e=>setSelectedKitten(e.target.value)} className="flex-1 rounded-xl border border-forest-900/10 p-2.5 text-sm">
+            <div className="flex flex-col sm:flex-row gap-3 mb-6">
+              <select value={selectedKitten} onChange={e=>setSelectedKitten(e.target.value)} className="flex-1 w-full rounded-xl border border-forest-900/10 p-2.5 text-sm min-w-0">
                 <option value="">Kies een kitten om te koppelen...</option>
                 {availableKittens.map(k => <option key={k.id} value={k.id}>{k.name}</option>)}
               </select>
-              <Btn variant="brass" onClick={handleAssignKitten}>Koppel</Btn>
+              <Btn variant="brass" onClick={handleAssignKitten} className="shrink-0 w-full sm:w-auto justify-center">Koppel Kitten</Btn>
             </div>
 
             <ul className="space-y-3">
@@ -159,12 +160,12 @@ export default function CustomerDetailPage({ params }) {
           <Card>
             <h2 className="mb-4 font-display text-2xl text-forest-900">Gekoppelde Nestjes (Wachtlijst/Volgen)</h2>
             
-            <div className="flex gap-2 mb-6">
-              <select value={selectedLitter} onChange={e=>setSelectedLitter(e.target.value)} className="flex-1 rounded-xl border border-forest-900/10 p-2.5 text-sm">
+            <div className="flex flex-col sm:flex-row gap-3 mb-6">
+              <select value={selectedLitter} onChange={e=>setSelectedLitter(e.target.value)} className="flex-1 w-full rounded-xl border border-forest-900/10 p-2.5 text-sm min-w-0">
                 <option value="">Kies een nestje om te koppelen...</option>
                 {availableLitters.map(l => <option key={l.id} value={l.id}>{l.name}</option>)}
               </select>
-              <Btn variant="brass" onClick={handleAssignLitter}>Koppel</Btn>
+              <Btn variant="brass" onClick={handleAssignLitter} className="shrink-0 w-full sm:w-auto justify-center">Koppel Nestje</Btn>
             </div>
 
             <ul className="space-y-3">
