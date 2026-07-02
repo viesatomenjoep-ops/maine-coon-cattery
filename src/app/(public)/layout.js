@@ -19,10 +19,7 @@ export default function PublicLayout({ children }) {
           </div>
           <div className="text-sm">
             <p className="mb-3 text-xs font-semibold uppercase tracking-[0.3em] text-terracotta-300">{mounted ? t('nav_contact') : 'Contact'}</p>
-            <p className="font-light">info@wendysdream.nl</p>
-            <p className="font-light">+31 6 45070868</p>
-            <p className="mt-2 text-cream-100/50 font-light mb-4">{mounted ? t('footer_hours_label') : 'Ibiza & Nederland · Op afspraak'}</p>
-            
+            <p className="font-light mb-4">Alleen WhatsApp of bellen</p>
             <div className="flex flex-col gap-2 mt-4 max-w-[200px]">
               <a
                 href="https://wa.me/31645070868"

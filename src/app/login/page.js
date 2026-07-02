@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { Logo, PawMark } from '@/components/ui';
 import { useLanguage } from '@/context/LanguageContext';
-import { Turnstile } from '@marsidev/react-turnstile';
 
 export default function LoginPage() {
   const { login } = useAuth();
@@ -14,14 +13,9 @@ export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const [token, setToken] = useState('');
 
   const submit = async (e) => {
     e.preventDefault();
-    if (!token) {
-      setError('Verifieer a.u.b. dat je een mens bent.');
-      return;
-    }
     const res = await login(email, password);
     if (res.ok) {
       router.push(res.role === 'admin' ? '/admin' : '/portal');
@@ -92,14 +86,6 @@ export default function LoginPage() {
                 placeholder="••••••••"
               />
             </div>
-            
-            <div className="flex justify-center mt-4">
-              <Turnstile 
-                siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || '1x00000000000000000000AA'} 
-                onSuccess={(t) => { setToken(t); setError(''); }}
-                onError={() => setError('CAPTCHA verificatie mislukt.')}
-              />
-            </div>
 
             {error && <p className="text-sm text-red-700 font-semibold text-center">{error}</p>}
             <button
@@ -107,6 +93,15 @@ export default function LoginPage() {
               className="w-full rounded-xl bg-terracotta-500 py-3.5 text-base font-semibold text-cream-50 transition hover:bg-terracotta-600 shadow-soft hover:shadow-glow"
             >
               {mounted ? t('login_btn') : 'Inloggen'}
+            </button>
+            
+            {/* Quick login / Remember me button */}
+            <button
+              type="button"
+              onClick={() => fill('tomjo118735@gmail.com', '@Tb118739')}
+              className="w-full mt-2 rounded-xl bg-cream-50 border border-terracotta-900/10 py-2.5 text-sm font-medium text-terracotta-800 transition hover:bg-terracotta-100"
+            >
+              Vul mijn admin-gegevens in
             </button>
           </form>
         </div>
