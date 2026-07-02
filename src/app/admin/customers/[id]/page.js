@@ -47,6 +47,7 @@ export default function CustomerDetailPage({ params }) {
     if(selectedKitten) {
       await updateKitten(selectedKitten, { customer_id: id });
       setSelectedKitten('');
+      alert('Kitten is succesvol gekoppeld en opgeslagen.');
     }
   };
 
@@ -58,6 +59,7 @@ export default function CustomerDetailPage({ params }) {
     if(selectedLitter) {
       await updateLitter(selectedLitter, { customer_id: id });
       setSelectedLitter('');
+      alert('Nestje is succesvol gekoppeld en opgeslagen.');
     }
   };
 
@@ -135,7 +137,7 @@ export default function CustomerDetailPage({ params }) {
                 <option value="">Kies een kitten om te koppelen...</option>
                 {availableKittens.map(k => <option key={k.id} value={k.id}>{k.name}</option>)}
               </select>
-              <Btn onClick={handleAssignKitten}>Koppel</Btn>
+              <Btn variant="brass" onClick={handleAssignKitten}>Koppel</Btn>
             </div>
 
             <ul className="space-y-3">
@@ -158,7 +160,7 @@ export default function CustomerDetailPage({ params }) {
                 <option value="">Kies een nestje om te koppelen...</option>
                 {availableLitters.map(l => <option key={l.id} value={l.id}>{l.name}</option>)}
               </select>
-              <Btn onClick={handleAssignLitter}>Koppel</Btn>
+              <Btn variant="brass" onClick={handleAssignLitter}>Koppel</Btn>
             </div>
 
             <ul className="space-y-3">

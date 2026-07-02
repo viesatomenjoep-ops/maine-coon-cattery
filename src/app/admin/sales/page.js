@@ -32,8 +32,9 @@ const STATUSES = ['Beschikbaar', 'Gereserveerd', 'Verkocht'];
 const eur = (n) => new Intl.NumberFormat('nl-NL', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(n || 0);
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 
-const KittenSalesCard = ({ k, updateKitten, handleCopyLink }) => {
+const KittenSalesCard = ({ k, updateKitten, handleCopyLink, customers }) => {
   const [localK, setLocalK] = useState(k);
   const [saving, setSaving] = useState(false);
 
@@ -53,6 +54,8 @@ const KittenSalesCard = ({ k, updateKitten, handleCopyLink }) => {
     setSaving(false);
     alert('Wijzigingen succesvol opgeslagen!');
   };
+
+  const customer = customers?.find(c => c.id === k.customer_id);
 
   return (
           <Card className="flex flex-col">
@@ -129,20 +132,23 @@ const KittenSalesCard = ({ k, updateKitten, handleCopyLink }) => {
             </div>
 
             <div className="mt-4 rounded-xl border border-forest-900/10 bg-forest-50 p-3 space-y-3">
-               <div>
-                 <div className="flex items-center justify-between">
-                   <span className="text-xs font-medium uppercase text-forest-700">Link NL Klant</span>
-                   <button onClick={() => handleCopyLink(k.secret_token_nl)} className="text-xs font-semibold text-brass-600 hover:underline">Kopieer</button>
+               {customer ? (
+                 <div>
+                   <div className="flex items-center justify-between">
+                     <span className="text-xs font-medium uppercase text-forest-700">Link Klantenportaal</span>
+                     <button onClick={() => handleCopyLink(customer.token)} className="text-xs font-semibold text-brass-600 hover:underline">Kopieer Link</button>
+                   </div>
+                   <p className="mt-1 text-[10px] text-forest-600 font-medium">Klant: {customer.name}</p>
+                   <p className="mt-1 truncate text-[10px] text-forest-600 font-mono">.../k/{customer.token?.split('-')[0]}...</p>
                  </div>
-                 <p className="mt-1 truncate text-[10px] text-forest-600 font-mono">.../k/{k.secret_token_nl?.split('-')[0]}...</p>
-               </div>
-               <div className="border-t border-forest-900/10 pt-2">
-                 <div className="flex items-center justify-between">
-                   <span className="text-xs font-medium uppercase text-forest-700">Link BE Klant</span>
-                   <button onClick={() => handleCopyLink(k.secret_token_be)} className="text-xs font-semibold text-brass-600 hover:underline">Kopieer</button>
+               ) : (
+                 <div className="text-center py-2">
+                   <p className="text-xs text-forest-600 mb-2">Dit kitten is nog niet gekoppeld.</p>
+                   <Link href={`/admin/customers`}>
+                     <Btn variant="ghost" className="text-[10px] py-1 px-2 border-forest-900/20 w-full text-center block">Naar Klantenbestand</Btn>
+                   </Link>
                  </div>
-                 <p className="mt-1 truncate text-[10px] text-forest-600 font-mono">.../k/{k.secret_token_be?.split('-')[0]}...</p>
-               </div>
+               )}
             </div>
 
             <div className="mt-4 flex items-center justify-between border-t border-forest-900/8 pt-4">
@@ -159,7 +165,7 @@ const KittenSalesCard = ({ k, updateKitten, handleCopyLink }) => {
 };
 
 export default function SalesPage() {
-  const { kittens, updateKitten } = useStore();
+  const { kittens, updateKitten, customers } = useStore();
 
   let hasCloudinary = false;
   try { hasCloudinary = Boolean(process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME); } catch (e) {}
@@ -179,7 +185,7 @@ export default function SalesPage() {
 
       <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
         {kittens.map((k) => (
-          <KittenSalesCard key={k.id} k={k} updateKitten={updateKitten} handleCopyLink={handleCopyLink} />
+          <KittenSalesCard key={k.id} k={k} updateKitten={updateKitten} handleCopyLink={handleCopyLink} customers={customers} />
         ))}
       </div>
     </>
