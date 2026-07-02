@@ -10,6 +10,7 @@ export function StoreProvider({ children }) {
   const [kittens, setKittens] = useState([]);
   const [documents, setDocuments] = useState([]);
   const [media, setMedia] = useState([]);
+  const [customers, setCustomers] = useState([]);
 
   // Initiele data fetch
   useEffect(() => {
@@ -42,6 +43,9 @@ export function StoreProvider({ children }) {
           });
           setKittens(kittensWithMed);
         }
+
+        const { data: cData } = await supabase.from('customers').select('*').order('created_at', { ascending: false });
+        if (cData) setCustomers(cData);
       } catch (err) {
         console.error("Supabase fetch error:", err);
       }
@@ -124,6 +128,28 @@ export function StoreProvider({ children }) {
     setKittens(s => s.filter(k => k.id !== id));
   };
 
+  // ---- customers ----
+  const addCustomer = async (customer) => {
+    const { data, error } = await supabase.from('customers').insert([{
+      name: customer.name,
+      address: customer.address || null,
+      email: customer.email || null,
+      whatsapp_number: customer.whatsapp_number || null,
+    }]).select();
+    if (!error && data) setCustomers(s => [data[0], ...s]);
+    return data?.[0];
+  };
+
+  const updateCustomer = async (id, patch) => {
+    setCustomers(s => s.map(c => (c.id === id ? { ...c, ...patch } : c)));
+    await supabase.from('customers').update(patch).eq('id', id);
+  };
+
+  const deleteCustomer = async (id) => {
+    await supabase.from('customers').delete().eq('id', id);
+    setCustomers(s => s.filter(c => c.id !== id));
+  };
+
   // ---- documents ----
   const addDocument = async (doc) => {
     const { data, error } = await supabase.from('documents').insert([{
@@ -201,10 +227,11 @@ export function StoreProvider({ children }) {
 
   return (
     <StoreContext.Provider value={{
-      news, litters, kittens, documents, media,
+      news, litters, kittens, documents, media, customers,
       addNews, deleteNews, addLitter, updateLitter, deleteLitter,
       addKitten, updateKitten, deleteKitten,
-      addDocument, deleteDocument, addMedia, deleteMedia, addMedical, deleteMedical
+      addDocument, deleteDocument, addMedia, deleteMedia, addMedical, deleteMedical,
+      addCustomer, updateCustomer, deleteCustomer
     }}>
       {children}
     </StoreContext.Provider>

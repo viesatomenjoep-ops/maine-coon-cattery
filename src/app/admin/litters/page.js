@@ -74,7 +74,7 @@ export default function LittersPage() {
                 <Combobox id="damsList" options={damNames} value={litter.dam_name} onChange={(e)=>setLitter({...litter, dam_name:e.target.value})} placeholder="Kies of typ" />
               </Field>
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Field label="Geboortedatum"><Input type="date" value={litter.born} onChange={(e)=>setLitter({...litter, born:e.target.value})} /></Field>
             </div>
             <Field label="Beschrijving (Wervende tekst)">

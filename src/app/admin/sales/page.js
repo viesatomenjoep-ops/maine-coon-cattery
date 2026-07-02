@@ -100,7 +100,7 @@ const KittenSalesCard = ({ k, updateKitten, handleCopyLink }) => {
             </div>
 
             <div className="mt-4 space-y-3">
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <label className="block">
                   <span className="text-xs font-medium uppercase tracking-wide text-forest-700">Prijs NL (€)</span>
                   <Input type="number" value={localK.price_nl || ''} onChange={(e)=>setLocalK({...localK, price_nl:Number(e.target.value)})} className="mt-1" />
@@ -110,7 +110,7 @@ const KittenSalesCard = ({ k, updateKitten, handleCopyLink }) => {
                   <Input type="number" value={localK.price_be || ''} onChange={(e)=>setLocalK({...localK, price_be:Number(e.target.value)})} className="mt-1" />
                 </label>
               </div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <label className="block">
                   <span className="text-xs font-medium uppercase tracking-wide text-forest-700">Klant Nat.</span>
                   <Select value={localK.customer_nationality || 'NL'} onChange={(e)=>setLocalK({...localK, customer_nationality:e.target.value})} className="mt-1">
