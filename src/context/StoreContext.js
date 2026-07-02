@@ -108,16 +108,20 @@ export function StoreProvider({ children }) {
     }
   };
 
-  // ---- litters ----
   const addLitter = async (litter) => {
     const { data, error } = await supabase.from('litters').insert([{ 
       name: litter.name, 
-      date_of_birth: litter.born,
+      date_of_birth: litter.born || null,
       description: litter.description || null,
       sire_name: litter.sire_name,
       dam_name: litter.dam_name 
     }]).select();
-    if (!error && data) setLitters(s => [...s, data[0]]);
+    if (!error && data) {
+      setLitters(s => [...s, data[0]]);
+      return { data: data[0] };
+    }
+    console.error("Error adding litter:", error);
+    return { error };
   };
   
   const updateLitter = async (id, patch) => {

@@ -44,16 +44,34 @@ export default function LittersPage() {
     setUploading(false);
   };
 
-  const saveLitter = () => {
-    if (!litter.name.trim()) return;
-    addLitter({ ...litter });
+  const saveLitter = async () => {
+    if (!litter.name.trim()) {
+      alert("Vul a.u.b. een naam in voor het nestje.");
+      return;
+    }
+    const res = await addLitter({ ...litter, born: litter.born || null });
+    if (res?.error) {
+      alert("Fout bij opslaan nestje: " + res.error.message);
+      return;
+    }
     setLitter({ name: '', sire_name: '', dam_name: '', born: '', description: '' });
     alert('Het nestje is succesvol opgeslagen.');
   };
   
-  const saveKitten = () => {
-    if (!kit.name.trim() || !kit.litter_id) return;
-    addKitten({ ...kit, gender: kit.sex });
+  const saveKitten = async () => {
+    if (!kit.litter_id) {
+      alert("Selecteer a.u.b. een nestje om dit kitten aan toe te voegen.");
+      return;
+    }
+    if (!kit.name.trim()) {
+      alert("Vul a.u.b. een naam in voor het kitten.");
+      return;
+    }
+    const res = await addKitten({ ...kit, gender: kit.sex });
+    if (res?.error) {
+      alert("Fout bij opslaan kitten: " + res.error.message);
+      return;
+    }
     setKit({ ...kit, name: '', color: '', pattern: '', cover_image: '' });
     alert('Het kitten is succesvol toegevoegd en opgeslagen.');
   };
