@@ -8,8 +8,8 @@ export default function AdminDashboard() {
   const { user } = useStore();
 
   const tiles = [
-    { href: '/admin/news', label: 'Nieuws & Updates', icon: '📝', desc: 'Plaats nieuwe berichten' },
     { href: '/admin/cats', label: 'Katten & Dossiers', icon: '🐈', desc: 'Bekijk of bewerk katten' },
+    { href: '/admin/news', label: 'Nieuws & Updates', icon: '📝', desc: 'Plaats nieuwe berichten' },
     { href: '/admin/litters', label: 'Nestjes Overzicht', icon: '🐾', desc: 'Beheer alle nestjes' },
     { href: '/admin/medical', label: 'Medisch Dashboard', icon: '🩺', desc: 'Vaccinaties & gezondheid' },
     { href: '/admin/sales', label: 'Verkoop & Portaal', icon: '💰', desc: 'Prijzen en beschikbaarheid' },
