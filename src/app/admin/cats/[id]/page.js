@@ -32,7 +32,7 @@ const CldUploadWidget = ({ children, onSuccess, options }) => {
 
 export default function CatDossier({ params }) {
   const router = useRouter();
-  const { kittens, deleteKitten, updateKitten, addKitten, addDocument, addMedia, documents, media } = useStore();
+  const { kittens, deleteKitten, updateKitten, addKitten, addDocument, addMedia, documents, media, addWeight, deleteWeight } = useStore();
   const isNew = params.id === 'new';
 
   const catDocs = documents.filter(d => d.cat_id === params.id);
@@ -67,12 +67,12 @@ export default function CatDossier({ params }) {
     vaccineBatch: '',
     vaccineDate: '',
     vaccineValidUntil: '',
-    // Pedigree (vereenvoudigde JSON weergave)
-    pedigree: JSON.stringify({
-      parents: { sire: '', dam: '' },
-      grandparents: {},
-      greatGrandparents: {}
-    }, null, 2)
+    // Pedigree
+    pedigree_data: { sire: '', dam: '', image_url: '' },
+    // Weights
+    weights: [],
+    weightDate: '',
+    weightGrams: ''
   });
 
   useEffect(() => {
@@ -86,7 +86,11 @@ export default function CatDossier({ params }) {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    if (name === 'sire' || name === 'dam') {
+      setFormData(prev => ({ ...prev, pedigree_data: { ...prev.pedigree_data, [name]: value } }));
+    } else {
+      setFormData(prev => ({ ...prev, [name]: value }));
+    }
   };
 
   const handleSave = () => {
@@ -121,9 +125,10 @@ export default function CatDossier({ params }) {
     { id: 'paspoort', label: '1. Paspoort & Beschrijving' },
     { id: 'chip', label: '2. Identificatie & Chip' },
     { id: 'medisch', label: '3. Inentingen & Medisch' },
-    { id: 'stamboom', label: '4. Stamboom' },
-    { id: 'media', label: '5. Media & Galerij' },
-    { id: 'verkoop', label: '6. Portaal & Verkoop' }
+    { id: 'stamboom', label: '4. Stamboom & Afstamming' },
+    { id: 'gewicht', label: '5. Groei & Weegcurves' },
+    { id: 'media', label: '6. Media & Galerij' },
+    { id: 'verkoop', label: '7. Portaal & Verkoop' }
   ];
 
   return (
@@ -245,17 +250,95 @@ export default function CatDossier({ params }) {
               {/* TAB 4: STAMBOOM */}
               {activeTab === 'stamboom' && (
                 <div className="grid gap-4">
-                  <h2 className="font-display text-xl text-forest-900">Stamboom Editor</h2>
-                  <Field label="Stamboom Data">
-                    <Textarea 
-                      name="pedigree" 
-                      rows={12} 
-                      value={formData.pedigree} 
-                      onChange={handleChange} 
-                      className="font-mono text-xs"
-                    />
-                  </Field>
+                  <h2 className="font-display text-xl text-forest-900">Stamboom & Afstamming</h2>
+                  <Field label="Vader (Sire)"><Input name="sire" value={formData.pedigree_data?.sire || ''} onChange={handleChange} placeholder="Naam van de vader" /></Field>
+                  <Field label="Moeder (Dam)"><Input name="dam" value={formData.pedigree_data?.dam || ''} onChange={handleChange} placeholder="Naam van de moeder" /></Field>
+                  
+                  <div className="mt-4 rounded-xl border border-brass-200 bg-brass-50 p-4">
+                    <p className="mb-2 text-sm font-semibold text-brass-900">Digitale Stamboom Uploaden</p>
+                    <CldUploadWidget 
+                      signatureEndpoint="/api/sign-cloudinary-params"
+                      onSuccess={(res) => { 
+                        if(res.event === 'success') {
+                          setFormData(prev => ({ ...prev, pedigree_data: { ...prev.pedigree_data, image_url: res.info.secure_url } }));
+                        } 
+                      }}
+                      options={{ folder: `cattery_stamboom/${params.id}` }}
+                    >
+                      {({ open }) => (
+                        <Btn type="button" variant="ghost" onClick={(e) => { e.preventDefault(); open(); }} className="bg-white border-brass-300 text-brass-800 hover:bg-brass-100 mb-4">
+                          Stamboom Uploaden
+                        </Btn>
+                      )}
+                    </CldUploadWidget>
+                    {formData.pedigree_data?.image_url && (
+                      <div className="mt-2 relative inline-block">
+                        <img src={formData.pedigree_data.image_url} alt="Stamboom" className="h-48 rounded shadow border border-brass-200" />
+                        <Btn type="button" variant="danger" className="absolute -top-2 -right-2 text-[10px] px-2 py-1" onClick={() => setFormData(prev => ({ ...prev, pedigree_data: { ...prev.pedigree_data, image_url: null } }))}>X</Btn>
+                      </div>
+                    )}
+                  </div>
                   <ActionBar />
+                </div>
+              )}
+
+              {/* TAB 5: GEWICHT */}
+              {activeTab === 'gewicht' && (
+                <div className="grid gap-4">
+                  <h2 className="font-display text-xl text-forest-900">Groei & Weegcurves</h2>
+                  <p className="text-sm text-forest-700 mb-4">Voeg hier de wekelijkse wegingen toe. Deze curve wordt getoond in het klantenportaal.</p>
+                  
+                  <div className="flex items-end gap-4 bg-cream-50 p-4 rounded-xl border border-forest-900/10">
+                    <div className="flex-1">
+                      <Field label="Datum"><Input type="date" name="weightDate" value={formData.weightDate} onChange={handleChange} /></Field>
+                    </div>
+                    <div className="flex-1">
+                      <Field label="Gewicht (gram)"><Input type="number" name="weightGrams" value={formData.weightGrams} onChange={handleChange} placeholder="Bv. 1250" /></Field>
+                    </div>
+                    <Btn 
+                      type="button" 
+                      variant="brass" 
+                      onClick={async () => {
+                        if (formData.weightDate && formData.weightGrams && !isNew) {
+                          await addWeight(params.id, formData.weightDate, formData.weightGrams);
+                          setFormData(prev => ({ ...prev, weightDate: '', weightGrams: '' }));
+                        } else if (isNew) {
+                          alert('Sla het kitten eerst op voordat je gewichten kunt toevoegen.');
+                        }
+                      }}
+                    >
+                      Toevoegen
+                    </Btn>
+                  </div>
+
+                  {formData.weights && formData.weights.length > 0 ? (
+                    <div className="mt-4 rounded-xl overflow-hidden border border-forest-900/10 bg-white">
+                      <table className="w-full text-left text-sm">
+                        <thead className="bg-forest-50 text-forest-900">
+                          <tr>
+                            <th className="p-3 font-semibold">Datum</th>
+                            <th className="p-3 font-semibold">Gewicht</th>
+                            <th className="p-3 font-semibold text-right">Actie</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {formData.weights.map(w => (
+                            <tr key={w.id} className="border-t border-forest-900/5 hover:bg-forest-50/50">
+                              <td className="p-3 text-forest-800">{new Date(w.date).toLocaleDateString('nl-NL')}</td>
+                              <td className="p-3 font-medium text-forest-900">{w.grams} g</td>
+                              <td className="p-3 text-right">
+                                <button type="button" onClick={() => deleteWeight(params.id, w.id)} className="text-red-500 hover:text-red-700 text-xs font-semibold uppercase">Verwijder</button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  ) : (
+                    <p className="text-sm text-forest-500 italic mt-2">Nog geen gewichten toegevoegd.</p>
+                  )}
+                  
+                  <div className="mt-8"><ActionBar /></div>
                 </div>
               )}
 

@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { notFound } from 'next/navigation';
 import { Logo, PawMark } from '@/components/ui';
 import { supabase } from '@/lib/supabase';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 // Helper component for updates
 function TimelineUpdate({ update }) {
@@ -47,6 +48,17 @@ export default function CustomerPortal({ params }) {
 
       // 3. Haal nieuws/updates, media en medische gegevens op voor deze kittens
       const catIds = (kittensData || []).map(k => k.id);
+      
+      const { data: weightsData } = await supabase.from('cat_weights').select('*').in('cat_id', catIds.length ? catIds : ['00000000-0000-0000-0000-000000000000']).order('weigh_date', { ascending: true });
+      
+      const kittensWithWeights = (kittensData || []).map(k => {
+        const catWeights = (weightsData || []).filter(w => w.cat_id === k.id).map(w => ({
+          date: new Date(w.weigh_date).toLocaleDateString('nl-NL', { day: 'numeric', month: 'short' }),
+          grams: w.weight_grams
+        }));
+        return { ...k, weights: catWeights };
+      });
+
       const litterIds = (littersData || []).map(l => l.id);
 
       // Fetch gerelateerd nieuws (timeline_updates heeft hopelijk een cat_id of we halen gewoon alles op en filteren)
@@ -70,7 +82,7 @@ export default function CustomerPortal({ params }) {
       // 4. Bouw het dashboard object op
       setData({
         customer: customerData,
-        kittens: kittensData || [],
+        kittens: kittensWithWeights,
         litters: littersData || [],
         updates: customerUpdates
       });
@@ -120,6 +132,38 @@ export default function CustomerPortal({ params }) {
                     <h3 className="font-display text-xl text-forest-900">{k.name}</h3>
                     <p className="text-sm text-forest-600">{k.color} · {k.gender}</p>
                     <p className="text-sm text-forest-600 mt-2 font-medium">Status: {k.status}</p>
+
+                    {/* Weights Chart */}
+                    {k.weights && k.weights.length > 0 && (
+                      <div className="mt-6">
+                        <h4 className="text-sm font-bold uppercase tracking-wider text-forest-800 mb-4">Groei (Weegcurve)</h4>
+                        <div className="h-48 w-full">
+                          <ResponsiveContainer width="100%" height="100%">
+                            <LineChart data={k.weights} margin={{ top: 5, right: 5, bottom: 5, left: -20 }}>
+                              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
+                              <XAxis dataKey="date" tick={{fontSize: 10, fill: '#4B5563'}} axisLine={false} tickLine={false} />
+                              <YAxis tick={{fontSize: 10, fill: '#4B5563'}} axisLine={false} tickLine={false} tickFormatter={(val) => `${val}g`} />
+                              <Tooltip contentStyle={{borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'}} />
+                              <Line type="monotone" dataKey="grams" stroke="#C4A484" strokeWidth={3} dot={{r: 4, fill: '#C4A484', strokeWidth: 0}} activeDot={{r: 6}} />
+                            </LineChart>
+                          </ResponsiveContainer>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Pedigree */}
+                    {k.pedigree_data && (k.pedigree_data.sire || k.pedigree_data.dam || k.pedigree_data.image_url) && (
+                      <div className="mt-6 pt-6 border-t border-forest-900/10">
+                        <h4 className="text-sm font-bold uppercase tracking-wider text-forest-800 mb-3">Stamboom & Afstamming</h4>
+                        {k.pedigree_data.sire && <p className="text-sm text-forest-700">Vader: <span className="font-medium text-forest-900">{k.pedigree_data.sire}</span></p>}
+                        {k.pedigree_data.dam && <p className="text-sm text-forest-700 mt-1">Moeder: <span className="font-medium text-forest-900">{k.pedigree_data.dam}</span></p>}
+                        {k.pedigree_data.image_url && (
+                          <a href={k.pedigree_data.image_url} target="_blank" rel="noreferrer" className="mt-3 inline-block text-xs font-semibold uppercase tracking-wider text-brass-600 hover:text-brass-700 transition">
+                            Bekijk Originele Stamboom →
+                          </a>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
               ))}

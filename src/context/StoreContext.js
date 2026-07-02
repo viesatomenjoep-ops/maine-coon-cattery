@@ -30,6 +30,7 @@ export function StoreProvider({ children }) {
         if (mData) setMedia(mData);
 
         const { data: vData } = await supabase.from('vaccinations').select('*');
+        const { data: wData } = await supabase.from('cat_weights').select('*').order('weigh_date', { ascending: true });
 
         const { data: kData } = await supabase.from('cats').select('*').order('created_at', { ascending: false });
         if (kData) {
@@ -40,7 +41,14 @@ export function StoreProvider({ children }) {
               date: v.vaccination_date,
               note: v.veterinarian_info
             })) || [];
-            return { ...k, medical: med };
+            
+            const catWeights = wData?.filter(w => w.cat_id === k.id).map(w => ({
+              id: w.id,
+              date: w.weigh_date,
+              grams: w.weight_grams
+            })) || [];
+            
+            return { ...k, medical: med, weights: catWeights };
           });
           setKittens(kittensWithMed);
         }
@@ -235,12 +243,42 @@ export function StoreProvider({ children }) {
     }));
   };
 
+  // ---- weights ----
+  const addWeight = async (catId, date, grams) => {
+    const { data, error } = await supabase.from('cat_weights').insert([{
+      cat_id: catId,
+      weigh_date: date,
+      weight_grams: parseInt(grams, 10)
+    }]).select();
+    if (!error && data) {
+      const dbEntry = { id: data[0].id, date: data[0].weigh_date, grams: data[0].weight_grams };
+      setKittens(s => s.map(k => {
+        if (k.id === catId) {
+          const newWeights = [...(k.weights || []), dbEntry].sort((a, b) => new Date(a.date) - new Date(b.date));
+          return { ...k, weights: newWeights };
+        }
+        return k;
+      }));
+    }
+  };
+
+  const deleteWeight = async (catId, weightId) => {
+    await supabase.from('cat_weights').delete().eq('id', weightId);
+    setKittens(s => s.map(k => {
+      if (k.id === catId) {
+        return { ...k, weights: k.weights.filter(w => w.id !== weightId) };
+      }
+      return k;
+    }));
+  };
+
   return (
     <StoreContext.Provider value={{
       news, litters, kittens, documents, media, customers, siteContent,
       addNews, deleteNews, addLitter, updateLitter, deleteLitter,
       addKitten, updateKitten, deleteKitten,
       addDocument, deleteDocument, addMedia, deleteMedia, addMedical, deleteMedical,
+      addWeight, deleteWeight,
       addCustomer, updateCustomer, deleteCustomer,
       saveSiteContent
     }}>
