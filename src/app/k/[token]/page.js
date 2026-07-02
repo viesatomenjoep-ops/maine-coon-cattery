@@ -117,7 +117,7 @@ export default function CustomerPortal({ params }) {
         <Logo />
       </header>
 
-      <main className="mx-auto max-w-2xl px-6 pt-12">
+      <main className="mx-auto max-w-5xl px-6 pt-12">
         <div className="text-center mb-12">
           <PawMark className="mx-auto mb-4 h-8 w-8 text-brass-400" />
           <h1 className="font-display text-4xl text-forest-950">Hallo {customer.name}!</h1>
@@ -126,8 +126,8 @@ export default function CustomerPortal({ params }) {
 
         {kittens.length > 0 && (
           <div className="mb-12">
-            <h2 className="font-display text-2xl text-forest-900 mb-6">Jouw Gekoppelde Kittens</h2>
-            <div className="grid gap-6 sm:grid-cols-2">
+            <h2 className="font-display text-2xl text-forest-900 mb-6 text-center">Jouw Gekoppelde Kittens</h2>
+            <div className={`grid gap-6 ${kittens.length === 1 ? 'max-w-xl mx-auto' : 'sm:grid-cols-2 lg:grid-cols-3'}`}>
               {kittens.map(k => (
                 <div key={k.id} className="overflow-hidden rounded-2xl border border-forest-900/10 bg-white shadow-soft">
                   {k.cover_image ? (
@@ -208,8 +208,8 @@ export default function CustomerPortal({ params }) {
 
         {litters.length > 0 && (
           <div className="mb-12">
-            <h2 className="font-display text-2xl text-forest-900 mb-6">Nestjes die je volgt</h2>
-            <div className="grid gap-6">
+            <h2 className="font-display text-2xl text-forest-900 mb-6 text-center">Nestjes die je volgt</h2>
+            <div className={`grid gap-6 ${litters.length === 1 ? 'max-w-xl mx-auto' : 'sm:grid-cols-2 lg:grid-cols-3'}`}>
               {litters.map(l => (
                 <div key={l.id} className="rounded-2xl border border-forest-900/10 bg-white shadow-soft p-5">
                   <h3 className="font-display text-xl text-forest-900">{l.name}</h3>
@@ -222,9 +222,9 @@ export default function CustomerPortal({ params }) {
         )}
 
         <div className="mt-12">
-          <h2 className="font-display text-2xl text-forest-900">Jouw Tijdlijn & Updates</h2>
+          <h2 className="font-display text-2xl text-forest-900 text-center">Jouw Tijdlijn & Updates</h2>
           {updates.length > 0 ? (
-            <div className="mt-6 space-y-8">
+            <div className="mt-8 space-y-8 max-w-2xl mx-auto">
               {updates.map((update, i) => <TimelineUpdate key={update.id || i} update={update} />)}
             </div>
           ) : (
