@@ -67,17 +67,45 @@ export function StoreProvider({ children }) {
 
   // ---- news ----
   const addNews = async (post) => {
-    const newPost = { 
-      title: post.title, 
-      content: post.html || post.body,
-      cat_id: post.cat_id || null
-    }; // Mapping naar timeline_updates schema
+    // We map frontend props to db columns
+    const newPost = {
+      title: post.title,
+      content: post.html || post.body, // timeline_updates usually stores HTML if we use a WYSIWYG
+      cat_id: post.cat_id,
+      // tags are not in timeline_updates, but let's assume content/title is main
+    };
     const { data, error } = await supabase.from('timeline_updates').insert([newPost]).select();
     if (!error && data) setNews(s => [data[0], ...s]);
   };
+
+  const updateNews = async (id, post) => {
+    const patch = {
+      title: post.title,
+      content: post.html || post.body,
+      cat_id: post.cat_id
+    };
+    const { error } = await supabase.from('timeline_updates').update(patch).eq('id', id);
+    if (!error) {
+      setNews(s => s.map(n => n.id === id ? { ...n, ...patch } : n));
+    } else {
+      console.error("Error updating news:", error);
+      alert("Fout bij wijzigen van nieuwsbericht.");
+    }
+  };
+
   const deleteNews = async (id) => {
-    await supabase.from('timeline_updates').delete().eq('id', id);
-    setNews(s => s.filter(p => p.id !== id));
+    try {
+      const { error } = await supabase.from('timeline_updates').delete().eq('id', id);
+      if (error) {
+        console.error("Error deleting news:", error);
+        alert("Fout bij verwijderen. Mogelijk geen permissie.");
+      } else {
+        setNews(s => s.filter(p => p.id !== id));
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Netwerkfout bij verwijderen.");
+    }
   };
 
   // ---- litters ----
@@ -102,20 +130,30 @@ export function StoreProvider({ children }) {
     setLitters(s => s.filter(l => l.id !== id));
   };
 
-  // ---- kittens ----
   const addKitten = async (kit) => {
     const dbKit = {
-      litter_id: kit.litter_id,
+      litter_id: kit.litter_id || null,
       name: kit.name || 'Naamloos',
       gender: kit.gender || kit.sex,
       color: kit.color,
       pattern: kit.pattern,
-      status: kit.status || 'beschikbaar',
-      price_nl: kit.price_nl || kit.priceNL || 0,
-      price_be: kit.price_be || kit.priceBE || 0,
+      status: kit.status || 'Beschikbaar',
+      price_nl: kit.price_nl || kit.priceNL || null,
+      price_be: kit.price_be || kit.priceBE || null,
       customer_nationality: kit.customer_nationality || 'NL',
       cover_image: kit.cover_image || null,
-      published: kit.published || false
+      published: kit.published || false,
+      date_of_birth: kit.dateOfBirth || kit.date_of_birth || null,
+      chip_number: kit.chipNumber || kit.chip_number || null,
+      pedigree_data: {
+        ...(kit.pedigree_data || {}),
+        chipImplantDate: kit.chipImplantDate || '',
+        chipLocation: kit.chipLocation || '',
+        vetName: kit.vetName || '',
+        breed: kit.breed || 'Maine Coon',
+        species: kit.species || 'Cat'
+      },
+      customer_id: kit.customer_id || null
     };
     const { data, error } = await supabase.from('cats').insert([dbKit]).select();
     if (!error && data) setKittens(s => [...s, data[0]]);
@@ -126,14 +164,38 @@ export function StoreProvider({ children }) {
     setKittens(s => s.map(k => (k.id === id ? { ...k, ...patch } : k)));
     
     // DB Update: we map formData props naar db kolommen indien nodig
-    let dbPatch = { ...patch };
-    if (patch.priceNL !== undefined) { dbPatch.price_nl = patch.priceNL; delete dbPatch.priceNL; }
-    if (patch.priceBE !== undefined) { dbPatch.price_be = patch.priceBE; delete dbPatch.priceBE; }
-    if (patch.secretToken !== undefined) delete dbPatch.secretToken; // prevent updating token names wrong
-    if (patch.sex !== undefined) { dbPatch.gender = patch.sex; delete dbPatch.sex; }
-    if (dbPatch.customer_id === '') dbPatch.customer_id = null;
+    let dbPatch = {};
+    if (patch.name !== undefined) dbPatch.name = patch.name;
+    if (patch.sex !== undefined) dbPatch.gender = patch.sex;
+    if (patch.color !== undefined) dbPatch.color = patch.color;
+    if (patch.pattern !== undefined) dbPatch.pattern = patch.pattern;
+    if (patch.status !== undefined) dbPatch.status = patch.status;
+    if (patch.priceNL !== undefined) dbPatch.price_nl = patch.priceNL === '' ? null : patch.priceNL;
+    if (patch.priceBE !== undefined) dbPatch.price_be = patch.priceBE === '' ? null : patch.priceBE;
+    if (patch.customer_nationality !== undefined) dbPatch.customer_nationality = patch.customer_nationality;
+    if (patch.cover_image !== undefined) dbPatch.cover_image = patch.cover_image;
+    if (patch.published !== undefined) dbPatch.published = patch.published;
+    if (patch.dateOfBirth !== undefined) dbPatch.date_of_birth = patch.dateOfBirth === '' ? null : patch.dateOfBirth;
+    if (patch.chipNumber !== undefined) dbPatch.chip_number = patch.chipNumber;
+    if (patch.customer_id !== undefined) dbPatch.customer_id = patch.customer_id === '' ? null : patch.customer_id;
+    if (patch.litter_id !== undefined) dbPatch.litter_id = patch.litter_id;
     
-    await supabase.from('cats').update(dbPatch).eq('id', id);
+    if (patch.pedigree_data !== undefined || patch.chipImplantDate !== undefined || patch.chipLocation !== undefined || patch.vetName !== undefined || patch.breed !== undefined || patch.species !== undefined) {
+      // Find current cat to merge pedigree_data
+      const currentCat = kittens.find(k => k.id === id) || {};
+      dbPatch.pedigree_data = {
+        ...(currentCat.pedigree_data || {}),
+        ...(patch.pedigree_data || {}),
+      };
+      if (patch.chipImplantDate !== undefined) dbPatch.pedigree_data.chipImplantDate = patch.chipImplantDate;
+      if (patch.chipLocation !== undefined) dbPatch.pedigree_data.chipLocation = patch.chipLocation;
+      if (patch.vetName !== undefined) dbPatch.pedigree_data.vetName = patch.vetName;
+      if (patch.breed !== undefined) dbPatch.pedigree_data.breed = patch.breed;
+      if (patch.species !== undefined) dbPatch.pedigree_data.species = patch.species;
+    }
+    
+    const { error } = await supabase.from('cats').update(dbPatch).eq('id', id);
+    if (error) console.error("Error updating cat:", error);
   };
 
   const deleteKitten = async (id) => {

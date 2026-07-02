@@ -43,7 +43,7 @@ export function AuthProvider({ children }) {
   };
 
   // Wacht met renderen totdat we weten of iemand nog is ingelogd (voorkomt onnodige kicks naar /login)
-  if (!isInitialized) return <div className="min-h-screen bg-cream-50" />;
+  // Dit blokkeerde de hele website rendering, nu verwijderd omdat middleware dit opvangt.
 
   return (
     <AuthContext.Provider value={{ user, login, logout }}>

@@ -43,8 +43,10 @@ function Toolbar({ exec }) {
 }
 
 export default function NewsEditor() {
-  const { news, kittens, addNews, deleteNews } = useStore();
+  const { news, kittens, addNews, updateNews, deleteNews } = useStore();
   const editorRef = useRef(null);
+  
+  const [editingId, setEditingId] = useState(null);
   const [title, setTitle] = useState('');
   const [tag, setTag] = useState(TAGS[0]);
   const [catId, setCatId] = useState('');
@@ -53,22 +55,45 @@ export default function NewsEditor() {
 
   const exec = (cmd, val) => document.execCommand(cmd, false, val);
 
+  const handleEdit = (n) => {
+    setEditingId(n.id);
+    setTitle(n.title || '');
+    setTag(n.tag || TAGS[0]);
+    setCatId(n.cat_id || '');
+    setImageUrl(n.image || '');
+    if (editorRef.current) editorRef.current.innerHTML = n.content || '';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const cancelEdit = () => {
+    setEditingId(null);
+    setTitle(''); setTag(TAGS[0]); setCatId(''); setImageUrl('');
+    if (editorRef.current) editorRef.current.innerHTML = '';
+  };
+
   const publish = () => {
     const html = editorRef.current?.innerHTML?.trim();
     const text = editorRef.current?.innerText?.trim();
     if (!title.trim() || !text) return;
-    addNews({ title: title.trim(), body: text, html, tag, image: imageUrl, cat_id: catId || null });
-    setTitle(''); setTag(TAGS[0]); setCatId(''); setImageUrl('');
-    if (editorRef.current) editorRef.current.innerHTML = '';
+    
+    if (editingId) {
+      updateNews(editingId, { title: title.trim(), body: text, html, tag, image: imageUrl, cat_id: catId || null });
+      alert('Nieuwsbericht is succesvol gewijzigd.');
+      cancelEdit();
+    } else {
+      addNews({ title: title.trim(), body: text, html, tag, image: imageUrl, cat_id: catId || null });
+      alert('Het nieuwsbericht is succesvol gepubliceerd.');
+      cancelEdit();
+    }
+    
     setSaved(true);
-    alert('Het nieuwsbericht is succesvol gepubliceerd.');
     setTimeout(() => setSaved(false), 2200);
   };
 
   return (
     <>
-      <PageHead label="CMS" title="Nieuws Editor">
-        {saved && <span className="rounded-full bg-forest-100 px-4 py-2 text-sm text-forest-700">✓ Gepubliceerd naar landingspagina</span>}
+      <PageHead label="CMS" title={editingId ? "Nieuwsbericht Wijzigen" : "Nieuws Editor"}>
+        {saved && <span className="rounded-full bg-forest-100 px-4 py-2 text-sm text-forest-700">✓ Opgeslagen</span>}
       </PageHead>
 
       <div className="grid gap-6 lg:grid-cols-[1.2fr_1fr]">
@@ -131,8 +156,12 @@ export default function NewsEditor() {
           </Field>
 
           <div className="mt-6 flex gap-3">
-            <Btn variant="brass" onClick={publish}>Publiceren</Btn>
-            <Btn variant="ghost" onClick={()=>{ setTitle(''); setImageUrl(''); if(editorRef.current) editorRef.current.innerHTML=''; }}>Wissen</Btn>
+            <Btn variant="brass" onClick={publish}>{editingId ? 'Wijzigingen Opslaan' : 'Publiceren'}</Btn>
+            {editingId ? (
+              <Btn variant="ghost" onClick={cancelEdit}>Annuleren</Btn>
+            ) : (
+              <Btn variant="ghost" onClick={cancelEdit}>Wissen</Btn>
+            )}
           </div>
         </Card>
 
@@ -141,14 +170,17 @@ export default function NewsEditor() {
           <div className="space-y-3">
             {news.map((n) => (
               <div key={n.id} className="flex items-start justify-between gap-3 rounded-xl border border-forest-900/8 p-3">
-                <div>
-                  <p className="text-sm font-medium text-forest-900">{n.title}</p>
-                  <p suppressHydrationWarning className="text-xs text-forest-600/70">
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-medium text-forest-900 truncate">{n.title}</p>
+                  <p suppressHydrationWarning className="text-xs text-forest-600/70 truncate">
                     {new Date(n.created_at).toLocaleDateString('nl-NL')} · {n.tag || 'Update'}
                     {n.cat_id && ` · Gelinkt aan ${kittens.find(k => k.id === n.cat_id)?.name || 'Kitten'}`}
                   </p>
                 </div>
-                <button onClick={()=>{ if(confirm('Weet je zeker dat je dit nieuwsbericht wilt verwijderen?')) deleteNews(n.id); }} className="text-xs text-red-600 hover:underline">Verwijder</button>
+                <div className="flex items-center gap-3 shrink-0">
+                  <button onClick={() => handleEdit(n)} className="text-xs text-brass-700 hover:underline">Wijzig</button>
+                  <button onClick={()=>{ if(confirm('Weet je zeker dat je dit nieuwsbericht wilt verwijderen?')) deleteNews(n.id); }} className="text-xs text-red-600 hover:underline">Verwijder</button>
+                </div>
               </div>
             ))}
           </div>

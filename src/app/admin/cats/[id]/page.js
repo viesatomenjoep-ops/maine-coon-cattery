@@ -93,11 +93,17 @@ export default function CatDossier({ params }) {
     }
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
+    // Check if there is pending weight data
+    if (formData.weightDate && formData.weightGrams && !isNew) {
+      await addWeight(params.id, formData.weightDate, formData.weightGrams);
+      setFormData(prev => ({ ...prev, weightDate: '', weightGrams: '' }));
+    }
+
     if (!isNew) {
-      updateKitten(params.id, formData);
+      await updateKitten(params.id, formData);
     } else {
-      addKitten(formData);
+      await addKitten(formData);
     }
     alert('Dossier is succesvol opgeslagen.');
     if (isNew) router.push('/admin/cats');
@@ -111,12 +117,9 @@ export default function CatDossier({ params }) {
   };
 
   const ActionBar = () => (
-    <div className="mt-8 flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-forest-900/10 pt-5">
-      <button type="button" onClick={handleDelete} className="w-full sm:w-auto rounded-lg border border-red-200 bg-white px-3 py-1.5 text-xs font-bold uppercase tracking-wider text-red-600 transition hover:bg-red-50">
-        Verwijderen
-      </button>
-      <button type="button" onClick={handleSave} className="w-full sm:w-auto rounded-lg border border-emerald-200 bg-white px-3 py-1.5 text-xs font-bold uppercase tracking-wider text-emerald-600 transition hover:bg-emerald-50">
-        Opslaan
+    <div className="mt-8 flex flex-col sm:flex-row items-center justify-end gap-4 border-t border-forest-900/10 pt-5">
+      <button type="button" onClick={handleSave} className="w-full sm:w-auto rounded-lg border border-emerald-200 bg-emerald-50 px-6 py-2 text-sm font-bold uppercase tracking-wider text-emerald-700 transition hover:bg-emerald-100 shadow-sm">
+        Dossier Opslaan
       </button>
     </div>
   );
@@ -133,7 +136,14 @@ export default function CatDossier({ params }) {
 
   return (
     <>
-      <PageHead label="Dossier" title={isNew ? 'Nieuwe Kat Toevoegen' : formData.name || 'Laden...'} />
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+        <PageHead label="Dossier" title={isNew ? 'Nieuwe Kat Toevoegen' : formData.name || 'Laden...'} />
+        {!isNew && (
+          <button type="button" onClick={handleDelete} className="rounded-lg border border-red-200 bg-white px-3 py-1.5 text-xs font-bold uppercase tracking-wider text-red-600 transition hover:bg-red-50 shadow-sm">
+            Volledig Dossier Verwijderen
+          </button>
+        )}
+      </div>
 
       <div className="flex flex-col lg:flex-row gap-6 lg:gap-8 items-start">
         {/* Mobiele Dropdown Navigatie */}
@@ -236,9 +246,18 @@ export default function CatDossier({ params }) {
                     {catDocs.length > 0 && (
                       <div className="mt-3 flex flex-wrap gap-2">
                         {catDocs.map(d => (
-                          <a key={d.id} href={d.file_url} target="_blank" className="text-xs text-brass-700 bg-white border border-brass-200 px-2 py-1 rounded hover:bg-brass-100 transition truncate max-w-[200px]">
-                            📄 {d.notes || 'Document'}
-                          </a>
+                          <div key={d.id} className="group relative flex items-center">
+                            <a href={d.file_url} target="_blank" className="text-xs text-brass-700 bg-white border border-brass-200 px-2 py-1 rounded hover:bg-brass-100 transition truncate max-w-[200px]">
+                              📄 {d.notes || 'Document'}
+                            </a>
+                            <button 
+                              type="button" 
+                              onClick={() => { if(confirm('Document definitief verwijderen?')) useStore.getState().deleteDocument(d.id); }} 
+                              className="absolute -top-2 -right-2 hidden group-hover:flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white hover:bg-red-600"
+                            >
+                              X
+                            </button>
+                          </div>
                         ))}
                       </div>
                     )}
@@ -300,11 +319,15 @@ export default function CatDossier({ params }) {
                       type="button" 
                       variant="brass" 
                       onClick={async () => {
-                        if (formData.weightDate && formData.weightGrams && !isNew) {
+                        if (!formData.weightDate || !formData.weightGrams) {
+                          alert('Vul a.u.b. een datum en gewicht in.');
+                          return;
+                        }
+                        if (!isNew) {
                           await addWeight(params.id, formData.weightDate, formData.weightGrams);
                           setFormData(prev => ({ ...prev, weightDate: '', weightGrams: '' }));
                           alert('Het gewicht is succesvol toegevoegd.');
-                        } else if (isNew) {
+                        } else {
                           alert('Sla het kitten eerst op voordat je gewichten kunt toevoegen.');
                         }
                       }}
@@ -414,8 +437,24 @@ export default function CatDossier({ params }) {
                   />
                   
                   <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3">
-                    {media.filter(m => m.media_url?.includes(params.id)).map(m => (
-                      <img key={m.id} src={m.media_url} alt="" className="aspect-square w-full rounded-xl object-cover shadow-sm border border-forest-900/10" />
+                    {media.filter(m => m.media_url?.includes(params.id) || m.cat_id === params.id).map(m => (
+                      <div key={m.id} className="relative group">
+                        <img src={m.media_url} alt="" className="aspect-square w-full rounded-xl object-cover shadow-sm border border-forest-900/10" />
+                        <button 
+                          type="button"
+                          onClick={() => {
+                            if(confirm('Weet je zeker dat je deze afbeelding definitief wilt verwijderen?')) {
+                              useStore.getState().deleteMedia(m.id);
+                            }
+                          }}
+                          className="absolute top-2 right-2 flex h-6 w-6 items-center justify-center rounded-full bg-white/90 text-red-600 shadow-sm opacity-0 group-hover:opacity-100 transition hover:bg-red-50"
+                          title="Verwijder foto"
+                        >
+                          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                        </button>
+                      </div>
                     ))}
                   </div>
                   <ActionBar />
