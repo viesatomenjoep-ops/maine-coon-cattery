@@ -3,6 +3,7 @@ import { useState, useRef } from 'react';
 import { useStore } from '@/context/StoreContext';
 import { PageHead, Card, Select, Btn } from '@/components/admin';
 import { ImageSlot } from '@/components/ui';
+import jsPDF from 'jspdf';
 
 // Onze native filepicker integratie met Cloudinary API
 const NativeUploadWidget = ({ children, onSuccess, folder, accept }) => {
@@ -65,6 +66,80 @@ export default function MediaDocumentenPage() {
     ...documents.map(d => ({ ...d, isDoc: true, kittenName: kittens.find(k=>k.id===d.cat_id)?.name || 'Algemeen', label: d.document_type })),
     ...media.map(m => ({ ...m, isDoc: false, kittenName: 'Galerij', label: 'Algemeen' }))
   ].sort((a,b) => new Date(b.created_at) - new Date(a.created_at));
+
+  const [selectedItems, setSelectedItems] = useState([]);
+
+  const toggleSelect = (id) => {
+    setSelectedItems(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
+  };
+
+  const forceDownload = async (url, filename) => {
+    try {
+      const res = await fetch(url);
+      const blob = await res.blob();
+      const a = document.createElement('a');
+      a.href = window.URL.createObjectURL(blob);
+      a.download = filename || `cattery-media-${Date.now()}`;
+      a.click();
+    } catch(e) {
+      window.open(url, '_blank');
+    }
+  };
+
+  const fetchImageData = (url) => {
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.crossOrigin = 'Anonymous';
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width;
+        canvas.height = img.height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0);
+        resolve({ dataUrl: canvas.toDataURL('image/jpeg', 0.9), width: img.width, height: img.height });
+      };
+      img.onerror = () => resolve(null);
+      img.src = url;
+    });
+  };
+
+  const handleDownloadSelectedFiles = async () => {
+    if(selectedItems.length === 0) return alert('Selecteer minimaal 1 bestand.');
+    const items = allUploads.filter(u => selectedItems.includes(u.id));
+    for (const item of items) {
+      await forceDownload(item.file_url || item.media_url, item.name || `media-${Date.now()}`);
+    }
+  };
+
+  const handleDownloadSelectedPDF = async () => {
+    const items = allUploads.filter(u => selectedItems.includes(u.id) && !(u.file_url || u.media_url).endsWith('.pdf'));
+    if(items.length === 0) return alert('Selecteer minimaal 1 afbeelding om een PDF album te maken. (Bestaande PDF\\'s worden overgeslagen)');
+    
+    const pdf = new jsPDF();
+    let pagesAdded = 0;
+    
+    for (const item of items) {
+      const imgObj = await fetchImageData(item.file_url || item.media_url);
+      if (imgObj) {
+        if (pagesAdded > 0) pdf.addPage();
+        const pw = pdf.internal.pageSize.getWidth();
+        const ph = pdf.internal.pageSize.getHeight();
+        const ratio = Math.min((pw - 20) / imgObj.width, (ph - 20) / imgObj.height);
+        const w = imgObj.width * ratio;
+        const h = imgObj.height * ratio;
+        const x = (pw - w) / 2;
+        const y = (ph - h) / 2;
+        pdf.addImage(imgObj.dataUrl, 'JPEG', x, y, w, h);
+        pagesAdded++;
+      }
+    }
+    
+    if (pagesAdded > 0) {
+      pdf.save('cattery-album.pdf');
+    } else {
+      alert('Kon geen afbeeldingen verwerken.');
+    }
+  };
 
   return (
     <>
@@ -200,23 +275,41 @@ export default function MediaDocumentenPage() {
 
       {/* Recente Uploads Overzicht */}
       <div className="mt-12 space-y-6">
-        <h2 className="font-display text-2xl text-forest-900">Documenten & Media Archief</h2>
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <h2 className="font-display text-2xl text-forest-900">Documenten & Media Archief</h2>
+          {selectedItems.length > 0 && (
+            <div className="flex flex-wrap items-center gap-2">
+               <span className="text-xs font-semibold text-forest-700 mr-2">{selectedItems.length} geselecteerd</span>
+               <Btn variant="ghost" className="text-xs py-1.5 border-forest-900/20" onClick={handleDownloadSelectedFiles}>Download Losse Bestanden</Btn>
+               <Btn variant="brass" className="text-xs py-1.5" onClick={handleDownloadSelectedPDF}>Download PDF Album</Btn>
+            </div>
+          )}
+        </div>
+        
         {allUploads.length === 0 ? (
           <p className="text-forest-700">Nog geen documenten of media geüpload in de database.</p>
         ) : (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {allUploads.map((doc) => (
-              <div key={doc.id} className="flex items-center gap-4 rounded-xl border border-forest-900/10 bg-white p-3 shadow-sm hover:border-forest-900/20 transition">
-                <div className="h-12 w-12 shrink-0 rounded-lg bg-forest-50 overflow-hidden relative border border-forest-900/5">
-                  {(doc.file_url || doc.media_url).endsWith('.pdf') ? (
+            {allUploads.map((doc) => {
+              const url = doc.file_url || doc.media_url;
+              return (
+              <div key={doc.id} className={`flex items-center gap-4 rounded-xl border p-3 shadow-sm transition ${selectedItems.includes(doc.id) ? 'border-brass-400 bg-brass-50/50' : 'border-forest-900/10 bg-white hover:border-forest-900/20'}`}>
+                
+                <input type="checkbox" checked={selectedItems.includes(doc.id)} onChange={() => toggleSelect(doc.id)} className="ml-1 rounded border-forest-900/20 text-brass-600 focus:ring-brass-400" />
+                
+                <div className="h-12 w-12 shrink-0 rounded-lg bg-forest-50 overflow-hidden relative border border-forest-900/5 cursor-pointer" onClick={() => toggleSelect(doc.id)}>
+                  {url.endsWith('.pdf') ? (
                     <div className="absolute inset-0 flex items-center justify-center text-[10px] font-bold text-red-500 bg-red-50">PDF</div>
                   ) : (
-                    <img src={doc.file_url || doc.media_url} alt="" className="h-full w-full object-cover" />
+                    <img src={url} alt="" className="h-full w-full object-cover" />
                   )}
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-semibold text-forest-900">{doc.label}: {doc.kittenName}</p>
-                  <a href={doc.file_url || doc.media_url} target="_blank" className="text-xs text-brass-600 hover:underline truncate block mt-0.5">{doc.notes || 'Bekijk bestand'}</a>
+                  <p className="truncate text-sm font-semibold text-forest-900" title={`${doc.label}: ${doc.kittenName}`}>{doc.label}: {doc.kittenName}</p>
+                  <div className="flex items-center gap-3 mt-0.5">
+                    <a href={url} target="_blank" className="text-xs text-forest-500 hover:underline truncate">Bekijk</a>
+                    <button onClick={() => forceDownload(url, doc.name || 'download')} className="text-xs font-semibold text-brass-600 hover:underline">Download</button>
+                  </div>
                 </div>
                 <button 
                   onClick={() => doc.isDoc ? deleteDocument(doc.id) : deleteMedia(doc.id)} 
@@ -226,7 +319,7 @@ export default function MediaDocumentenPage() {
                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
                 </button>
               </div>
-            ))}
+            )})}
           </div>
         )}
       </div>
