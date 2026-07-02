@@ -10,42 +10,21 @@ export function AuthProvider({ children }) {
   const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
-    // Check local bypass first
-    const bypassed = localStorage.getItem('cattery_bypass_auth');
-    if (bypassed) {
-      setUser(JSON.parse(bypassed));
-      setIsInitialized(true);
-      return;
-    }
-
     // Check active session on mount
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!bypassed) setUser(session?.user || null);
+      setUser(session?.user || null);
       setIsInitialized(true);
     });
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (!localStorage.getItem('cattery_bypass_auth')) {
-        setUser(session?.user || null);
-      }
+      setUser(session?.user || null);
     });
 
     return () => subscription.unsubscribe();
   }, []);
 
-  const login = async (username, password) => {
-    // Aangepaste login zoals door gebruiker gevraagd
-    if (username === 'Willem11' && password === 'Maincoon11') {
-      const sessionUser = { role: 'admin', email: 'Willem11', name: 'Willem' };
-      setUser(sessionUser);
-      localStorage.setItem('cattery_bypass_auth', JSON.stringify(sessionUser));
-      return { ok: true, role: 'admin' };
-    }
-    
-    return { ok: false, error: 'Onjuiste gebruikersnaam of wachtwoord.' };
-    
-    /* ORIGINELE SUPABASE AUTH CODE:
+  const login = async (email, password) => {
     const { data, error } = await supabase.auth.signInWithPassword({
       email: email.trim(),
       password,
@@ -56,12 +35,10 @@ export function AuthProvider({ children }) {
     }
     
     return { ok: true, role: 'admin' };
-    */
   };
 
   const logout = async () => {
     setUser(null);
-    localStorage.removeItem('cattery_bypass_auth');
     await supabase.auth.signOut();
   };
 

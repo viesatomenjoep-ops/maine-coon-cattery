@@ -17,11 +17,11 @@ const COLORS = [
 const STATUSES = ['Beschikbaar', 'Gereserveerd', 'Verkocht', 'Evaluatie'];
 
 export default function LittersPage() {
-  const { litters, kittens, parents, addLitter, deleteLitter, addKitten, updateKitten, deleteKitten } = useStore();
+  const { litters = [], kittens = [], parents = [], addLitter, deleteLitter, addKitten, updateKitten, deleteKitten } = useStore();
   
   // Zorg dat we altijd bestaande kattennamen kunnen suggereren
-  const damNames = Array.from(new Set([...parents.filter(p => p.gender === 'Poes').map(d => d.name), ...kittens.filter(k => k.gender === 'Poes').map(k => k.name)]));
-  const sireNames = Array.from(new Set([...parents.filter(p => p.gender === 'Kater').map(d => d.name), ...kittens.filter(k => k.gender === 'Kater').map(k => k.name)]));
+  const damNames = Array.from(new Set([...parents.filter(p => p.gender === 'Poes').map(d => d.name), ...kittens.filter(k => k.gender === 'Poes' || k.gender === 'Vrouw').map(k => k.name)]));
+  const sireNames = Array.from(new Set([...parents.filter(p => p.gender === 'Kater').map(d => d.name), ...kittens.filter(k => k.gender === 'Kater' || k.gender === 'Man').map(k => k.name)]));
 
   const [litter, setLitter] = useState({ name: '', sire_name: '', dam_name: '', born: '', description: '' });
   const [kit, setKit] = useState({ litter_id: litters[0]?.id || '', name: '', sex: 'Kater', color: '', pattern: '', status: 'Beschikbaar', priceNL: 1250, priceBE: 1300, cover_image: '' });
