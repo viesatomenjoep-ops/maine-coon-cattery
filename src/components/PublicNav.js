@@ -29,7 +29,6 @@ export default function PublicNav() {
   const languages = [
     { code: 'nl', label: 'NL' },
     { code: 'en', label: 'EN' },
-    { code: 'es', label: 'ES' },
   ];
 
   return (
