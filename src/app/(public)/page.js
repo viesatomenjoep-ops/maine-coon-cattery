@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useLanguage } from '@/context/LanguageContext';
 import { useStore } from '@/context/StoreContext';
+import { PawMark, SectionLabel } from '@/components/ui';
 
 // Standard fallback data
 const fallbackSlides = [

@@ -16,7 +16,7 @@ const NAV = [
   { href: '/admin/customers', label: 'Klantenbestand', icon: 'customer' },
   { href: '/admin/content', label: 'Website Editor', icon: 'layout' },
   { href: '/admin/settings', label: 'Instellingen', icon: 'settings' },
-  { href: '/admin/media', label: 'Media Sync', icon: 'image' },
+  { href: '/admin/media', label: 'Foto- en Videogalerij', icon: 'image' },
 ];
 
 function Icon({ name, className = 'h-5 w-5' }) {
