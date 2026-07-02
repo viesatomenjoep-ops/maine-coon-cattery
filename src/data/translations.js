@@ -17,7 +17,7 @@ export const translations = {
       {
         subtitle: 'Wendy\'s Dream',
         title: 'Een oase van rust & pure liefde',
-        text: 'Bij ons groeien majestueuze zachte reuzen op in een ontspannen Ibiza-sfeer, omringd door warmte en professionele zorg.',
+        text: '',
       },
       {
         subtitle: 'Exclusieve Nestjes',

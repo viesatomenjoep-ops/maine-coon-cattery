@@ -11,7 +11,7 @@ const fallbackSlides = [
     image: '/images/litter_terrace.png',
     title: 'Een oase van rust & pure liefde',
     subtitle: 'Wendy\'s Dream',
-    text: 'Bij ons groeien majestueuze zachte reuzen op in een ontspannen Ibiza-sfeer, omringd door warmte en professionele zorg.',
+    text: '',
   },
   {
     image: '/images/kittens_basket.png',

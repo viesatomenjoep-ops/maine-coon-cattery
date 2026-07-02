@@ -36,10 +36,10 @@ export default function AdminLayout({ children }) {
 
   useEffect(() => {
     if (!user) router.replace('/login');
-    else if (user.role !== 'admin') router.replace('/portal');
+    else if (user.user_metadata?.role !== 'admin') router.replace('/portal');
   }, [user, router]);
 
-  if (!user || user.role !== 'admin') {
+  if (!user || user.user_metadata?.role !== 'admin') {
     return <div className="relative z-10 grid min-h-screen place-items-center text-forest-700">Toegang controleren…</div>;
   }
 
@@ -77,7 +77,7 @@ export default function AdminLayout({ children }) {
             })}
           </nav>
           <div className="border-t border-forest-900/10 p-6 lg:p-4">
-            <p className="px-2 text-sm lg:text-xs text-forest-600">{user.name}</p>
+            <p className="px-2 text-sm lg:text-xs text-forest-600">{user.user_metadata?.name || 'Beheerder'}</p>
             <button onClick={() => { logout(); router.push('/'); }} className="mt-2 w-full rounded-xl px-4 py-3 lg:py-2.5 text-left text-base lg:text-sm text-forest-900 transition hover:bg-forest-50">
               Uitloggen
             </button>
