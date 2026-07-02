@@ -52,7 +52,9 @@ export default function CustomerDetailPage({ params }) {
   };
 
   const handleUnassignKitten = async (kittenId) => {
-    await updateKitten(kittenId, { customer_id: null });
+    if(confirm('Weet je zeker dat je dit kitten wilt ontkoppelen?')) {
+      await updateKitten(kittenId, { customer_id: null });
+    }
   };
 
   const handleAssignLitter = async () => {
@@ -64,7 +66,9 @@ export default function CustomerDetailPage({ params }) {
   };
 
   const handleUnassignLitter = async (litterId) => {
-    await updateLitter(litterId, { customer_id: null });
+    if(confirm('Weet je zeker dat je dit nestje wilt ontkoppelen?')) {
+      await updateLitter(litterId, { customer_id: null });
+    }
   };
 
   const sendWhatsApp = () => {

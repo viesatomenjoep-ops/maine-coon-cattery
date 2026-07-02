@@ -48,12 +48,14 @@ export default function LittersPage() {
     if (!litter.name.trim()) return;
     addLitter({ ...litter });
     setLitter({ name: '', sire_name: '', dam_name: '', born: '', description: '' });
+    alert('Het nestje is succesvol opgeslagen.');
   };
   
   const saveKitten = () => {
     if (!kit.name.trim() || !kit.litter_id) return;
     addKitten({ ...kit, gender: kit.sex });
     setKit({ ...kit, name: '', color: '', pattern: '', cover_image: '' });
+    alert('Het kitten is succesvol toegevoegd en opgeslagen.');
   };
 
   return (
@@ -143,7 +145,7 @@ export default function LittersPage() {
                   </p>
                 </div>
                 <div className="flex gap-3">
-                  <Btn variant="ghost" onClick={()=>deleteLitter(litter.id)} className="!text-red-600 hover:!bg-red-50 !py-1.5 !px-3 !text-xs">Nestje verwijderen</Btn>
+                  <Btn variant="ghost" onClick={()=>{ if(confirm('Weet je zeker dat je dit nestje wilt verwijderen?')) deleteLitter(litter.id); }} className="!text-red-600 hover:!bg-red-50 !py-1.5 !px-3 !text-xs">Nestje verwijderen</Btn>
                 </div>
               </div>
               
@@ -187,7 +189,7 @@ export default function LittersPage() {
                             </td>
                             <td className="pr-5 text-right flex gap-3 justify-end items-center h-[57px]">
                               <Link href={`/admin/cats/${k.id}`} className="text-xs text-emerald-600 hover:text-emerald-800 font-medium transition">Bewerk / Opslaan</Link>
-                              <button onClick={()=>deleteKitten(k.id)} className="text-xs text-red-500 hover:text-red-700 underline transition">Verwijder</button>
+                              <button onClick={()=>{ if(confirm('Weet je zeker dat je dit kitten wilt verwijderen?')) deleteKitten(k.id); }} className="text-xs text-red-500 hover:text-red-700 underline transition">Verwijder</button>
                             </td>
                           </tr>
                         ))}

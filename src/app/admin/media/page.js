@@ -113,7 +113,7 @@ export default function MediaDocumentenPage() {
 
   const handleDownloadSelectedPDF = async () => {
     const items = allUploads.filter(u => selectedItems.includes(u.id) && !(u.file_url || u.media_url).endsWith('.pdf'));
-    if(items.length === 0) return alert('Selecteer minimaal 1 afbeelding om een PDF album te maken. (Bestaande PDF\\'s worden overgeslagen)');
+    if(items.length === 0) return alert("Selecteer minimaal 1 afbeelding om een PDF album te maken. (Bestaande PDF's worden overgeslagen)");
     
     const pdf = new jsPDF();
     let pagesAdded = 0;
@@ -312,7 +312,7 @@ export default function MediaDocumentenPage() {
                   </div>
                 </div>
                 <button 
-                  onClick={() => doc.isDoc ? deleteDocument(doc.id) : deleteMedia(doc.id)} 
+                  onClick={() => { if(confirm('Weet je zeker dat je dit bestand wilt verwijderen?')) { doc.isDoc ? deleteDocument(doc.id) : deleteMedia(doc.id) } }} 
                   className="shrink-0 p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition"
                   title="Verwijder"
                 >

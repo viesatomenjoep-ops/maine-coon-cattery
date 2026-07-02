@@ -33,6 +33,7 @@ export default function MedicalPage() {
     selected.forEach((id) => addMedical(id, { ...entry }));
     setDone(true);
     setSelected([]);
+    alert('Medische historie succesvol toegevoegd aan de geselecteerde dossiers.');
     setTimeout(() => setDone(false), 2200);
   };
 
@@ -98,7 +99,7 @@ export default function MedicalPage() {
                               <span suppressHydrationWarning className="font-medium min-w-[70px]">{new Date(m.date).toLocaleDateString('nl-NL', { day:'numeric', month:'short' })}</span>
                               <span className="text-forest-600">{m.type}: {m.note}</span>
                             </div>
-                            <button onClick={(e) => { e.preventDefault(); deleteMedical(k.id, i); }} className="text-red-500 hover:text-red-700 ml-2">Verwijder</button>
+                            <button onClick={(e) => { e.preventDefault(); if(confirm('Weet je zeker dat je deze medische notitie wilt verwijderen?')) deleteMedical(k.id, i); }} className="text-red-500 hover:text-red-700 ml-2">Verwijder</button>
                           </div>
                         );
                       })}
@@ -138,6 +139,7 @@ export default function MedicalPage() {
                           if (!se.date) return alert('Vul een datum in');
                           addMedical(k.id, { type: se.type || TYPES[0], date: se.date, note: se.note || '' });
                           setSingleEntry(s => ({ ...s, [k.id]: { type: TYPES[0], date: '', note: '' } }));
+                          alert('Medische notitie is succesvol opgeslagen.');
                         }}
                       >
                         Opslaan

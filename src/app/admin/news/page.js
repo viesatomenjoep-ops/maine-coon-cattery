@@ -61,6 +61,7 @@ export default function NewsEditor() {
     setTitle(''); setTag(TAGS[0]); setCatId(''); setImageUrl('');
     if (editorRef.current) editorRef.current.innerHTML = '';
     setSaved(true);
+    alert('Het nieuwsbericht is succesvol gepubliceerd.');
     setTimeout(() => setSaved(false), 2200);
   };
 
@@ -147,7 +148,7 @@ export default function NewsEditor() {
                     {n.cat_id && ` · Gelinkt aan ${kittens.find(k => k.id === n.cat_id)?.name || 'Kitten'}`}
                   </p>
                 </div>
-                <button onClick={()=>deleteNews(n.id)} className="text-xs text-red-600 hover:underline">Verwijder</button>
+                <button onClick={()=>{ if(confirm('Weet je zeker dat je dit nieuwsbericht wilt verwijderen?')) deleteNews(n.id); }} className="text-xs text-red-600 hover:underline">Verwijder</button>
               </div>
             ))}
           </div>

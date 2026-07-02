@@ -99,7 +99,7 @@ export default function CatDossier({ params }) {
     } else {
       addKitten(formData);
     }
-    alert('Sectie opgeslagen in actieve sessie!');
+    alert('Dossier is succesvol opgeslagen.');
     if (isNew) router.push('/admin/cats');
   };
 
@@ -261,6 +261,7 @@ export default function CatDossier({ params }) {
                       onSuccess={(res) => { 
                         if(res.event === 'success') {
                           setFormData(prev => ({ ...prev, pedigree_data: { ...prev.pedigree_data, image_url: res.info.secure_url } }));
+                          alert('Stamboom afbeelding is geüpload! Vergeet niet op Opslaan te drukken.');
                         } 
                       }}
                       options={{ folder: `cattery_stamboom/${params.id}` }}
@@ -302,6 +303,7 @@ export default function CatDossier({ params }) {
                         if (formData.weightDate && formData.weightGrams && !isNew) {
                           await addWeight(params.id, formData.weightDate, formData.weightGrams);
                           setFormData(prev => ({ ...prev, weightDate: '', weightGrams: '' }));
+                          alert('Het gewicht is succesvol toegevoegd.');
                         } else if (isNew) {
                           alert('Sla het kitten eerst op voordat je gewichten kunt toevoegen.');
                         }
@@ -327,7 +329,7 @@ export default function CatDossier({ params }) {
                               <td className="p-3 text-forest-800">{new Date(w.date).toLocaleDateString('nl-NL')}</td>
                               <td className="p-3 font-medium text-forest-900">{w.grams} g</td>
                               <td className="p-3 text-right">
-                                <button type="button" onClick={() => deleteWeight(params.id, w.id)} className="text-red-500 hover:text-red-700 text-xs font-semibold uppercase">Verwijder</button>
+                                <button type="button" onClick={() => { if(confirm('Weet je zeker dat je dit gewicht wilt verwijderen?')) deleteWeight(params.id, w.id); }} className="text-red-500 hover:text-red-700 text-xs font-semibold uppercase">Verwijder</button>
                               </td>
                             </tr>
                           ))}
