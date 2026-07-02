@@ -156,13 +156,15 @@ export function StoreProvider({ children }) {
       customer_id: kit.customer_id || null
     };
     const { data, error } = await supabase.from('cats').insert([dbKit]).select();
-    if (!error && data) setKittens(s => [...s, data[0]]);
+    if (!error && data) {
+      setKittens(s => [...s, data[0]]);
+      return { data: data[0] };
+    }
+    console.error("Error adding cat:", error);
+    return { error };
   };
 
   const updateKitten = async (id, patch) => {
-    // We updaten lokaal direct voor een snelle UI
-    setKittens(s => s.map(k => (k.id === id ? { ...k, ...patch } : k)));
-    
     // DB Update: we map formData props naar db kolommen indien nodig
     let dbPatch = {};
     if (patch.name !== undefined) dbPatch.name = patch.name;
@@ -195,7 +197,14 @@ export function StoreProvider({ children }) {
     }
     
     const { error } = await supabase.from('cats').update(dbPatch).eq('id', id);
-    if (error) console.error("Error updating cat:", error);
+    if (error) {
+      console.error("Error updating cat:", error);
+      return { error };
+    } else {
+      // Pas lokaal aan als succesvol
+      setKittens(s => s.map(k => (k.id === id ? { ...k, ...patch } : k)));
+      return { success: true };
+    }
   };
 
   const deleteKitten = async (id) => {

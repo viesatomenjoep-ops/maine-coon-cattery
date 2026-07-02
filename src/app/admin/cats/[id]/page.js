@@ -94,19 +94,36 @@ export default function CatDossier({ params }) {
   };
 
   const handleSave = async () => {
-    // Check if there is pending weight data
-    if (formData.weightDate && formData.weightGrams && !isNew) {
-      await addWeight(params.id, formData.weightDate, formData.weightGrams);
-      setFormData(prev => ({ ...prev, weightDate: '', weightGrams: '' }));
-    }
+    try {
+      if (!formData.name || formData.name.trim() === '') {
+        alert('Vul a.u.b. een naam in voor de kat. Dit veld is verplicht.');
+        return;
+      }
 
-    if (!isNew) {
-      await updateKitten(params.id, formData);
-    } else {
-      await addKitten(formData);
+      // Check if there is pending weight data
+      if (formData.weightDate && formData.weightGrams && !isNew) {
+        await addWeight(params.id, formData.weightDate, formData.weightGrams);
+        setFormData(prev => ({ ...prev, weightDate: '', weightGrams: '' }));
+      }
+
+      let res;
+      if (!isNew) {
+        res = await updateKitten(params.id, formData);
+      } else {
+        res = await addKitten(formData);
+      }
+
+      if (res && res.error) {
+        alert('Er ging iets mis bij het opslaan: ' + (res.error.message || JSON.stringify(res.error)));
+        return;
+      }
+
+      alert('Dossier is succesvol opgeslagen.');
+      if (isNew) router.push('/admin/cats');
+    } catch (err) {
+      console.error("Save error:", err);
+      alert('Er is een onverwachte fout opgetreden: ' + err.message);
     }
-    alert('Dossier is succesvol opgeslagen.');
-    if (isNew) router.push('/admin/cats');
   };
 
   const handleDelete = () => {
