@@ -11,6 +11,7 @@ export function StoreProvider({ children }) {
   const [documents, setDocuments] = useState([]);
   const [media, setMedia] = useState([]);
   const [customers, setCustomers] = useState([]);
+  const [siteContent, setSiteContent] = useState({});
 
   // Initiele data fetch
   useEffect(() => {
@@ -46,6 +47,9 @@ export function StoreProvider({ children }) {
 
         const { data: cData } = await supabase.from('customers').select('*').order('created_at', { ascending: false });
         if (cData) setCustomers(cData);
+
+        const { data: sData, error: sErr } = await supabase.from('site_content').select('*').eq('key', 'homepage_nl').single();
+        if (sData?.content) setSiteContent(sData.content);
       } catch (err) {
         console.error("Supabase fetch error:", err);
       }
@@ -150,6 +154,12 @@ export function StoreProvider({ children }) {
     setCustomers(s => s.filter(c => c.id !== id));
   };
 
+  // ---- site content ----
+  const saveSiteContent = async (newContent) => {
+    setSiteContent(newContent);
+    await supabase.from('site_content').upsert({ key: 'homepage_nl', content: newContent });
+  };
+
   // ---- documents ----
   const addDocument = async (doc) => {
     const { data, error } = await supabase.from('documents').insert([{
@@ -227,11 +237,12 @@ export function StoreProvider({ children }) {
 
   return (
     <StoreContext.Provider value={{
-      news, litters, kittens, documents, media, customers,
+      news, litters, kittens, documents, media, customers, siteContent,
       addNews, deleteNews, addLitter, updateLitter, deleteLitter,
       addKitten, updateKitten, deleteKitten,
       addDocument, deleteDocument, addMedia, deleteMedia, addMedical, deleteMedical,
-      addCustomer, updateCustomer, deleteCustomer
+      addCustomer, updateCustomer, deleteCustomer,
+      saveSiteContent
     }}>
       {children}
     </StoreContext.Provider>

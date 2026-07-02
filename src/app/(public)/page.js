@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { SectionLabel, PawMark } from '@/components/ui';
 import { useLanguage } from '@/context/LanguageContext';
+import { useStore } from '@/context/StoreContext';
 
 // Standard fallback data
 const fallbackSlides = [
@@ -44,6 +44,7 @@ export default function HomePage() {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [activeTab, setActiveTab] = useState('oorsprong');
   const { t, mounted } = useLanguage();
+  const { siteContent } = useStore();
 
   // Autoplay hero slider
   useEffect(() => {
@@ -54,17 +55,21 @@ export default function HomePage() {
   }, []);
 
   // Hydrate translation arrays safely
-  const slides = mounted ? t('hero_slides') : fallbackSlides;
+  const slides = (siteContent?.hero_slides) || (mounted ? t('hero_slides') : fallbackSlides);
   const currentSlideData = slides[currentSlide] || slides[0];
-  const slideImage = fallbackSlides[currentSlide]?.image || '/images/litter_terrace.png';
 
-  const rawStages = mounted ? t('timeline_stages') : [];
+  const rawStages = siteContent?.timeline_stages || (mounted ? t('timeline_stages') : []);
   const stages = Array.isArray(rawStages) && rawStages.length > 0 
     ? rawStages.map((stageText, idx) => ({
         ...stageText,
-        image: growthImages[idx] || '/images/litter_terrace.png',
+        image: siteContent?.timeline_stages?.[idx]?.image || growthImages[idx] || '/images/litter_terrace.png',
       }))
     : [];
+
+  const tCMS = (key) => {
+    if (siteContent && siteContent[key]) return siteContent[key];
+    return mounted ? t(key) : '';
+  };
 
   return (
     <div className="overflow-x-hidden">
@@ -72,12 +77,12 @@ export default function HomePage() {
       <section className="relative mx-auto max-w-7xl px-6 pt-10 pb-20 md:py-24 grid gap-12 md:grid-cols-[1.1fr_0.9fr] items-center">
         <div className="animate-fade-up space-y-6">
           <span className="text-xs font-semibold uppercase tracking-[0.3em] text-terracotta-600">
-            {mounted ? t('logo_subtext') : 'Maine Coon Cattery'}
+            {tCMS('logo_subtext') || 'Maine Coon Cattery'}
           </span>
-          <h1 className="font-display text-4xl md:text-6xl font-light text-ink leading-[1.15]">
+          <h1 className="font-display text-4xl md:text-6xl font-light text-ink leading-[1.15] whitespace-pre-line">
             {currentSlideData.title}
           </h1>
-          <p className="max-w-md text-sm md:text-lg text-ink/80 font-light leading-relaxed">
+          <p className="max-w-md text-sm md:text-lg text-ink/80 font-light leading-relaxed whitespace-pre-line">
             {currentSlideData.text}
           </p>
           <div className="pt-4 flex flex-wrap gap-4">
@@ -129,16 +134,16 @@ export default function HomePage() {
       {/* 2. OVER WENDY'S DREAM (Ibiza Oase) */}
       <section className="relative py-20 px-6 md:py-28 bg-sand-100/50 mx-4 md:mx-8 rounded-[3rem] my-12">
         <div className="mx-auto max-w-5xl text-center">
-          <SectionLabel>{mounted ? t('intro_label') : "Wendy's Dream"}</SectionLabel>
-          <h2 className="mt-6 font-display text-4xl md:text-5xl lg:text-6xl font-light text-ink">
-            {mounted ? t('intro_title') : 'Thuiskomen in een wereld van pure liefde'}
+          <SectionLabel>{tCMS('intro_label') || "Wendy's Dream"}</SectionLabel>
+          <h2 className="mt-6 font-display text-4xl md:text-5xl lg:text-6xl font-light text-ink whitespace-pre-line">
+            {tCMS('intro_title') || 'Thuiskomen in een wereld van pure liefde'}
           </h2>
-          <p className="mt-8 mx-auto max-w-3xl text-base md:text-lg font-light leading-relaxed text-ink/80">
-            {mounted ? t('intro_text') : 'Wendy\'s Dream is ontstaan uit een diepgewortelde passie voor de majestueuze Maine Coon.'}
+          <p className="mt-8 mx-auto max-w-3xl text-base md:text-lg font-light leading-relaxed text-ink/80 whitespace-pre-line">
+            {tCMS('intro_text') || 'Wendy\'s Dream is ontstaan uit een diepgewortelde passie voor de majestueuze Maine Coon.'}
           </p>
           <div className="mt-12 inline-flex items-center gap-2 text-sm font-semibold tracking-wider text-terracotta-600 uppercase">
             <PawMark className="h-5 w-5" />
-            <span>{mounted ? t('intro_tested') : 'Ouders getest op HCM · SMA · PKDef'}</span>
+            <span>{tCMS('intro_tested') || 'Ouders getest op HCM · SMA · PKDef'}</span>
           </div>
         </div>
       </section>
@@ -252,12 +257,12 @@ export default function HomePage() {
       <section id="verhaal" className="relative py-20 px-6 md:py-28 bg-beige-100/50 mx-4 md:mx-8 rounded-[3rem] my-12">
         <div className="mx-auto max-w-7xl">
           <div className="text-center max-w-3xl mx-auto mb-16">
-            <SectionLabel>{mounted ? t('timeline_label') : 'Fotodagboek & Groeicyclus'}</SectionLabel>
+            <SectionLabel>{tCMS('timeline_label') || 'Fotodagboek & Groeicyclus'}</SectionLabel>
             <h2 className="mt-4 font-display text-4xl md:text-5xl font-light text-ink">
-              {mounted ? t('timeline_title') : 'Van Kitten tot Majestueuze Reus'}
+              {tCMS('timeline_title') || 'Van Kitten tot Majestueuze Reus'}
             </h2>
-            <p className="mt-4 text-sm md:text-base font-light text-ink/75 leading-relaxed">
-              {mounted ? t('timeline_desc') : 'Volg de fascinerende ontwikkeling van onze Maine Coons.'}
+            <p className="mt-4 text-sm md:text-base font-light text-ink/75 leading-relaxed whitespace-pre-line">
+              {tCMS('timeline_desc') || 'Volg de fascinerende ontwikkeling van onze Maine Coons.'}
             </p>
           </div>
 
@@ -293,7 +298,7 @@ export default function HomePage() {
                   <h3 className="font-display text-3xl font-light text-ink">
                     {stage.title}
                   </h3>
-                  <p className="text-sm md:text-base font-light leading-relaxed text-ink/80">
+                  <p className="text-sm md:text-base font-light leading-relaxed text-ink/80 whitespace-pre-line">
                     {stage.desc}
                   </p>
                   <div className="pt-2">
@@ -321,10 +326,10 @@ export default function HomePage() {
               <PawMark className="h-8 w-8" />
             </span>
             <h2 className="font-display text-4xl md:text-5xl font-light text-cream-50 leading-tight">
-              {mounted ? t('portal_cta_title') : 'Krijg toegang tot ons digitaal nest-portaal'}
+              {tCMS('portal_cta_title') || 'Krijg toegang tot ons digitaal nest-portaal'}
             </h2>
-            <p className="mt-6 text-sm md:text-base text-cream-100/70 font-light leading-relaxed">
-              {mounted ? t('portal_cta_desc') : 'Bent u geïnteresseerd in een van onze kittens?'}
+            <p className="mt-6 text-sm md:text-base text-cream-100/70 font-light leading-relaxed whitespace-pre-line">
+              {tCMS('portal_cta_desc') || 'Bent u geïnteresseerd in een van onze kittens?'}
             </p>
             <div className="mt-10 flex flex-wrap justify-center gap-4">
               <Link

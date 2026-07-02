@@ -3,7 +3,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useStore } from '@/context/StoreContext';
-import { PageHead, Card, Button } from '@/components/admin';
+import { PageHead, Card, Btn } from '@/components/admin';
 
 export default function CustomersPage() {
   const { customers, addCustomer, deleteCustomer } = useStore();
@@ -32,8 +32,9 @@ export default function CustomersPage() {
       <PageHead 
         title="Klantenbestand" 
         label="Beheer alle klanten en toewijzingen"
-        action={<Button onClick={() => setShowAdd(!showAdd)}>+ Nieuwe Klant</Button>}
-      />
+      >
+        <Btn variant="brass" onClick={() => setShowAdd(!showAdd)}>+ Nieuwe Klant</Btn>
+      </PageHead>
 
       {showAdd && (
         <Card className="mb-8">
@@ -58,8 +59,8 @@ export default function CustomersPage() {
               <textarea value={formData.address} onChange={e=>setFormData({...formData, address: e.target.value})} rows={2} className="mt-1 block w-full rounded-xl border border-forest-900/10 p-3 shadow-sm focus:border-brass-400 focus:ring-brass-400" />
             </div>
             <div className="flex gap-3">
-              <Button type="submit">Aanmaken</Button>
-              <Button type="button" onClick={() => setShowAdd(false)} className="bg-transparent text-forest-600 border border-forest-900/10 hover:bg-forest-50">Annuleren</Button>
+              <Btn variant="brass" type="submit">Aanmaken</Btn>
+              <Btn type="button" variant="ghost" onClick={() => setShowAdd(false)}>Annuleren</Btn>
             </div>
           </form>
         </Card>

@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useStore } from '@/context/StoreContext';
-import { PageHead, Card, Button } from '@/components/admin';
+import { PageHead, Card, Btn } from '@/components/admin';
 
 export default function CustomerDetailPage({ params }) {
   const { id } = params;
@@ -85,13 +85,13 @@ export default function CustomerDetailPage({ params }) {
         action={
           <div className="flex gap-3">
             {customer.whatsapp_number && (
-              <Button onClick={sendWhatsApp} className="bg-green-600 hover:bg-green-700 text-white">
-                Stuur WhatsApp Link
-              </Button>
+              <Btn onClick={sendWhatsApp} className="bg-green-600 hover:bg-green-700 text-white">
+                WhatsApp Sturen
+              </Btn>
             )}
-            <Button onClick={handleDelete} className="bg-red-50 text-red-700 border border-red-200 hover:bg-red-100">
-              Verwijderen
-            </Button>
+            <Btn onClick={handleDelete} className="bg-red-50 text-red-700 border border-red-200 hover:bg-red-100">
+              Klant Verwijderen
+            </Btn>
           </div>
         }
       />
@@ -135,7 +135,7 @@ export default function CustomerDetailPage({ params }) {
                 <option value="">Kies een kitten om te koppelen...</option>
                 {availableKittens.map(k => <option key={k.id} value={k.id}>{k.name}</option>)}
               </select>
-              <Button onClick={handleAssignKitten}>Koppel</Button>
+              <Btn onClick={handleAssignKitten}>Koppel</Btn>
             </div>
 
             <ul className="space-y-3">
@@ -158,7 +158,7 @@ export default function CustomerDetailPage({ params }) {
                 <option value="">Kies een nestje om te koppelen...</option>
                 {availableLitters.map(l => <option key={l.id} value={l.id}>{l.name}</option>)}
               </select>
-              <Button onClick={handleAssignLitter}>Koppel</Button>
+              <Btn onClick={handleAssignLitter}>Koppel</Btn>
             </div>
 
             <ul className="space-y-3">
