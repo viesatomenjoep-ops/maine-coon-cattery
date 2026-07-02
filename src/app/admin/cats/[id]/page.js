@@ -32,7 +32,7 @@ const CldUploadWidget = ({ children, onSuccess, options }) => {
 
 export default function CatDossier({ params }) {
   const router = useRouter();
-  const { kittens, deleteKitten, updateKitten, addKitten, addDocument, addMedia, documents, media, addWeight, deleteWeight } = useStore();
+  const { kittens, customers, deleteKitten, updateKitten, addKitten, addDocument, addMedia, documents, media, addWeight, deleteWeight } = useStore();
   const isNew = params.id === 'new';
 
   const catDocs = documents.filter(d => d.cat_id === params.id);
@@ -60,7 +60,7 @@ export default function CatDossier({ params }) {
     status: 'Beschikbaar',
     priceNL: '',
     priceBE: '',
-    customerName: '',
+    customer_id: '',
     secretToken: isNew ? ((typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : Math.random().toString(36).substring(2) + Date.now().toString(36)) : '123e4567-e89b-12d3-a456-426614174000',
     // Vaccinations
     vaccineName: '',
@@ -356,7 +356,14 @@ export default function CatDossier({ params }) {
                       <option value="Eigen fok">Eigen fok</option>
                     </Select>
                   </Field>
-                  <Field label="Klant Naam"><Input name="customerName" value={formData.customerName} onChange={handleChange} placeholder="Bv. Jan & Lisa" /></Field>
+                  <Field label="Gekoppelde Klant">
+                    <Select name="customer_id" value={formData.customer_id || ''} onChange={handleChange}>
+                      <option value="">- Geen klant (of nieuw in klantenbestand) -</option>
+                      {customers.map(c => (
+                        <option key={c.id} value={c.id}>{c.name}</option>
+                      ))}
+                    </Select>
+                  </Field>
                   
                   <div className="col-span-full grid grid-cols-2 gap-4 items-end">
                     <Field label="Prijs NL (€)">

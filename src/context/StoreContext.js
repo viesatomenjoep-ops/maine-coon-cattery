@@ -131,6 +131,7 @@ export function StoreProvider({ children }) {
     if (patch.priceBE !== undefined) { dbPatch.price_be = patch.priceBE; delete dbPatch.priceBE; }
     if (patch.secretToken !== undefined) delete dbPatch.secretToken; // prevent updating token names wrong
     if (patch.sex !== undefined) { dbPatch.gender = patch.sex; delete dbPatch.sex; }
+    if (dbPatch.customer_id === '') dbPatch.customer_id = null;
     
     await supabase.from('cats').update(dbPatch).eq('id', id);
   };
