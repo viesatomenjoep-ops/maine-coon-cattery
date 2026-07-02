@@ -1,57 +1,32 @@
-import { createServerClient } from '@supabase/ssr'
 import { NextResponse } from 'next/server'
 
-export async function middleware(request) {
-  let supabaseResponse = NextResponse.next({
-    request,
-  })
-
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-    {
-      cookies: {
-        getAll() {
-          return request.cookies.getAll()
-        },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) => request.cookies.set(name, value))
-          supabaseResponse = NextResponse.next({
-            request,
-          })
-          cookiesToSet.forEach(({ name, value, options }) =>
-            supabaseResponse.cookies.set(name, value, options)
-          )
-        },
-      },
-    }
-  )
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  // Protect /admin routes
-  if (request.nextUrl.pathname.startsWith('/admin')) {
-    if (!user) {
-      const url = request.nextUrl.clone()
-      url.pathname = '/login'
-      return NextResponse.redirect(url)
-    }
+export function middleware(request) {
+  // Controleer of de request naar een klantportaal gaat (deze moeten altijd toegankelijk blijven zonder login)
+  const isCustomerPortal = request.nextUrl.pathname.startsWith('/k/');
+  
+  if (isCustomerPortal) {
+    return NextResponse.next()
   }
 
-  return supabaseResponse
+  // Controleer op Supabase sessie cookies (doorgaans in de vorm van sb-[id]-auth-token)
+  const hasSession = request.cookies.getAll().some(c => c.name.startsWith('sb-') && c.name.endsWith('-auth-token'));
+  
+  const isLoginPage = request.nextUrl.pathname === '/login'
+
+  // Als de gebruiker niet is ingelogd en niet op de loginpagina is: redirect naar /login
+  if (!hasSession && !isLoginPage) {
+    return NextResponse.redirect(new URL('/login', request.url))
+  }
+
+  // Als de gebruiker wél is ingelogd en naar /login probeert te gaan: direct naar dashboard
+  if (hasSession && isLoginPage) {
+    return NextResponse.redirect(new URL('/admin', request.url))
+  }
+
+  return NextResponse.next()
 }
 
+// Zorg dat de middleware op álle routes draait, behalve static bestanden en API's
 export const config = {
-  matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * - api (API routes, we handle those separately or they don't need UI redirect)
-     */
-    '/((?!_next/static|_next/image|favicon.ico|api|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
-  ],
+  matcher: ['/((?!api|_next/static|_next/image|favicon.ico|images|logo.png).*)'],
 }

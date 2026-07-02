@@ -50,7 +50,6 @@ export default function AdminLayout({ children }) {
   }
 
   return (
-    <StoreProvider>
     <div className="relative z-10 min-h-screen overflow-x-hidden bg-cream-100 lg:grid lg:grid-cols-[260px_1fr]">
       {/* sidebar */}
       <aside className={`fixed inset-y-0 left-0 z-40 w-full transform border-r border-forest-900/10 bg-white transition-transform lg:static lg:w-[260px] lg:translate-x-0 ${open ? 'translate-x-0' : '-translate-x-full'}`}>
@@ -109,6 +108,5 @@ export default function AdminLayout({ children }) {
         <div className="p-4 sm:p-6 md:p-10">{children}</div>
       </div>
     </div>
-    </StoreProvider>
   );
 }

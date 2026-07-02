@@ -1,6 +1,7 @@
 import './globals.css';
 import { AuthProvider } from '@/context/AuthContext';
 import { LanguageProvider } from '@/context/LanguageContext';
+import { StoreProvider } from '@/context/StoreContext';
 
 export const metadata = {
   title: "Wendy's Dream · Maine Coon Cattery",
@@ -19,9 +20,11 @@ export default function RootLayout({ children }) {
         />
       </head>
       <body className="font-body antialiased relative">
-        <LanguageProvider>
-          <AuthProvider>{children}</AuthProvider>
-        </LanguageProvider>
+        <StoreProvider>
+          <LanguageProvider>
+            <AuthProvider>{children}</AuthProvider>
+          </LanguageProvider>
+        </StoreProvider>
       </body>
     </html>
   );

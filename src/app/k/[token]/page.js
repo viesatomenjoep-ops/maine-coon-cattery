@@ -109,6 +109,19 @@ export default function CustomerPortal({ params }) {
     return notFound();
   }
 
+  const forceDownload = async (url, filename) => {
+    try {
+      const res = await fetch(url);
+      const blob = await res.blob();
+      const a = document.createElement('a');
+      a.href = window.URL.createObjectURL(blob);
+      a.download = filename || `cattery-media-${Date.now()}`;
+      a.click();
+    } catch(e) {
+      window.open(url, '_blank');
+    }
+  };
+
   const { customer, kittens, litters, updates } = data;
 
   return (
@@ -167,9 +180,14 @@ export default function CustomerPortal({ params }) {
                         {k.pedigree_data.sire && <p className="text-sm text-forest-700">Vader: <span className="font-medium text-forest-900">{k.pedigree_data.sire}</span></p>}
                         {k.pedigree_data.dam && <p className="text-sm text-forest-700 mt-1">Moeder: <span className="font-medium text-forest-900">{k.pedigree_data.dam}</span></p>}
                         {k.pedigree_data.image_url && (
-                          <a href={k.pedigree_data.image_url} target="_blank" rel="noreferrer" className="mt-3 inline-block text-xs font-semibold uppercase tracking-wider text-brass-600 hover:text-brass-700 transition">
-                            Bekijk Originele Stamboom →
-                          </a>
+                          <div className="mt-3 flex gap-4">
+                            <a href={k.pedigree_data.image_url} target="_blank" rel="noreferrer" className="inline-block text-xs font-semibold uppercase tracking-wider text-brass-600 hover:text-brass-700 transition">
+                              Bekijk Stamboom →
+                            </a>
+                            <button onClick={() => forceDownload(k.pedigree_data.image_url, `stamboom-${k.name}.jpg`)} className="inline-block text-xs font-semibold uppercase tracking-wider text-forest-600 hover:text-forest-900 transition">
+                              Download ↓
+                            </button>
+                          </div>
                         )}
                       </div>
                     )}
@@ -180,7 +198,12 @@ export default function CustomerPortal({ params }) {
                         <h4 className="text-sm font-bold uppercase tracking-wider text-forest-800 mb-4">Gallerij & Foto's</h4>
                         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
                           {k.media.map(m => (
-                            <img key={m.id} src={m.media_url} alt="Kitten foto" className="aspect-square w-full rounded-xl object-cover shadow-sm border border-forest-900/10 hover:opacity-90 transition cursor-pointer" onClick={() => window.open(m.media_url, '_blank')} />
+                            <div key={m.id} className="relative group">
+                              <img src={m.media_url} alt="Kitten foto" className="aspect-square w-full rounded-xl object-cover shadow-sm border border-forest-900/10 hover:opacity-90 transition cursor-pointer" onClick={() => window.open(m.media_url, '_blank')} />
+                              <button onClick={() => forceDownload(m.media_url, m.name || `foto-${k.name}.jpg`)} className="absolute bottom-2 right-2 bg-white/90 text-forest-900 hover:bg-white text-[10px] font-bold px-2 py-1.5 rounded shadow-sm opacity-0 group-hover:opacity-100 transition">
+                                DOWNLOAD
+                              </button>
+                            </div>
                           ))}
                         </div>
                       </div>
@@ -192,9 +215,14 @@ export default function CustomerPortal({ params }) {
                         <h4 className="text-sm font-bold uppercase tracking-wider text-forest-800 mb-4">Documenten (Medisch & Paspoort)</h4>
                         <div className="flex flex-wrap gap-2">
                           {k.documents.map(d => (
-                            <a key={d.id} href={d.file_url} target="_blank" rel="noreferrer" className="flex items-center gap-2 rounded-lg bg-forest-50 px-3 py-2 text-sm text-forest-800 hover:bg-forest-100 transition border border-forest-900/5 shadow-sm">
-                              📄 {d.notes || 'Document'}
-                            </a>
+                            <div key={d.id} className="flex items-center gap-2 rounded-lg bg-forest-50 pl-3 pr-1 py-1 text-sm text-forest-800 border border-forest-900/5 shadow-sm group">
+                              <a href={d.file_url} target="_blank" rel="noreferrer" className="flex items-center gap-2 hover:text-forest-950 transition py-1">
+                                📄 {d.notes || d.document_type || 'Document'}
+                              </a>
+                              <button onClick={() => forceDownload(d.file_url, d.notes || d.document_type || 'document.pdf')} className="ml-2 px-2 py-1 text-xs font-semibold text-brass-600 hover:bg-brass-100 rounded-md transition opacity-0 group-hover:opacity-100">
+                                Download ↓
+                              </button>
+                            </div>
                           ))}
                         </div>
                       </div>
