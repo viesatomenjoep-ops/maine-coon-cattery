@@ -211,13 +211,17 @@ export default function CustomerPortal({ params }) {
                         {k.pedigree_data.sire && <p className="text-sm text-forest-700">Vader: <span className="font-medium text-forest-900">{k.pedigree_data.sire}</span></p>}
                         {k.pedigree_data.dam && <p className="text-sm text-forest-700 mt-1">Moeder: <span className="font-medium text-forest-900">{k.pedigree_data.dam}</span></p>}
                         {k.pedigree_data.image_url && (
-                          <div className="mt-3 flex gap-4">
-                            <a href={k.pedigree_data.image_url} target="_blank" rel="noreferrer" className="inline-block text-xs font-semibold uppercase tracking-wider text-brass-600 hover:text-brass-700 transition">
-                              Bekijk Stamboom →
-                            </a>
-                            <button onClick={() => forceDownload(k.pedigree_data.image_url, `stamboom-${k.name}.jpg`)} className="inline-block text-xs font-semibold uppercase tracking-wider text-forest-600 hover:text-forest-900 transition">
-                              Download ↓
-                            </button>
+                          <div className="mt-3 flex flex-col sm:flex-row gap-3 items-start sm:items-center bg-white p-3 rounded-xl border border-forest-900/10 shadow-sm">
+                            <img src={k.pedigree_data.image_url} alt="Stamboom" className="h-16 w-16 object-cover rounded-lg border border-forest-900/10 shrink-0" />
+                            <div className="flex-1 w-full flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                              <a href={k.pedigree_data.image_url} target="_blank" rel="noreferrer" className="inline-block text-sm font-semibold text-forest-900 hover:text-brass-600 transition truncate">
+                                Stamboom Afbeelding
+                              </a>
+                              <button onClick={() => forceDownload(k.pedigree_data.image_url, `stamboom-${k.name}.jpg`)} className="inline-flex items-center justify-center gap-1.5 rounded bg-brass-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-brass-700 transition shadow-sm w-full sm:w-auto">
+                                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+                                Download
+                              </button>
+                            </div>
                           </div>
                         )}
                       </div>
@@ -229,10 +233,11 @@ export default function CustomerPortal({ params }) {
                         <h4 className="text-sm font-bold uppercase tracking-wider text-forest-800 mb-4">Gallerij & Foto's</h4>
                         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
                           {k.media.map(m => (
-                            <div key={m.id} className="relative group">
-                              <img src={m.media_url} alt="Kitten foto" className="aspect-square w-full rounded-xl object-cover shadow-sm border border-forest-900/10 hover:opacity-90 transition cursor-pointer" onClick={() => window.open(m.media_url, '_blank')} />
-                              <button onClick={() => forceDownload(m.media_url, m.name || `foto-${k.name}.jpg`)} className="absolute bottom-2 right-2 bg-white/90 text-forest-900 hover:bg-white text-[10px] font-bold px-2 py-1.5 rounded shadow-sm opacity-0 group-hover:opacity-100 transition">
-                                DOWNLOAD
+                            <div key={m.id} className="flex flex-col gap-2 rounded-xl bg-white p-2 border border-forest-900/10 shadow-sm">
+                              <img src={m.media_url} alt="Kitten foto" className="aspect-square w-full rounded-lg object-cover cursor-pointer hover:opacity-90 transition" onClick={() => window.open(m.media_url, '_blank')} />
+                              <button onClick={() => forceDownload(m.media_url, m.name || `foto-${k.name}.jpg`)} className="w-full inline-flex items-center justify-center gap-1.5 rounded bg-forest-50 border border-forest-900/5 px-2 py-2 text-[10px] font-bold text-forest-800 hover:bg-forest-100 hover:text-forest-950 transition uppercase tracking-wider">
+                                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+                                Download
                               </button>
                             </div>
                           ))}

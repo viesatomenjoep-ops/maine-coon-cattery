@@ -83,7 +83,7 @@ export default function LittersPage() {
               <textarea value={litter.description} onChange={(e)=>setLitter({...litter, description:e.target.value})} className="w-full rounded-xl border-forest-900/20 bg-white/50 p-3 text-sm focus:border-forest-500 focus:ring-forest-500 min-h-[80px]" placeholder="Vertel iets leuks over dit nestje..." />
             </Field>
           </div>
-          <Btn variant="brass" onClick={saveLitter} className="mt-6">Nestje toevoegen</Btn>
+          <Btn variant="brass" onClick={saveLitter} className="mt-6 w-full sm:w-auto">Nestje toevoegen</Btn>
         </Card>
 
         {/* New kitten */}
@@ -114,14 +114,14 @@ export default function LittersPage() {
               <Field label="Prijs BE (€)"><Input type="number" value={kit.priceBE} onChange={(e)=>setKit({...kit, priceBE:Number(e.target.value)})} /></Field>
             </div>
             <Field label="Cover Afbeelding (Optioneel)">
-              <div className="flex items-center gap-3">
-                <input type="file" accept="image/*" onChange={handleUpload} className="text-sm file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-forest-50 file:text-forest-700 hover:file:bg-forest-100" />
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+                <input type="file" accept="image/*" onChange={handleUpload} className="text-sm w-full file:w-full sm:file:w-auto file:mb-2 sm:file:mb-0 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-forest-50 file:text-forest-700 hover:file:bg-forest-100" />
                 {uploading && <span className="text-xs text-forest-500">Uploaden...</span>}
                 {kit.cover_image && <img src={kit.cover_image} alt="Preview" className="h-10 w-10 object-cover rounded shadow" />}
               </div>
             </Field>
           </div>
-          <Btn variant="brass" onClick={saveKitten} className="mt-6">Kitten toevoegen</Btn>
+          <Btn variant="brass" onClick={saveKitten} className="mt-6 w-full sm:w-auto">Kitten toevoegen</Btn>
         </Card>
       </div>
 

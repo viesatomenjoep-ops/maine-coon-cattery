@@ -308,16 +308,17 @@ export default function CatDossier({ params }) {
                   <h2 className="font-display text-xl text-forest-900">Groei & Weegcurves</h2>
                   <p className="text-sm text-forest-700 mb-4">Voeg hier de wekelijkse wegingen toe. Deze curve wordt getoond in het klantenportaal.</p>
                   
-                  <div className="flex items-end gap-4 bg-cream-50 p-4 rounded-xl border border-forest-900/10">
-                    <div className="flex-1">
-                      <Field label="Datum"><Input type="date" name="weightDate" value={formData.weightDate} onChange={handleChange} /></Field>
+                  <div className="flex flex-col sm:flex-row items-stretch sm:items-end gap-4 bg-cream-50 p-4 rounded-xl border border-forest-900/10">
+                    <div className="flex-1 w-full">
+                      <Field label="Datum"><Input type="date" name="weightDate" value={formData.weightDate} onChange={handleChange} className="w-full" /></Field>
                     </div>
-                    <div className="flex-1">
-                      <Field label="Gewicht (gram)"><Input type="number" name="weightGrams" value={formData.weightGrams} onChange={handleChange} placeholder="Bv. 1250" /></Field>
+                    <div className="flex-1 w-full">
+                      <Field label="Gewicht (gram)"><Input type="number" name="weightGrams" value={formData.weightGrams} onChange={handleChange} placeholder="Bv. 1250" className="w-full" /></Field>
                     </div>
                     <Btn 
                       type="button" 
                       variant="brass" 
+                      className="w-full sm:w-auto mt-2 sm:mt-0 justify-center py-3 sm:py-2.5" 
                       onClick={async () => {
                         if (!formData.weightDate || !formData.weightGrams) {
                           alert('Vul a.u.b. een datum en gewicht in.');
