@@ -50,6 +50,7 @@ export default function LittersPage() {
   const sireOptions = breedingCats.filter((c) => c.gender === 'male');
   const damOptions = breedingCats.filter((c) => c.gender === 'female');
 
+  const [mode, setMode] = useState(null); // null = tegelkeuze, 'litter' of 'kitten'
   const [litter, setLitter] = useState(EMPTY_LITTER);
   const [sireManual, setSireManual] = useState(false);
   const [damManual, setDamManual] = useState(false);
@@ -58,9 +59,9 @@ export default function LittersPage() {
   const [litterUploading, setLitterUploading] = useState(false);
   const [lastLitterId, setLastLitterId] = useState('');
 
-  const kittenPanelRef = useRef(null);
+  const formRef = useRef(null);
 
-  const scrollToKittenPanel = () => kittenPanelRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  const scrollToForm = () => formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
   const handleUpload = async (e) => {
     const file = e.target.files[0];
@@ -126,12 +127,14 @@ export default function LittersPage() {
   const continueWithKittens = () => {
     if (!lastLitterId) return;
     setKit((k) => ({ ...k, litter_id: lastLitterId }));
-    scrollToKittenPanel();
+    setMode('kitten');
+    scrollToForm();
   };
 
   const addKittenToLitter = (litterId) => {
     setKit((k) => ({ ...k, litter_id: litterId }));
-    scrollToKittenPanel();
+    setMode('kitten');
+    scrollToForm();
   };
 
   const saveKitten = async () => {
@@ -164,10 +167,48 @@ export default function LittersPage() {
     <>
       <PageHead label="Fokkerij" title="Nestjes & Kittens" />
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+      <div ref={formRef} className="scroll-mt-24">
+        {mode === null && (
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+            <button
+              type="button"
+              onClick={() => setMode('litter')}
+              className="group flex flex-col items-start gap-4 rounded-3xl border border-forest-900/10 bg-white/70 p-8 text-left shadow-sm transition hover:-translate-y-1 hover:border-brass-400/60 hover:shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-brass-500"
+            >
+              <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-forest-50 text-forest-700 transition group-hover:bg-brass-100 group-hover:text-brass-700">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-7 w-7"><path strokeLinecap="round" strokeLinejoin="round" d="M3 10.5 12 4l9 6.5" /><path strokeLinecap="round" strokeLinejoin="round" d="M5 9.5V20h14V9.5" /><path strokeLinecap="round" strokeLinejoin="round" d="M9 20v-5a3 3 0 0 1 6 0v5" /></svg>
+              </span>
+              <div>
+                <h2 className="font-display text-xl text-forest-900">Nieuw nestje aanmaken</h2>
+                <p className="mt-1 text-sm text-forest-600">Registreer een nieuw nestje met ouders, ras, status en cover-afbeelding.</p>
+              </div>
+              <span className="mt-auto text-sm font-semibold text-brass-700">Openen →</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => { setKit((k) => ({ ...k, litter_id: k.litter_id || litters[0]?.id || '' })); setMode('kitten'); }}
+              className="group flex flex-col items-start gap-4 rounded-3xl border border-forest-900/10 bg-white/70 p-8 text-left shadow-sm transition hover:-translate-y-1 hover:border-brass-400/60 hover:shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-brass-500"
+            >
+              <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-forest-50 text-forest-700 transition group-hover:bg-brass-100 group-hover:text-brass-700">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-7 w-7"><path strokeLinecap="round" strokeLinejoin="round" d="M12 21c4.5 0 7-2.5 7-6 0-2-1-3.5-2.5-4.5C16 8 15 6 12 6S8 8 7.5 10.5C6 11.5 5 13 5 15c0 3.5 2.5 6 7 6Z" /><path strokeLinecap="round" strokeLinejoin="round" d="M6.5 5.5 8 8.5M17.5 5.5 16 8.5M9.5 14h.01M14.5 14h.01" /></svg>
+              </span>
+              <div>
+                <h2 className="font-display text-xl text-forest-900">Kitten toevoegen</h2>
+                <p className="mt-1 text-sm text-forest-600">Voeg een kitten toe aan een bestaand nestje, met alle details.</p>
+              </div>
+              <span className="mt-auto text-sm font-semibold text-brass-700">Openen →</span>
+            </button>
+          </div>
+        )}
+
         {/* New litter */}
+        {mode === 'litter' && (
         <Card className="flex flex-col">
-          <h2 className="mb-4 font-display text-xl text-forest-900">Nieuw nestje aanmaken</h2>
+          <div className="mb-4 flex items-center justify-between gap-3">
+            <h2 className="font-display text-xl text-forest-900">Nieuw nestje aanmaken</h2>
+            <Btn variant="ghost" onClick={() => setMode(null)} className="!px-3 !py-1.5 !text-xs">← Terug</Btn>
+          </div>
           <div className="grid flex-1 gap-4">
             <Field label="Naam nestje"><Input value={litter.name} onChange={(e) => setLitter({ ...litter, name: e.target.value })} placeholder="Bijv. Noorderlicht" /></Field>
 
@@ -222,10 +263,15 @@ export default function LittersPage() {
             )}
           </div>
         </Card>
+        )}
 
         {/* New kitten */}
-        <Card ref={kittenPanelRef} className="flex flex-col scroll-mt-24">
-          <h2 className="mb-4 font-display text-xl text-forest-900">Kitten toevoegen</h2>
+        {mode === 'kitten' && (
+        <Card className="flex flex-col">
+          <div className="mb-4 flex items-center justify-between gap-3">
+            <h2 className="font-display text-xl text-forest-900">Kitten toevoegen</h2>
+            <Btn variant="ghost" onClick={() => setMode(null)} className="!px-3 !py-1.5 !text-xs">← Terug</Btn>
+          </div>
           <div className="grid flex-1 gap-4">
             <Field label="Nestje">
               <Select value={kit.litter_id} onChange={(e) => setKit({ ...kit, litter_id: e.target.value })}>
@@ -269,6 +315,7 @@ export default function LittersPage() {
           </div>
           <Btn variant="brass" onClick={saveKitten} className="mt-6 w-full sm:w-auto">Kitten toevoegen</Btn>
         </Card>
+        )}
       </div>
 
       {/* Litters & Kittens Tree */}
