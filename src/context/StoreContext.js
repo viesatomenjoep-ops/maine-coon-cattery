@@ -75,7 +75,8 @@ export function StoreProvider({ children }) {
               type: v.vaccine_name,
               date: v.vaccination_date,
               note: v.veterinarian_info,
-              due: v.next_due_date || null
+              due: v.next_due_date || null,
+              completed: v.completed || false
             })) || [];
             
             const catWeights = wData?.filter(w => w.cat_id === k.id).map(w => ({
@@ -465,6 +466,23 @@ export function StoreProvider({ children }) {
     }));
   };
 
+  // Een behandeling bijwerken (bv. afvinken als voltooid). Werkt op record-id.
+  const updateMedical = async (catId, medId, patch) => {
+    const dbPatch = {};
+    if (patch.completed !== undefined) dbPatch.completed = patch.completed;
+    if (patch.due !== undefined) dbPatch.next_due_date = patch.due || null;
+    if (patch.date !== undefined) dbPatch.vaccination_date = patch.date || null;
+    if (patch.note !== undefined) dbPatch.veterinarian_info = patch.note;
+    if (patch.type !== undefined) dbPatch.vaccine_name = patch.type;
+    const { error } = await supabase.from('vaccinations').update(dbPatch).eq('id', medId);
+    if (!error) {
+      setKittens(s => s.map(k => (k.id === catId
+        ? { ...k, medical: (k.medical || []).map(m => (m.id === medId ? { ...m, ...patch } : m)) }
+        : k)));
+    }
+    return { error };
+  };
+
   // ---- weights ----
   const addWeight = async (catId, date, grams) => {
     const { data, error } = await supabase.from('cat_weights').insert([withTid({
@@ -530,7 +548,7 @@ export function StoreProvider({ children }) {
       addNews, deleteNews, addLitter, updateLitter, deleteLitter,
       addKitten, updateKitten, deleteKitten,
       addBreedingCat, updateBreedingCat,
-      addDocument, addDocumentFull, deleteDocument, updateDocument, addMedia, deleteMedia, updateMedia, addMedical, deleteMedical,
+      addDocument, addDocumentFull, deleteDocument, updateDocument, addMedia, deleteMedia, updateMedia, addMedical, deleteMedical, updateMedical,
       addWeight, deleteWeight,
       addCustomer, updateCustomer, deleteCustomer,
       saveSiteContent

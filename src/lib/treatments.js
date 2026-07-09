@@ -1,10 +1,29 @@
 // Gedeelde helpers voor medische behandelingen (ontworming, inenting, check)
 // en hun geplande vervolgdatums / herinneringen.
 
-export const TREATMENT_TYPES = ['Vaccinatie', 'Ontworming', 'Gezondheidscheck'];
+export const TREATMENT_TYPES = [
+  'Ontworming',
+  'Vaccinatie 9 weken',
+  'Vaccinatie 12 weken',
+  'Transponderchip',
+  'Gezondheidscheck',
+];
 
-export const treatmentIcon = (type) =>
-  type === 'Vaccinatie' ? '💉' : type === 'Ontworming' ? '💊' : '🩺';
+// Standaardschema: aantal weken ná de geboorte waarop een behandeling hoort.
+export const TREATMENT_SCHEDULE = {
+  'Ontworming': 4,
+  'Vaccinatie 9 weken': 9,
+  'Vaccinatie 12 weken': 12,
+};
+
+export const treatmentIcon = (type) => {
+  const t = (type || '').toLowerCase();
+  if (t.includes('vaccinat') || t.includes('enting')) return '💉';
+  if (t.includes('ontworm')) return '💊';
+  if (t.includes('transponder') || t.includes('chip')) return '📍';
+  if (t.includes('gezond') || t.includes('check')) return '🩺';
+  return '🐾';
+};
 
 const DAY = 86400000;
 
@@ -44,6 +63,7 @@ export function collectUpcoming(kittens, { includeOverdue = true, onlyCatIds = n
     if (onlyCatIds && !onlyCatIds.includes(k.id)) continue;
     for (const m of k.medical || []) {
       if (!m.due) continue;
+      if (m.completed) continue; // afgevinkte taken tellen niet meer mee
       const n = daysUntil(m.due);
       if (n === null) continue;
       if (!includeOverdue && n < 0) continue;
@@ -61,7 +81,7 @@ export function dueSoon(kittens, opts = {}) {
 // Per kat: de eerstvolgende geplande behandeling van een bepaald type (of elk type).
 export function nextTreatment(cat, type = null) {
   const entries = (cat?.medical || [])
-    .filter((m) => m.due && (!type || m.type === type))
+    .filter((m) => m.due && !m.completed && (!type || m.type === type))
     .map((m) => ({ ...m, days: daysUntil(m.due) }))
     .filter((m) => m.days !== null && m.days >= 0)
     .sort((a, b) => new Date(a.due) - new Date(b.due));

@@ -3,14 +3,30 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useStore } from '@/context/StoreContext';
 import { PageHead, Card, Field, Input, Select, Btn } from '@/components/admin';
-import { TREATMENT_TYPES as TYPES, treatmentIcon, urgency, formatDate, collectUpcoming } from '@/lib/treatments';
+import { TREATMENT_TYPES as TYPES, TREATMENT_SCHEDULE, treatmentIcon, urgency, formatDate, collectUpcoming } from '@/lib/treatments';
 
 const isMale = (g) => /kater|mann|\bmale\b|\bm\b/i.test(g || '');
 const isFemale = (g) => /poes|vrouw|female|\bf\b/i.test(g || '');
 const groupOf = (k) => (!k.is_own_breeding_cat ? 'kittens' : isMale(k.gender) ? 'katers' : isFemale(k.gender) ? 'poezen' : 'overige');
 
 export default function MedicalPage() {
-  const { litters, kittens, addMedical, deleteMedical } = useStore();
+  const { litters, kittens, addMedical, deleteMedical, updateMedical } = useStore();
+
+  // Geboortedatum van een kat (eigen datum of die van het nestje).
+  const catBirth = (catId) => {
+    const k = kittens.find((c) => c.id === catId);
+    if (!k) return null;
+    return k.date_of_birth || litters.find((l) => l.id === k.litter_id)?.date_of_birth || null;
+  };
+  // Stel automatisch de vervaldatum voor op basis van het schema (4/9/12 weken).
+  const suggestDue = (catId, type) => {
+    const wk = TREATMENT_SCHEDULE[type];
+    const birth = catBirth(catId);
+    if (!wk || !birth) return '';
+    const d = new Date(birth);
+    d.setDate(d.getDate() + wk * 7);
+    return isNaN(d) ? '' : d.toISOString().slice(0, 10);
+  };
   const [litterId, setLitterId] = useState('');
   const [selected, setSelected] = useState([]);
   const [entry, setEntry] = useState({ type: TYPES[0], date: '', due: '', note: '' });
@@ -65,6 +81,26 @@ export default function MedicalPage() {
         {done && <span className="rounded-full bg-forest-100 px-4 py-2 text-sm text-forest-700">✓ Toegevoegd aan dossiers</span>}
       </PageHead>
 
+      {/* Uitleg standaardschema */}
+      <div className="mb-6 rounded-2xl border border-forest-900/10 bg-white p-5">
+        <h2 className="font-display text-lg text-forest-900">Standaard gezondheidsschema</h2>
+        <p className="mt-1 text-sm text-forest-600">Je kunt voor elke categorie een datum + herinnering instellen. Zodra een behandeling gedaan is, vink je hem af — dan stopt de melding.</p>
+        <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-5">
+          {[
+            { i: '💊', t: 'Ontworming', d: 'Vanaf 4 weken — kittens én de moeder' },
+            { i: '💉', t: 'Vaccinatie 9 weken', d: 'Eerste enting rond 9 weken' },
+            { i: '💉', t: 'Vaccinatie 12 weken', d: 'Tweede enting rond 12 weken' },
+            { i: '📍', t: 'Transponderchip', d: 'Chip plaatsen + registreren' },
+            { i: '🩺', t: 'Gezondheidscheck', d: 'Controle door de dierenarts' },
+          ].map((x) => (
+            <div key={x.t} className="rounded-xl border border-forest-900/10 bg-cream-50 p-3">
+              <p className="text-sm font-semibold text-forest-900">{x.i} {x.t}</p>
+              <p className="mt-0.5 text-xs text-forest-600">{x.d}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
       <div className="grid gap-6 lg:grid-cols-2">
         {/* ---- 1. Groepsbehandeling ---- */}
         <Card>
@@ -73,7 +109,7 @@ export default function MedicalPage() {
           <div className="grid gap-4">
             <Field label="Nestje"><Select value={litterId} onChange={(e) => { setLitterId(e.target.value); setSelected([]); }}>{litters.map((l) => <option key={l.id} value={l.id}>{l.name}</option>)}</Select></Field>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <Field label="Type"><Select value={entry.type} onChange={(e) => setEntry({ ...entry, type: e.target.value })}>{TYPES.map((t) => <option key={t}>{t}</option>)}</Select></Field>
+              <Field label="Type"><Select value={entry.type} onChange={(e) => { const type = e.target.value; const wk = TREATMENT_SCHEDULE[type]; const birth = litters.find((l) => l.id === litterId)?.date_of_birth; let due = entry.due; if (wk && birth) { const d = new Date(birth); d.setDate(d.getDate() + wk * 7); if (!isNaN(d)) due = d.toISOString().slice(0, 10); } setEntry({ ...entry, type, due }); }}>{TYPES.map((t) => <option key={t}>{t}</option>)}</Select></Field>
               <Field label="Uitgevoerd op"><Input type="date" value={entry.date} onChange={(e) => setEntry({ ...entry, date: e.target.value })} /></Field>
             </div>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -107,7 +143,7 @@ export default function MedicalPage() {
           <p className="mb-4 text-sm text-forest-600">Voor één specifieke kat — elke kitten, kater of poes.</p>
           <div className="grid gap-4">
             <Field label="Welke kat?">
-              <Select value={single.catId} onChange={(e) => setSingle({ ...single, catId: e.target.value })}>
+              <Select value={single.catId} onChange={(e) => { const catId = e.target.value; setSingle((s) => ({ ...s, catId, due: suggestDue(catId, s.type) || s.due })); }}>
                 <option value="">Selecteer een kat…</option>
                 {groups.map((g) => {
                   const list = kittens.filter((k) => groupOf(k) === g.key);
@@ -121,13 +157,16 @@ export default function MedicalPage() {
               </Select>
             </Field>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <Field label="Type"><Select value={single.type} onChange={(e) => setSingle({ ...single, type: e.target.value })}>{TYPES.map((t) => <option key={t}>{t}</option>)}</Select></Field>
+              <Field label="Type"><Select value={single.type} onChange={(e) => { const type = e.target.value; setSingle((s) => ({ ...s, type, due: suggestDue(s.catId, type) || s.due })); }}>{TYPES.map((t) => <option key={t}>{t}</option>)}</Select></Field>
               <Field label="Uitgevoerd op"><Input type="date" value={single.date} onChange={(e) => setSingle({ ...single, date: e.target.value })} /></Field>
             </div>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <Field label="Volgende keer nodig op (herinnering)"><Input type="date" value={single.due} onChange={(e) => setSingle({ ...single, due: e.target.value })} /></Field>
               <Field label="Notitie"><Input value={single.note} onChange={(e) => setSingle({ ...single, note: e.target.value })} placeholder="Bijv. Ontworming Milbemax" /></Field>
             </div>
+            {TREATMENT_SCHEDULE[single.type] && (
+              <p className="-mt-1 text-xs text-forest-500">💡 Datum automatisch voorgesteld op <b>{TREATMENT_SCHEDULE[single.type]} weken</b> na de geboorte. Je mag hem aanpassen.</p>
+            )}
             <Btn variant="brass" onClick={applySingle}>Behandeling opslaan</Btn>
           </div>
         </Card>
@@ -146,15 +185,18 @@ export default function MedicalPage() {
             {agenda.map((a, i) => {
               const u = urgency(a.due);
               return (
-                <Link key={a.medId || i} href={`/admin/cats/${a.catId}`} className={`flex items-center gap-3 rounded-2xl border bg-white p-4 shadow-sm transition hover:shadow-md ${u?.key === 'overdue' || u?.key === 'today' ? 'border-red-200' : 'border-forest-900/10'}`}>
+                <div key={a.medId || i} className={`flex items-center gap-3 rounded-2xl border bg-white p-4 shadow-sm ${u?.key === 'overdue' || u?.key === 'today' ? 'border-red-200' : 'border-forest-900/10'}`}>
                   <span className="text-2xl">{treatmentIcon(a.type)}</span>
-                  <div className="min-w-0 flex-1">
+                  <Link href={`/admin/cats/${a.catId}`} className="min-w-0 flex-1">
                     <p className="truncate font-semibold text-forest-900">{a.catName}</p>
                     <p className="truncate text-xs text-forest-600">{a.type}{a.note ? ` · ${a.note}` : ''}</p>
                     <p className="mt-1 text-xs text-forest-500">{formatDate(a.due)}</p>
+                  </Link>
+                  <div className="flex shrink-0 flex-col items-end gap-1.5">
+                    {u && <span className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold ${u.cls}`}>{u.label}</span>}
+                    <button onClick={() => updateMedical(a.catId, a.medId, { completed: true })} className="inline-flex items-center gap-1 rounded-lg bg-emerald-600 px-2 py-1 text-[10px] font-semibold text-white transition hover:bg-emerald-700">✓ Gedaan</button>
                   </div>
-                  {u && <span className={`shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-semibold ${u.cls}`}>{u.label}</span>}
-                </Link>
+                </div>
               );
             })}
           </div>
@@ -176,11 +218,20 @@ export default function MedicalPage() {
               ) : (
                 <div className="flex flex-col gap-2">
                   {k.medical.map((m, i) => (
-                    <div key={m.id || i} className="flex items-center justify-between gap-1.5 rounded-lg border border-forest-900/5 bg-cream-50 px-3 py-2 text-xs text-forest-800">
+                    <div key={m.id || i} className={`flex items-center justify-between gap-1.5 rounded-lg border px-3 py-2 text-xs ${m.completed ? 'border-emerald-200 bg-emerald-50 text-forest-500' : 'border-forest-900/5 bg-cream-50 text-forest-800'}`}>
                       <div className="flex min-w-0 items-center gap-2">
+                        {m.due && (
+                          <input
+                            type="checkbox"
+                            checked={!!m.completed}
+                            onChange={(e) => updateMedical(k.id, m.id, { completed: e.target.checked })}
+                            title="Markeer als voltooid"
+                            className="h-4 w-4 shrink-0 accent-emerald-600"
+                          />
+                        )}
                         <span className="text-sm">{treatmentIcon(m.type)}</span>
                         <span suppressHydrationWarning className="min-w-[64px] font-medium">{m.date ? new Date(m.date).toLocaleDateString('nl-NL', { day: 'numeric', month: 'short' }) : '—'}</span>
-                        <span className="truncate text-forest-600">{m.type}{m.note ? `: ${m.note}` : ''}{m.due ? ` · volgende: ${formatDate(m.due)}` : ''}</span>
+                        <span className={`truncate ${m.completed ? 'line-through' : 'text-forest-600'}`}>{m.type}{m.note ? `: ${m.note}` : ''}{m.due ? ` · volgende: ${formatDate(m.due)}` : ''}{m.completed ? ' · ✓ voltooid' : ''}</span>
                       </div>
                       <button onClick={() => { if (confirm('Weet je zeker dat je deze notitie wilt verwijderen?')) deleteMedical(k.id, i); }} className="ml-2 shrink-0 text-red-500 hover:text-red-700">Verwijder</button>
                     </div>
