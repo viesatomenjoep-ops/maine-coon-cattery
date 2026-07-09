@@ -59,21 +59,30 @@ export default function MediaDocumentenPage() {
   const [previewGallery, setPreviewGallery] = useState(null);
 
   const handleUploadSuccess = async (category, kittenId, result) => {
-    if (category === 'Galerij') {
-      await addMedia({ url: result.info.secure_url, name: result.info.name });
-      setPreviewGallery({ url: result.info.secure_url, name: result.info.name });
-    } else {
-      await addDocument({ 
-        url: result.info.secure_url, 
-        name: result.info.name || 'Document',
-        category,
-        cat_id: kittenId || null 
-      });
-      if (category === 'Medisch') {
-        setPreviewMedical({ url: result.info.secure_url, name: result.info.name });
+    try {
+      if (category === 'Galerij') {
+        const saved = await addMedia({ url: result.info.secure_url, name: result.info.name });
+        if (!saved) throw new Error('opslaan mislukt');
+        setPreviewGallery({ url: result.info.secure_url, name: result.info.name });
       } else {
-        setPreviewContract({ url: result.info.secure_url, name: result.info.name });
+        if (!kittenId) {
+          alert('Kies eerst een kat (kitten, kater of poes) voordat je uploadt — anders wordt het bestand niet aan een dossier gekoppeld.');
+          return;
+        }
+        const saved = await addDocument({
+          url: result.info.secure_url,
+          name: result.info.name || 'Document',
+          category,
+          cat_id: kittenId,
+        });
+        if (!saved) throw new Error('opslaan mislukt');
+        const catName = kittens.find((k) => k.id === kittenId)?.name || 'de kat';
+        if (category === 'Medisch') setPreviewMedical({ url: result.info.secure_url, name: result.info.name });
+        else setPreviewContract({ url: result.info.secure_url, name: result.info.name });
+        alert(`✓ Opgeslagen bij ${catName}.`);
       }
+    } catch (err) {
+      alert('Opslaan in de database is mislukt. Ververs de pagina en probeer het opnieuw.');
     }
   };
 
@@ -191,11 +200,12 @@ export default function MediaDocumentenPage() {
             >
               {({ open, openCamera }) => (
                 <div className="flex flex-col gap-3">
-                  <button type="button" onClick={(e) => { e.preventDefault(); open(); }} className="w-full flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-blue-200 bg-blue-50/50 p-6 transition hover:bg-blue-50">
+                  {!targetMedical && <p className="rounded-lg bg-blue-50 px-3 py-2 text-xs font-medium text-blue-700">👆 Kies eerst een kat hierboven om te kunnen uploaden.</p>}
+                  <button type="button" disabled={!targetMedical} onClick={(e) => { e.preventDefault(); if (!targetMedical) return alert('Kies eerst een kat.'); open(); }} className={`w-full flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-blue-200 bg-blue-50/50 p-6 transition hover:bg-blue-50 ${!targetMedical ? 'cursor-not-allowed opacity-50' : ''}`}>
                     <span className="rounded-full bg-blue-100 px-4 py-2 text-sm font-semibold text-blue-700 shadow-sm">📁 Kies bestand</span>
-                    <span className="text-xs text-blue-600/70">PDF of foto (auto-save)</span>
+                    <span className="text-xs text-blue-600/70">PDF of foto — wordt direct opgeslagen</span>
                   </button>
-                  <button type="button" onClick={(e) => { e.preventDefault(); openCamera(); }} className="w-full rounded-xl border border-blue-200 bg-white px-4 py-3 text-sm font-semibold text-blue-700 transition hover:bg-blue-50">
+                  <button type="button" disabled={!targetMedical} onClick={(e) => { e.preventDefault(); if (!targetMedical) return alert('Kies eerst een kat.'); openCamera(); }} className={`w-full rounded-xl border border-blue-200 bg-white px-4 py-3 text-sm font-semibold text-blue-700 transition hover:bg-blue-50 ${!targetMedical ? 'cursor-not-allowed opacity-50' : ''}`}>
                     📷 Open camera
                   </button>
                 </div>
@@ -236,11 +246,12 @@ export default function MediaDocumentenPage() {
             >
               {({ open, openCamera }) => (
                 <div className="flex flex-col gap-3">
-                  <button type="button" onClick={(e) => { e.preventDefault(); open(); }} className="w-full flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-terracotta-200 bg-terracotta-50/50 p-6 transition hover:bg-terracotta-50">
+                  {!targetContract && <p className="rounded-lg bg-terracotta-50 px-3 py-2 text-xs font-medium text-terracotta-700">👆 Kies eerst een kat hierboven om te kunnen uploaden.</p>}
+                  <button type="button" disabled={!targetContract} onClick={(e) => { e.preventDefault(); if (!targetContract) return alert('Kies eerst een kat.'); open(); }} className={`w-full flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-terracotta-200 bg-terracotta-50/50 p-6 transition hover:bg-terracotta-50 ${!targetContract ? 'cursor-not-allowed opacity-50' : ''}`}>
                     <span className="rounded-full bg-terracotta-100 px-4 py-2 text-sm font-semibold text-terracotta-700 shadow-sm">📁 Kies bestand</span>
-                    <span className="text-xs text-terracotta-600/70">Contract PDF of foto (auto-save)</span>
+                    <span className="text-xs text-terracotta-600/70">Contract PDF of foto — wordt direct opgeslagen</span>
                   </button>
-                  <button type="button" onClick={(e) => { e.preventDefault(); openCamera(); }} className="w-full rounded-xl border border-terracotta-200 bg-white px-4 py-3 text-sm font-semibold text-terracotta-700 transition hover:bg-terracotta-50">
+                  <button type="button" disabled={!targetContract} onClick={(e) => { e.preventDefault(); if (!targetContract) return alert('Kies eerst een kat.'); openCamera(); }} className={`w-full rounded-xl border border-terracotta-200 bg-white px-4 py-3 text-sm font-semibold text-terracotta-700 transition hover:bg-terracotta-50 ${!targetContract ? 'cursor-not-allowed opacity-50' : ''}`}>
                     📷 Open camera
                   </button>
                 </div>
