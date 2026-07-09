@@ -381,7 +381,7 @@ export default function LitterEditor({ initialLitterId = null, onClose }) {
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
             <Field label="Ras"><Input value={litter.breed} onChange={(e) => setLitter({ ...litter, breed: e.target.value })} /></Field>
             <Field label="Status"><Select value={litter.status} onChange={(e) => setLitter({ ...litter, status: e.target.value })}>{LITTER_STATUSES.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}</Select></Field>
-            <Field label="Verwacht aantal kittens"><Input type="number" min="0" value={litter.expected_count} onChange={(e) => setLitter({ ...litter, expected_count: e.target.value })} placeholder="Optioneel" /></Field>
+            <Field label="Aantal kittens"><Input type="number" min="0" value={litter.expected_count} onChange={(e) => setLitter({ ...litter, expected_count: e.target.value })} placeholder="Optioneel" /></Field>
           </div>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Field label="Geboortedatum"><Input type="date" value={litter.date_of_birth} onChange={(e) => setLitter({ ...litter, date_of_birth: e.target.value })} /></Field>

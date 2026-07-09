@@ -1,6 +1,7 @@
 import { v2 as cloudinary } from 'cloudinary';
 import { NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
+import { cookies } from 'next/headers';
 
 cloudinary.config({
   cloud_name: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
@@ -10,18 +11,27 @@ cloudinary.config({
 
 export async function POST(request) {
   try {
+    const cookieStore = await cookies();
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
       {
         cookies: {
           getAll() {
-            return request.cookies.getAll()
+            return cookieStore.getAll();
+          },
+          setAll(cookiesToSet) {
+            try {
+              cookiesToSet.forEach(({ name, value, options }) => cookieStore.set(name, value, options));
+            } catch {
+              // In sommige contexten (bv. streaming) kan setAll niet schrijven; sessie-refresh
+              // wordt dan door de client afgehandeld.
+            }
           },
         },
       }
     );
-    
+
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized. Je moet ingelogd zijn om bestanden te uploaden.' }, { status: 401 });
