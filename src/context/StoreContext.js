@@ -119,7 +119,9 @@ export function StoreProvider({ children }) {
       // tags are not in timeline_updates, but let's assume content/title is main
     };
     const { data, error } = await supabase.from('timeline_updates').insert([withTid(newPost)]).select();
-    if (!error && data) setNews(s => [data[0], ...s]);
+    if (!error && data) { setNews(s => [data[0], ...s]); return { data: data[0] }; }
+    console.error("Error adding news:", error);
+    return { error };
   };
 
   const updateNews = async (id, post) => {
@@ -131,10 +133,10 @@ export function StoreProvider({ children }) {
     const { error } = await supabase.from('timeline_updates').update(patch).eq('id', id);
     if (!error) {
       setNews(s => s.map(n => n.id === id ? { ...n, ...patch } : n));
-    } else {
-      console.error("Error updating news:", error);
-      alert("Fout bij wijzigen van nieuwsbericht.");
+      return { success: true };
     }
+    console.error("Error updating news:", error);
+    return { error };
   };
 
   const deleteNews = async (id) => {

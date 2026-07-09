@@ -51,21 +51,24 @@ export default function NewsEditor() {
     if (editorRef.current) editorRef.current.innerHTML = '';
   };
 
-  const publish = () => {
+  const publish = async () => {
     const html = editorRef.current?.innerHTML?.trim();
     const text = editorRef.current?.innerText?.trim();
-    if (!title.trim() || !text) return;
-    
+    if (!title.trim()) return alert('Vul eerst een titel in.');
+    if (!text) return alert('Schrijf eerst wat inhoud voor het bericht.');
+
     if (editingId) {
-      updateNews(editingId, { title: title.trim(), body: text, html, tag, image: imageUrl, cat_id: catId || null });
+      const res = await updateNews(editingId, { title: title.trim(), body: text, html, tag, image: imageUrl, cat_id: catId || null });
+      if (res?.error) return alert('Wijzigen mislukt: ' + (res.error.message || ''));
       alert('Nieuwsbericht is succesvol gewijzigd.');
       cancelEdit();
     } else {
-      addNews({ title: title.trim(), body: text, html, tag, image: imageUrl, cat_id: catId || null });
+      const res = await addNews({ title: title.trim(), body: text, html, tag, image: imageUrl, cat_id: catId || null });
+      if (res?.error) return alert('Publiceren mislukt: ' + (res.error.message || ''));
       alert('Het nieuwsbericht is succesvol gepubliceerd.');
       cancelEdit();
     }
-    
+
     setSaved(true);
     setTimeout(() => setSaved(false), 2200);
   };
@@ -84,7 +87,7 @@ export default function NewsEditor() {
             <Field label="Koppel aan Kitten">
               <Select value={catId} onChange={(e)=>setCatId(e.target.value)}>
                 <option value="">Algemeen (Geen specifieke kat)</option>
-                {kittens.map(k => <option key={k.id} value={k.id}>{k.name}</option>)}
+                {kittens.filter(k => !k.is_own_breeding_cat).map(k => <option key={k.id} value={k.id}>{k.name}</option>)}
               </Select>
             </Field>
           </div>
