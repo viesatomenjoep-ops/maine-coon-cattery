@@ -122,7 +122,7 @@ export default function AdminDashboard() {
               <div key={k.id} className="flex items-center justify-between rounded-xl border border-forest-900/8 px-4 py-3">
                 <div>
                   <p className="font-medium text-forest-900">{k.name}</p>
-                  <p className="text-xs text-forest-600/70">{k.sex} · {k.color}</p>
+                  <p className="text-xs text-forest-600/70">{[k.gender, k.color].filter(Boolean).join(' · ') || '—'}</p>
                 </div>
                 <StatusPill status={k.status} />
               </div>
@@ -139,7 +139,7 @@ export default function AdminDashboard() {
             {news.slice(0, 4).map((n) => (
               <div key={n.id} className="border-b border-forest-900/8 pb-3 last:border-0">
                 <p className="text-sm font-medium text-forest-900">{n.title}</p>
-                <p className="text-xs text-forest-600/70" suppressHydrationWarning>{new Date(n.published_at).toLocaleDateString('nl-NL')} · {n.tag}</p>
+                <p className="text-xs text-forest-600/70" suppressHydrationWarning>{n.created_at ? new Date(n.created_at).toLocaleDateString('nl-NL') : 'Zonder datum'}</p>
               </div>
             ))}
           </div>
