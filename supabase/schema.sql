@@ -24,6 +24,27 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 -- ==============================================================================
 
 -- 3.1 KLANTEN (CUSTOMERS)
+-- 3.0 MULTI-TENANT (FASE A): catteries + gebruikersprofielen
+CREATE TABLE IF NOT EXISTS public.tenants (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    name VARCHAR(255) NOT NULL,
+    slug VARCHAR(120) UNIQUE,
+    plan VARCHAR(50) DEFAULT 'trial',
+    status VARCHAR(50) DEFAULT 'active',
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS public.profiles (
+    user_id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+    tenant_id UUID REFERENCES public.tenants(id) ON DELETE SET NULL,
+    role VARCHAR(30) DEFAULT 'owner',
+    is_superadmin BOOLEAN DEFAULT FALSE,
+    name VARCHAR(255),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Alle datatabellen hieronder krijgen een tenant_id (zie migratie 20260709170000).
+
 CREATE TABLE IF NOT EXISTS public.customers (
     id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
     name TEXT NOT NULL,

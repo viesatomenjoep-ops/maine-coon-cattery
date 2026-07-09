@@ -14,26 +14,60 @@ export function StoreProvider({ children }) {
   const [interests, setInterests] = useState([]);
   const [siteContent, setSiteContent] = useState({});
 
+  // Multi-tenant (fase A): welke cattery hoort bij de ingelogde gebruiker.
+  const [tenantId, setTenantId] = useState(null);
+  const [currentTenant, setCurrentTenant] = useState(null);
+  const [isSuperadmin, setIsSuperadmin] = useState(false);
+  const [tenants, setTenants] = useState([]);
+
+  // Voeg tenant_id toe aan een insert zodra we een tenant kennen (anders legacy-gedrag).
+  const withTid = (obj) => (tenantId ? { ...obj, tenant_id: tenantId } : obj);
+
   // Initiele data fetch
   useEffect(() => {
     async function fetchData() {
       try {
-        const { data: nData } = await supabase.from('timeline_updates').select('*').order('created_at', { ascending: false });
+        // Bepaal eerst de tenant van de ingelogde gebruiker (fase A).
+        // Faalt dit (tabellen bestaan nog niet / geen profiel), dan vallen we
+        // terug op het oude gedrag: alle data ophalen zonder filter.
+        let tid = null;
+        try {
+          const { data: { user } } = await supabase.auth.getUser();
+          if (user) {
+            const { data: prof } = await supabase.from('profiles').select('tenant_id, is_superadmin').eq('user_id', user.id).single();
+            if (prof) {
+              tid = prof.tenant_id || null;
+              setIsSuperadmin(!!prof.is_superadmin);
+              if (prof.is_superadmin) {
+                const { data: allTen } = await supabase.from('tenants').select('*').order('created_at', { ascending: true });
+                if (allTen) setTenants(allTen);
+              }
+            }
+            if (tid) {
+              const { data: ten } = await supabase.from('tenants').select('*').eq('id', tid).single();
+              if (ten) setCurrentTenant(ten);
+            }
+          }
+        } catch { /* pre-migratie: geen tenants/profiles → legacy modus */ }
+        setTenantId(tid);
+        const onTenant = (q) => (tid ? q.eq('tenant_id', tid) : q);
+
+        const { data: nData } = await onTenant(supabase.from('timeline_updates').select('*')).order('created_at', { ascending: false });
         if (nData) setNews(nData);
 
-        const { data: lData } = await supabase.from('litters').select('*');
+        const { data: lData } = await onTenant(supabase.from('litters').select('*'));
         if (lData) setLitters(lData);
 
-        const { data: dData } = await supabase.from('documents').select('*').order('created_at', { ascending: false });
+        const { data: dData } = await onTenant(supabase.from('documents').select('*')).order('created_at', { ascending: false });
         if (dData) setDocuments(dData);
 
-        const { data: mData } = await supabase.from('media').select('*').order('created_at', { ascending: false });
+        const { data: mData } = await onTenant(supabase.from('media').select('*')).order('created_at', { ascending: false });
         if (mData) setMedia(mData);
 
-        const { data: vData } = await supabase.from('vaccinations').select('*');
-        const { data: wData } = await supabase.from('cat_weights').select('*').order('weigh_date', { ascending: true });
+        const { data: vData } = await onTenant(supabase.from('vaccinations').select('*'));
+        const { data: wData } = await onTenant(supabase.from('cat_weights').select('*')).order('weigh_date', { ascending: true });
 
-        const { data: kData } = await supabase.from('cats').select('*').order('created_at', { ascending: false });
+        const { data: kData } = await onTenant(supabase.from('cats').select('*')).order('created_at', { ascending: false });
         if (kData) {
           const kittensWithMed = kData.map(k => {
             const med = vData?.filter(v => v.cat_id === k.id).map(v => ({
@@ -55,13 +89,13 @@ export function StoreProvider({ children }) {
           setKittens(kittensWithMed);
         }
 
-        const { data: cData } = await supabase.from('customers').select('*').order('created_at', { ascending: false });
+        const { data: cData } = await onTenant(supabase.from('customers').select('*')).order('created_at', { ascending: false });
         if (cData) setCustomers(cData);
 
-        const { data: iData } = await supabase.from('kitten_interests').select('*').order('created_at', { ascending: false });
+        const { data: iData } = await onTenant(supabase.from('kitten_interests').select('*')).order('created_at', { ascending: false });
         if (iData) setInterests(iData);
 
-        const { data: sData, error: sErr } = await supabase.from('site_content').select('*').eq('key', 'homepage_nl').single();
+        const { data: sData, error: sErr } = await onTenant(supabase.from('site_content').select('*').eq('key', 'homepage_nl')).single();
         if (sData?.content) setSiteContent(sData.content);
       } catch (err) {
         console.error("Supabase fetch error:", err);
@@ -79,7 +113,7 @@ export function StoreProvider({ children }) {
       cat_id: post.cat_id,
       // tags are not in timeline_updates, but let's assume content/title is main
     };
-    const { data, error } = await supabase.from('timeline_updates').insert([newPost]).select();
+    const { data, error } = await supabase.from('timeline_updates').insert([withTid(newPost)]).select();
     if (!error && data) setNews(s => [data[0], ...s]);
   };
 
@@ -114,8 +148,8 @@ export function StoreProvider({ children }) {
   };
 
   const addLitter = async (litter) => {
-    const { data, error } = await supabase.from('litters').insert([{ 
-      name: litter.name, 
+    const { data, error } = await supabase.from('litters').insert([withTid({
+      name: litter.name,
       date_of_birth: litter.born || null,
       description: litter.description || null,
       sire_name: litter.sire_name || null,
@@ -126,7 +160,7 @@ export function StoreProvider({ children }) {
       status: litter.status || 'verwacht',
       expected_count: (litter.expected_count === '' || litter.expected_count == null) ? null : Number(litter.expected_count),
       cover_image_url: litter.cover_image_url || null
-    }]).select();
+    })]).select();
     if (!error && data) {
       setLitters(s => [...s, data[0]]);
       return { data: data[0] };
@@ -175,7 +209,7 @@ export function StoreProvider({ children }) {
       },
       customer_id: kit.customer_id || null
     };
-    const { data, error } = await supabase.from('cats').insert([dbKit]).select();
+    const { data, error } = await supabase.from('cats').insert([withTid(dbKit)]).select();
     if (!error && data) {
       setKittens(s => [...s, data[0]]);
       return { data: data[0] };
@@ -255,7 +289,7 @@ export function StoreProvider({ children }) {
   });
 
   const addBreedingCat = async (cat) => {
-    const { data, error } = await supabase.from('cats').insert([mapBreedingCat(cat)]).select();
+    const { data, error } = await supabase.from('cats').insert([withTid(mapBreedingCat(cat))]).select();
     if (!error && data) {
       setKittens(s => [data[0], ...s]);
       return { data: data[0] };
@@ -277,7 +311,7 @@ export function StoreProvider({ children }) {
 
   // ---- documenten (rijk: koppeling naar kat/nestje + Cloudinary-metadata) ----
   const addDocumentFull = async (doc) => {
-    const { data, error } = await supabase.from('documents').insert([{
+    const { data, error } = await supabase.from('documents').insert([withTid({
       cat_id: doc.cat_id || null,
       litter_id: doc.litter_id || null,
       document_type: doc.document_type || doc.doc_type || 'overig',
@@ -287,7 +321,7 @@ export function StoreProvider({ children }) {
       mime_type: doc.mime_type || null,
       notes: doc.notes || null,
       is_private: doc.is_private ?? true
-    }]).select();
+    })]).select();
     if (!error && data) {
       setDocuments(s => [data[0], ...s]);
       return { data: data[0] };
@@ -298,12 +332,12 @@ export function StoreProvider({ children }) {
 
   // ---- customers ----
   const addCustomer = async (customer) => {
-    const { data, error } = await supabase.from('customers').insert([{
+    const { data, error } = await supabase.from('customers').insert([withTid({
       name: customer.name,
       address: customer.address || null,
       email: customer.email || null,
       whatsapp_number: customer.whatsapp_number || null,
-    }]).select();
+    })]).select();
     if (!error && data) setCustomers(s => [data[0], ...s]);
     return data?.[0];
   };
@@ -321,18 +355,18 @@ export function StoreProvider({ children }) {
   // ---- site content ----
   const saveSiteContent = async (newContent) => {
     setSiteContent(newContent);
-    await supabase.from('site_content').upsert({ key: 'homepage_nl', content: newContent });
+    await supabase.from('site_content').upsert(withTid({ key: 'homepage_nl', content: newContent }));
   };
 
   // ---- documents ----
   const addDocument = async (doc) => {
-    const { data, error } = await supabase.from('documents').insert([{
+    const { data, error } = await supabase.from('documents').insert([withTid({
       cat_id: doc.cat_id || null,
       document_type: doc.category,
       file_url: doc.url,
       notes: doc.name,
       is_private: true
-    }]).select();
+    })]).select();
     if (!error && data) setDocuments(s => [data[0], ...s]);
     return data?.[0];
   };
@@ -343,13 +377,13 @@ export function StoreProvider({ children }) {
 
   // ---- media (gallery) ----
   const addMedia = async (med) => {
-    const { data, error } = await supabase.from('media').insert([{
+    const { data, error } = await supabase.from('media').insert([withTid({
       cat_id: med.cat_id || null,
       litter_id: med.litter_id || null,
       media_url: med.url,
       media_type: med.media_type || 'image',
       is_public: med.is_public ?? true
-    }]).select();
+    })]).select();
     if (!error && data) setMedia(s => [data[0], ...s]);
     return data?.[0];
   };
@@ -367,11 +401,11 @@ export function StoreProvider({ children }) {
       veterinarian_info: entry.note,
       next_due_date: entry.due || null
     };
-    let { data, error } = await supabase.from('vaccinations').insert([post]).select();
+    let { data, error } = await supabase.from('vaccinations').insert([withTid(post)]).select();
     // Veilige fallback als de kolom next_due_date nog niet bestaat in de database.
     if (error && /next_due_date/.test(error.message || '')) {
       const { next_due_date, ...legacy } = post;
-      ({ data, error } = await supabase.from('vaccinations').insert([legacy]).select());
+      ({ data, error } = await supabase.from('vaccinations').insert([withTid(legacy)]).select());
     }
     if (!error && data) {
       const dbEntry = { id: data[0].id, ...entry, due: entry.due || null };
@@ -412,11 +446,11 @@ export function StoreProvider({ children }) {
 
   // ---- weights ----
   const addWeight = async (catId, date, grams) => {
-    const { data, error } = await supabase.from('cat_weights').insert([{
+    const { data, error } = await supabase.from('cat_weights').insert([withTid({
       cat_id: catId,
       weigh_date: date,
       weight_grams: parseInt(grams, 10)
-    }]).select();
+    })]).select();
     if (!error && data) {
       const dbEntry = { id: data[0].id, date: data[0].weigh_date, grams: data[0].weight_grams };
       setKittens(s => s.map(k => {
@@ -450,12 +484,28 @@ export function StoreProvider({ children }) {
     setInterests(s => s.filter(i => i.id !== id));
   };
 
+  // ---- tenants (multi-tenant beheer, alleen superadmin) ----
+  // Nieuwe cattery + eigenaar-login aanmaken gaat via een beveiligde server-route
+  // (service role), zodat we een echte auth-gebruiker kunnen aanmaken.
+  const createCattery = async ({ catteryName, ownerName, ownerEmail, ownerPassword }) => {
+    const res = await fetch('/api/admin/create-cattery', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ catteryName, ownerName, ownerEmail, ownerPassword }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) return { error: data.error || 'Aanmaken mislukt.' };
+    if (data.tenant) setTenants((s) => [...s, data.tenant]);
+    return { data };
+  };
+
   const breedingCats = kittens.filter(k => k.is_own_breeding_cat);
 
   return (
     <StoreContext.Provider value={{
       news, litters, kittens, breedingCats, documents, media, customers, interests, siteContent,
       updateInterest, deleteInterest,
+      currentTenant, isSuperadmin, tenants, createCattery,
       addNews, deleteNews, addLitter, updateLitter, deleteLitter,
       addKitten, updateKitten, deleteKitten,
       addBreedingCat, updateBreedingCat,

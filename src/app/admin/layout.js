@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
-import { StoreProvider } from '@/context/StoreContext';
+import { StoreProvider, useStore } from '@/context/StoreContext';
 import { Logo, PawMark } from '@/components/ui';
 import TreatmentReminders from '@/components/admin/TreatmentReminders';
 
@@ -30,6 +30,7 @@ function Icon({ name, className = 'h-5 w-5' }) {
 
 export default function AdminLayout({ children }) {
   const { user, logout } = useAuth();
+  const { currentTenant, isSuperadmin } = useStore();
   const router = useRouter();
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
@@ -74,8 +75,16 @@ export default function AdminLayout({ children }) {
                 </Link>
               );
             })}
+            {isSuperadmin && (
+              <Link href="/admin/tenants" onClick={() => setOpen(false)}
+                className={`flex items-center gap-4 rounded-xl px-4 py-4 lg:py-3 text-base lg:text-sm transition ${pathname === '/admin/tenants' ? 'bg-brass-400 text-forest-950 font-medium' : 'text-forest-900 hover:bg-forest-50 hover:text-forest-950'}`}>
+                <Icon name="customer" className="h-6 w-6 lg:h-5 lg:w-5" />
+                Catteries
+              </Link>
+            )}
           </nav>
           <div className="border-t border-forest-900/10 p-6 lg:p-4">
+            {currentTenant?.name && <p className="px-2 text-xs font-semibold text-forest-800">🏡 {currentTenant.name}</p>}
             <p className="px-2 text-sm lg:text-xs text-forest-600">{user.user_metadata?.name || 'Beheerder'}</p>
             <button onClick={async () => { await logout(); window.location.href = '/'; }} className="mt-2 w-full rounded-xl px-4 py-3 lg:py-2.5 text-left text-base lg:text-sm text-forest-900 transition hover:bg-forest-50">
               Uitloggen
