@@ -134,7 +134,7 @@ export default function MedicalPage() {
               </div>
             </div>
 
-            <Btn variant="brass" onClick={apply}>Registreren ({selected.length})</Btn>
+            <Btn variant="brass" onClick={apply} className="w-full">Behandeling opslaan{selected.length > 0 ? ` (${selected.length} kitten${selected.length === 1 ? '' : 's'})` : ''}</Btn>
           </div>
         </Card>
 
