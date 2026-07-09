@@ -228,11 +228,13 @@ export default function LittersPage() {
                       {lit.sire_name || 'Onbekende vader'} x {lit.dam_name || 'Onbekende moeder'}
                       <span className="mx-2 opacity-50">|</span>
                       {lit.date_of_birth ? new Date(lit.date_of_birth).toLocaleDateString('nl-NL') : 'Datum onbekend'}
-                      {lit.expected_count ? <><span className="mx-2 opacity-50">|</span>Verwacht: {lit.expected_count}</> : null}
+                      <span className="mx-2 opacity-50">|</span>
+                      {nestKittens.length} {nestKittens.length === 1 ? 'kitten' : 'kittens'}
                     </p>
                   </div>
                 </div>
                 <div className="flex flex-wrap gap-3">
+                  <Link href={`/admin/litters/${lit.id}`} className="inline-flex items-center rounded-xl bg-emerald-600 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-emerald-700">Open nestje</Link>
                   <Btn variant="solid" onClick={() => openLitter(lit.id)} className="!px-3 !py-1.5 !text-xs">Nestje bewerken</Btn>
                   <Btn variant="brass" onClick={() => openNewKitten(lit.id)} className="!px-3 !py-1.5 !text-xs">+ Kitten toevoegen</Btn>
                   <Btn variant="ghost" onClick={() => { if (confirm('Weet je zeker dat je dit nestje wilt verwijderen?')) deleteLitter(lit.id); }} className="!px-3 !py-1.5 !text-xs !text-red-600 hover:!bg-red-50">Verwijderen</Btn>
