@@ -168,6 +168,7 @@ CREATE TABLE IF NOT EXISTS public.media (
     litter_id UUID REFERENCES public.litters(id) ON DELETE CASCADE,
     media_url TEXT NOT NULL,
     media_type VARCHAR(50),
+    name TEXT,
     is_public BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );

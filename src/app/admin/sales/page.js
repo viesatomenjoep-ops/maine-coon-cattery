@@ -232,12 +232,12 @@ function AdEditor({ k, customers, documents, media, updateKitten, onCopyLink }) 
 
         {litter && (
           <div className="mt-5">
-            <label className="text-xs font-medium uppercase tracking-wide text-forest-700">Advertentietekst (voor dit nestje)</label>
+            <label className="text-xs font-medium uppercase tracking-wide text-forest-700">Extra advertentietekst (voor dit nestje)</label>
             <textarea
               defaultValue={litter.ad_text || ''}
               onBlur={(e) => { if (e.target.value !== (litter.ad_text || '')) updateLitter(litter.id, { ad_text: e.target.value }); }}
-              rows={6}
-              placeholder="Vertel het verhaal van je cattery… Deze tekst verschijnt bovenaan de advertentie, met de kittens eronder."
+              rows={5}
+              placeholder="Optioneel — extra tekst naast het standaardverhaal dat al op de advertentie staat."
               className="mt-1.5 w-full rounded-xl border border-forest-900/15 bg-white px-4 py-3 text-sm leading-relaxed outline-none focus:border-brass-400 focus:ring-2 focus:ring-brass-200"
             />
             <p className="mt-1 text-xs text-forest-500">Wordt gedeeld door het hele nestje. Sla op door buiten het veld te klikken.</p>
@@ -403,10 +403,11 @@ function LitterAdEditor({ litter, updateLitter, deleteLitter, onDeleted }) {
       </Card>
 
       <Card>
-        <h4 className="font-display text-lg text-forest-900">Advertentietekst</h4>
-        <textarea defaultValue={litter.ad_text || ''} onBlur={(e) => { if (e.target.value !== (litter.ad_text || '')) updateLitter(litter.id, { ad_text: e.target.value }); }} rows={7}
-          placeholder="Vertel het verhaal van je cattery en dit verwachte nestje…" className="mt-3 w-full rounded-xl border border-forest-900/15 bg-white px-4 py-3 text-sm leading-relaxed outline-none focus:border-brass-400 focus:ring-2 focus:ring-brass-200" />
-        <p className="mt-1 text-xs text-forest-500">Verschijnt bovenaan de advertentie. Wordt automatisch opgeslagen.</p>
+        <h4 className="font-display text-lg text-forest-900">Extra advertentietekst</h4>
+        <p className="mt-1 text-sm text-forest-600">Op elke advertentie staat al een mooi standaardverhaal (met type-effect). Hier voeg je optioneel <b>extra tekst</b> toe, specifiek voor dit nestje.</p>
+        <textarea defaultValue={litter.ad_text || ''} onBlur={(e) => { if (e.target.value !== (litter.ad_text || '')) updateLitter(litter.id, { ad_text: e.target.value }); }} rows={6}
+          placeholder="Bijv. Dit nestje verwachten we begin zomer, uit onze topcombinatie…" className="mt-3 w-full rounded-xl border border-forest-900/15 bg-white px-4 py-3 text-sm leading-relaxed outline-none focus:border-brass-400 focus:ring-2 focus:ring-brass-200" />
+        <p className="mt-1 text-xs text-forest-500">Wordt automatisch opgeslagen.</p>
       </Card>
 
       <div className="flex flex-col gap-3 sm:flex-row sm:justify-between">

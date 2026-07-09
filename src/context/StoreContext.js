@@ -400,13 +400,20 @@ export function StoreProvider({ children }) {
 
   // ---- media (gallery) ----
   const addMedia = async (med) => {
-    const { data, error } = await supabase.from('media').insert([withTid({
+    let payload = withTid({
       cat_id: med.cat_id || null,
       litter_id: med.litter_id || null,
       media_url: med.url,
       media_type: med.media_type || 'image',
-      is_public: med.is_public ?? true
-    })]).select();
+      is_public: med.is_public ?? true,
+      name: med.name || null
+    });
+    let { data, error } = await supabase.from('media').insert([payload]).select();
+    // Veilige fallback als de kolom 'name' nog niet bestaat.
+    if (error && /name/.test(error.message || '')) {
+      const { name, ...rest } = payload;
+      ({ data, error } = await supabase.from('media').insert([rest]).select());
+    }
     if (!error && data) setMedia(s => [data[0], ...s]);
     return data?.[0];
   };

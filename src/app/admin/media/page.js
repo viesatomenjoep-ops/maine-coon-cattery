@@ -48,7 +48,7 @@ function CatPicker({ kittens, value, onChange }) {
 }
 
 export default function MediaDocumentenPage() {
-  const { kittens, documents, media, addDocument, deleteDocument, addMedia, deleteMedia } = useStore();
+  const { kittens, documents, media, addDocument, deleteDocument, addMedia, deleteMedia, updateMedia } = useStore();
   const [targetMedical, setTargetMedical] = useState('');
   const [targetContract, setTargetContract] = useState('');
   const [archiveCat, setArchiveCat] = useState('');
@@ -318,23 +318,33 @@ export default function MediaDocumentenPage() {
             {galleryMedia.length === 0 ? (
               <p className="text-sm italic text-forest-600">Nog niets in de galerij. Upload hierboven foto's of video's.</p>
             ) : (
-              <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 lg:grid-cols-6">
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
                 {galleryMedia.map((m) => {
                   const url = m.media_url;
                   const isVideo = (m.media_type || '').includes('video') || /\.(mp4|webm|mov|m4v)$/i.test(url || '');
                   return (
-                    <div key={m.id} className="group relative aspect-square overflow-hidden rounded-xl border border-forest-900/10 bg-forest-50">
-                      {isVideo ? (
-                        <video src={url} className="h-full w-full object-cover" muted playsInline />
-                      ) : (
-                        <img src={url} alt="" className="h-full w-full object-cover" />
-                      )}
-                      <a href={url} target="_blank" rel="noreferrer" className="absolute inset-0" aria-label="Bekijk" />
-                      <button
-                        onClick={() => { if (confirm('Dit bestand uit de galerij verwijderen?')) deleteMedia(m.id); }}
-                        className="absolute right-1 top-1 z-10 rounded-md bg-red-500/90 px-1.5 py-0.5 text-[10px] font-semibold text-white opacity-0 transition group-hover:opacity-100"
-                      >Wis</button>
-                      {isVideo && <span className="pointer-events-none absolute bottom-1 left-1 rounded bg-ink/70 px-1.5 py-0.5 text-[9px] font-semibold text-white">▶ video</span>}
+                    <div key={m.id} className="overflow-hidden rounded-xl border border-forest-900/10 bg-white">
+                      <div className="group relative aspect-square bg-forest-50">
+                        {isVideo ? (
+                          <video src={url} className="h-full w-full object-cover" muted playsInline />
+                        ) : (
+                          <img src={url} alt={m.name || ''} className="h-full w-full object-cover" />
+                        )}
+                        <a href={url} target="_blank" rel="noreferrer" className="absolute inset-0" aria-label="Bekijk" />
+                        <button
+                          onClick={() => { if (confirm('Dit bestand uit de galerij verwijderen?')) deleteMedia(m.id); }}
+                          className="absolute right-1 top-1 z-10 rounded-md bg-red-500/90 px-1.5 py-0.5 text-[10px] font-semibold text-white opacity-0 transition group-hover:opacity-100"
+                        >Wis</button>
+                        {isVideo && <span className="pointer-events-none absolute bottom-1 left-1 rounded bg-ink/70 px-1.5 py-0.5 text-[9px] font-semibold text-white">▶ video</span>}
+                      </div>
+                      <div className="p-2">
+                        <input
+                          defaultValue={m.name || ''}
+                          onBlur={(e) => { if (e.target.value !== (m.name || '')) updateMedia(m.id, { name: e.target.value }); }}
+                          placeholder="Naam / label…"
+                          className="w-full rounded-lg border border-forest-900/10 bg-white px-2 py-1 text-xs outline-none focus:border-brass-400 focus:ring-1 focus:ring-brass-200"
+                        />
+                      </div>
                     </div>
                   );
                 })}

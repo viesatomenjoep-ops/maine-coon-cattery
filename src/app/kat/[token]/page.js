@@ -3,6 +3,8 @@ import { useState, useEffect, use } from 'react';
 import { PawMark } from '@/components/ui';
 import { treatmentIcon, urgency, formatDate } from '@/lib/treatments';
 import Lightbox from '@/components/Lightbox';
+import Typewriter from '@/components/Typewriter';
+import { DEFAULT_AD_TEXT } from '@/lib/ad';
 
 const norm = (s) => (s || '').toLowerCase();
 const sexLabel = (g) => {
@@ -85,6 +87,15 @@ export default function CatShowcasePage({ params }) {
       </section>
 
       <main className="mx-auto max-w-5xl px-6 py-14">
+        {/* Verhaal — standaard cattery-tekst met typemachine-effect */}
+        <section className="mx-auto mb-12 max-w-3xl text-center">
+          <span className="font-display text-6xl leading-none text-brass-300">“</span>
+          <p className="mt-2 font-display text-xl font-light leading-relaxed text-forest-900 md:text-2xl">
+            <Typewriter text={DEFAULT_AD_TEXT} />
+          </p>
+          <div className="mx-auto mt-8 h-px w-24 bg-brass-300/60" />
+        </section>
+
         {/* Ouders — bovenaan, boven de gegevens */}
         {(cat.sire_image_url || cat.dam_image_url) && (
           <section className="mb-10">

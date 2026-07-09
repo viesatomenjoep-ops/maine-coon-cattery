@@ -3,6 +3,8 @@ import { useState, useEffect, useRef, use } from 'react';
 import { PawMark } from '@/components/ui';
 import { treatmentIcon, urgency, formatDate } from '@/lib/treatments';
 import Lightbox from '@/components/Lightbox';
+import Typewriter from '@/components/Typewriter';
+import { DEFAULT_AD_TEXT } from '@/lib/ad';
 
 // Onthult content zachtjes wanneer die in beeld scrollt.
 function Reveal({ children, className = '', delay = 0 }) {
@@ -173,16 +175,19 @@ export default function LitterAdPage({ params }) {
       </section>
 
       <main className="mx-auto max-w-6xl px-6">
-        {/* Verhaal / advertentietekst */}
-        {litter.ad_text && (
-          <Reveal>
-            <section className="relative mx-auto -mt-2 max-w-3xl py-16 text-center md:py-20">
-              <span className="font-display text-6xl leading-none text-brass-300">“</span>
-              <p className="mt-2 whitespace-pre-line font-display text-xl font-light leading-relaxed text-black md:text-2xl">{litter.ad_text}</p>
-              <div className="mx-auto mt-8 h-px w-24 bg-brass-300/60" />
-            </section>
-          </Reveal>
-        )}
+        {/* Verhaal — standaard cattery-tekst met typemachine-effect + extra tekst */}
+        <Reveal>
+          <section className="relative mx-auto -mt-2 max-w-3xl py-16 text-center md:py-20">
+            <span className="font-display text-6xl leading-none text-brass-300">“</span>
+            <p className="mt-2 font-display text-xl font-light leading-relaxed text-black md:text-2xl">
+              <Typewriter text={DEFAULT_AD_TEXT} />
+            </p>
+            {litter.ad_text && (
+              <p className="mx-auto mt-8 max-w-2xl whitespace-pre-line text-base font-light leading-relaxed text-forest-700 md:text-lg">{litter.ad_text}</p>
+            )}
+            <div className="mx-auto mt-8 h-px w-24 bg-brass-300/60" />
+          </section>
+        </Reveal>
 
         {/* Advertentievideo */}
         {litter.ad_video && (
