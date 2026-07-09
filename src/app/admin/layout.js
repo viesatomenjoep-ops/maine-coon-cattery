@@ -75,23 +75,13 @@ export default function AdminLayout({ children }) {
           <nav className="flex-1 space-y-1 px-6 lg:px-4">
             {NAV.map((item) => {
               const active = pathname === item.href;
-              const link = (
-                <Link href={item.href} onClick={() => setOpen(false)}
-                  className={`flex flex-1 items-center gap-4 rounded-xl px-4 py-4 lg:py-3 text-base lg:text-sm transition ${active ? 'bg-brass-400 text-forest-950 font-medium' : 'text-forest-900 hover:bg-forest-50 hover:text-forest-950'}`}>
+              return (
+                <Link key={item.href} href={item.href} onClick={() => setOpen(false)}
+                  className={`flex items-center gap-4 rounded-xl px-4 py-4 lg:py-3 text-base lg:text-sm transition ${active ? 'bg-brass-400 text-forest-950 font-medium' : 'text-forest-900 hover:bg-forest-50 hover:text-forest-950'}`}>
                   <Icon name={item.icon} className="h-6 w-6 lg:h-5 lg:w-5" />
                   {item.label}
                 </Link>
               );
-              if (item.href === '/admin') {
-                return (
-                  <div key={item.href} className="flex items-center gap-2">
-                    {link}
-                    <a href="/" target="_blank" rel="noreferrer" title="Bekijk de website — opent apart, je blijft in het beheer" aria-label="Bekijk de website"
-                      className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-forest-900/15 bg-white text-lg transition hover:border-brass-400 hover:bg-forest-50 lg:h-10 lg:w-10">🌍</a>
-                  </div>
-                );
-              }
-              return <div key={item.href}>{link}</div>;
             })}
             {isSuperadmin && (
               <Link href="/superadmin" onClick={() => setOpen(false)}

@@ -19,7 +19,12 @@ export default function AdminDashboard() {
 
   return (
     <>
-      <PageHead label="Welkom terug" title="Startscherm" />
+      <PageHead label="Welkom terug" title="Startscherm">
+        <a href="/" target="_blank" rel="noreferrer" title="Opent apart, je blijft in het beheer"
+          className="inline-flex items-center gap-2 rounded-xl border border-forest-900/15 bg-white px-4 py-2.5 text-sm font-semibold text-forest-800 shadow-sm transition hover:border-brass-400 hover:bg-forest-50">
+          <span className="text-lg leading-none">🌍</span> Ga naar website
+        </a>
+      </PageHead>
       <p className="mb-8 text-forest-700 text-lg">
         Kies een van de onderstaande categorieën om direct naar het juiste onderdeel te gaan.
       </p>
