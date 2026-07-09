@@ -111,6 +111,29 @@ export default function CustomerPortal({ params }) {
                       </p>
                     )}
 
+                    {/* Ouders (vader & moeder) */}
+                    {(k.sire_image_url || k.dam_image_url) && (
+                      <div className="mt-6 pt-6 border-t border-forest-900/10">
+                        <h4 className="text-sm font-bold uppercase tracking-wider text-forest-800 mb-4">Ouders</h4>
+                        <div className="flex items-start gap-6">
+                          <div className="text-center">
+                            <div className="h-24 w-24 overflow-hidden rounded-2xl border border-forest-900/10 bg-forest-50">
+                              {k.sire_image_url ? <img src={k.sire_image_url} alt="Vader" className="h-full w-full object-cover" /> : <div className="flex h-full w-full items-center justify-center"><PawMark className="h-6 w-6 text-forest-200" /></div>}
+                            </div>
+                            <p className="mt-2 text-[10px] font-bold uppercase tracking-wide text-forest-600/60">Vader</p>
+                            <p className="text-xs font-semibold text-forest-900">{k.sire_name || '—'}</p>
+                          </div>
+                          <div className="text-center">
+                            <div className="h-24 w-24 overflow-hidden rounded-2xl border border-forest-900/10 bg-forest-50">
+                              {k.dam_image_url ? <img src={k.dam_image_url} alt="Moeder" className="h-full w-full object-cover" /> : <div className="flex h-full w-full items-center justify-center"><PawMark className="h-6 w-6 text-forest-200" /></div>}
+                            </div>
+                            <p className="mt-2 text-[10px] font-bold uppercase tracking-wide text-forest-600/60">Moeder</p>
+                            <p className="text-xs font-semibold text-forest-900">{k.dam_name || '—'}</p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
                     {/* Weights Chart */}
                     {k.weights && k.weights.length > 0 && (
                       <div className="mt-6">

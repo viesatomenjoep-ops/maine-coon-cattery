@@ -100,6 +100,26 @@ export default function LitterAdPage({ params }) {
           <div className="mt-4 inline-flex items-center gap-2 rounded-full bg-emerald-100 px-5 py-2 text-sm font-semibold text-emerald-800">
             🐾 Op dit moment {available.length} {available.length === 1 ? 'kitten' : 'kittens'} beschikbaar
           </div>
+
+          {/* Ouders van het nestje */}
+          {(litter.sire_image_url || litter.dam_image_url) && (
+            <div className="mt-8 flex items-start justify-center gap-8">
+              <div className="text-center">
+                <div className="mx-auto h-28 w-28 overflow-hidden rounded-2xl border border-forest-900/10 bg-forest-50 shadow-sm">
+                  {litter.sire_image_url ? <img src={litter.sire_image_url} alt="Vader" className="h-full w-full object-cover" /> : <div className="flex h-full w-full items-center justify-center"><PawMark className="h-7 w-7 text-forest-200" /></div>}
+                </div>
+                <p className="mt-2 text-xs font-bold uppercase tracking-wide text-forest-600/60">Vader</p>
+                <p className="text-sm font-semibold text-forest-900">{litter.sire_name || '—'}</p>
+              </div>
+              <div className="text-center">
+                <div className="mx-auto h-28 w-28 overflow-hidden rounded-2xl border border-forest-900/10 bg-forest-50 shadow-sm">
+                  {litter.dam_image_url ? <img src={litter.dam_image_url} alt="Moeder" className="h-full w-full object-cover" /> : <div className="flex h-full w-full items-center justify-center"><PawMark className="h-7 w-7 text-forest-200" /></div>}
+                </div>
+                <p className="mt-2 text-xs font-bold uppercase tracking-wide text-forest-600/60">Moeder</p>
+                <p className="text-sm font-semibold text-forest-900">{litter.dam_name || '—'}</p>
+              </div>
+            </div>
+          )}
         </div>
 
         {kittens.length === 0 ? (

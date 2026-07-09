@@ -70,6 +70,8 @@ CREATE TABLE IF NOT EXISTS public.litters (
     status VARCHAR(50) DEFAULT 'verwacht',
     expected_count INTEGER,
     cover_image_url TEXT,
+    sire_image_url TEXT,
+    dam_image_url TEXT,
     share_token UUID DEFAULT uuid_generate_v4(),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );

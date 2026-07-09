@@ -65,6 +65,8 @@ function AdEditor({ k, customers, documents, media, updateKitten, onCopyLink }) 
     updateKitten(k.id, { customer_id: customerId || null });
   };
 
+  const { litters = [], updateLitter, updateDocument, updateMedia } = useStore();
+  const litter = litters.find((l) => l.id === k.litter_id) || null;
   const customer = customers?.find((c) => c.id === k.customer_id) || null;
   const catDocs = documents.filter((d) => d.cat_id === k.id);
   const catMedia = media.filter((m) => m.cat_id === k.id);
@@ -73,6 +75,7 @@ function AdEditor({ k, customers, documents, media, updateKitten, onCopyLink }) 
   const lastWeight = weights.length ? weights[weights.length - 1] : null;
 
   return (
+    <div className="space-y-6">
     <div className="grid gap-6 lg:grid-cols-2">
       {/* ---- KOLOM 1: de advertentie ---- */}
       <Card className="flex flex-col">
@@ -200,6 +203,74 @@ function AdEditor({ k, customers, documents, media, updateKitten, onCopyLink }) 
         </Card>
       </div>
     </div>
+
+      {/* ---- Ouderfoto's (vader & moeder) ---- */}
+      <Card>
+        <h4 className="font-display text-lg text-forest-900">Ouderfoto's — vader &amp; moeder</h4>
+        <p className="mt-1 text-sm text-forest-600">Deze verschijnen op een mooie plek in de advertentie van het nestje.</p>
+        {litter ? (
+          <div className="mt-4 grid grid-cols-2 gap-4 sm:max-w-md">
+            <ParentPhoto label={`Vader${litter.sire_name ? ` · ${litter.sire_name}` : ''}`} src={litter.sire_image_url} folder={`cattery_parents/${litter.id}/sire`} onSet={(url) => updateLitter(litter.id, { sire_image_url: url })} />
+            <ParentPhoto label={`Moeder${litter.dam_name ? ` · ${litter.dam_name}` : ''}`} src={litter.dam_image_url} folder={`cattery_parents/${litter.id}/dam`} onSet={(url) => updateLitter(litter.id, { dam_image_url: url })} />
+          </div>
+        ) : (
+          <p className="mt-4 rounded-xl border border-forest-900/10 bg-forest-50 p-3 text-sm text-forest-600">Dit kitten hoort nog niet bij een nestje, dus ouderfoto's kunnen hier nog niet worden ingesteld.</p>
+        )}
+      </Card>
+
+      {/* ---- Bestanden publiceren (vinkjes) ---- */}
+      <Card>
+        <h4 className="font-display text-lg text-forest-900">Bestanden op de advertentie</h4>
+        <p className="mt-1 text-sm text-forest-600">Vink aan welke foto's en documenten de klant/geïnteresseerde te zien krijgt. Uitgevinkt = verborgen.</p>
+        <div className="mt-4 space-y-2">
+          {catMedia.length === 0 && catDocs.length === 0 && (
+            <p className="text-sm text-forest-600">Nog geen bestanden geüpload voor {k.name}. Upload ze in het dossier.</p>
+          )}
+          {catMedia.map((m) => (
+            <FileRow key={`m-${m.id}`} thumb={m.media_url} name={m.name || 'Foto'} type="Foto" checked={m.is_public !== false} onToggle={(v) => updateMedia(m.id, { is_public: v })} />
+          ))}
+          {catDocs.map((d) => (
+            <FileRow key={`d-${d.id}`} thumb={/\.(jpe?g|png|gif|webp)$/i.test(d.file_url || '') ? d.file_url : null} name={d.title || d.document_type || 'Document'} type={d.document_type || 'Document'} checked={d.is_private === false} onToggle={(v) => updateDocument(d.id, { is_private: !v })} />
+          ))}
+        </div>
+      </Card>
+    </div>
+  );
+}
+
+function ParentPhoto({ label, src, folder, onSet }) {
+  return (
+    <div>
+      <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-forest-700">{label}</p>
+      <div className="group relative aspect-square overflow-hidden rounded-xl bg-forest-50">
+        {src ? <img src={src} alt={label} className="h-full w-full object-cover" /> : <ImageSlot label="Geen foto" ratio="aspect-square" className="!rounded-xl" />}
+        <div className="absolute inset-0 flex items-center justify-center gap-2 bg-ink/40 opacity-0 transition group-hover:opacity-100">
+          <AdminUpload onSuccess={(res) => { if (res.event === 'success') onSet(res.info.secure_url); }} options={{ folder, clientAllowedFormats: ['images'] }}>
+            {({ open, openCamera }) => (
+              <>
+                <button type="button" onClick={(e) => { e.preventDefault(); open(); }} className="rounded-lg bg-white/90 px-2.5 py-1 text-[11px] font-semibold text-forest-900 shadow hover:bg-white">Upload</button>
+                <button type="button" onClick={(e) => { e.preventDefault(); openCamera(); }} className="rounded-lg bg-white/90 px-2.5 py-1 text-[11px] font-semibold text-forest-900 shadow hover:bg-white">Camera</button>
+              </>
+            )}
+          </AdminUpload>
+          {src && <button onClick={() => onSet(null)} className="rounded-lg bg-red-500/90 px-2.5 py-1 text-[11px] font-semibold text-white shadow">Wis</button>}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function FileRow({ thumb, name, type, checked, onToggle }) {
+  return (
+    <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-forest-900/10 bg-white p-2.5">
+      {thumb ? <img src={thumb} alt="" className="h-10 w-10 shrink-0 rounded-lg object-cover" /> : <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-forest-50 text-sm">📄</div>}
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-sm font-medium text-forest-900">{name}</p>
+        <p className="text-xs uppercase tracking-wide text-forest-500">{type}</p>
+      </div>
+      <span className={`text-xs font-semibold ${checked ? 'text-emerald-700' : 'text-forest-400'}`}>{checked ? 'Zichtbaar' : 'Verborgen'}</span>
+      <input type="checkbox" checked={checked} onChange={(e) => onToggle(e.target.checked)} className="h-5 w-5 accent-emerald-600" />
+    </label>
   );
 }
 

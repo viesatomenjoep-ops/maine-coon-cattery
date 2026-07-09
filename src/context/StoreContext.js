@@ -401,6 +401,17 @@ export function StoreProvider({ children }) {
     await supabase.from('media').delete().eq('id', id);
     setMedia(s => s.filter(m => m.id !== id));
   };
+  // Publicatie-status van bestanden bijwerken (voor de advertentie-vinkjes).
+  const updateDocument = async (id, patch) => {
+    const { error } = await supabase.from('documents').update(patch).eq('id', id);
+    if (!error) setDocuments(s => s.map(d => (d.id === id ? { ...d, ...patch } : d)));
+    return { error };
+  };
+  const updateMedia = async (id, patch) => {
+    const { error } = await supabase.from('media').update(patch).eq('id', id);
+    if (!error) setMedia(s => s.map(m => (m.id === id ? { ...m, ...patch } : m)));
+    return { error };
+  };
 
   // ---- medical (vaccinations) ----
   const addMedical = async (catId, entry) => {
@@ -519,7 +530,7 @@ export function StoreProvider({ children }) {
       addNews, deleteNews, addLitter, updateLitter, deleteLitter,
       addKitten, updateKitten, deleteKitten,
       addBreedingCat, updateBreedingCat,
-      addDocument, addDocumentFull, deleteDocument, addMedia, deleteMedia, addMedical, deleteMedical,
+      addDocument, addDocumentFull, deleteDocument, updateDocument, addMedia, deleteMedia, updateMedia, addMedical, deleteMedical,
       addWeight, deleteWeight,
       addCustomer, updateCustomer, deleteCustomer,
       saveSiteContent

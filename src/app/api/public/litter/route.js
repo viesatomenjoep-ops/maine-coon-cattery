@@ -46,6 +46,8 @@ export async function GET(request) {
   const safeLitter = {
     id: litter.id, name: litter.name, sire_name: litter.sire_name,
     dam_name: litter.dam_name, date_of_birth: litter.date_of_birth,
+    sire_image_url: litter.sire_image_url || null,
+    dam_image_url: litter.dam_image_url || null,
   };
 
   return NextResponse.json({ litter: safeLitter, kittens });

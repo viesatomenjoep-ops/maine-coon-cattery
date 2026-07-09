@@ -3,7 +3,8 @@ import { createClient } from '@supabase/supabase-js';
 
 export const dynamic = 'force-dynamic';
 
-// Verrijk een lijst katten met gewichten, media, documenten en geplande zorg.
+// Verrijk een lijst katten met gewichten, media, documenten, geplande zorg en
+// ouderfoto's. Toont alleen GEPUBLICEERDE bestanden (advertentie-vinkjes).
 async function enrichKittens(db, kittensData) {
   const catIds = (kittensData || []).map((k) => k.id);
   const idFilter = catIds.length ? catIds : ['00000000-0000-0000-0000-000000000000'];
@@ -12,18 +13,32 @@ async function enrichKittens(db, kittensData) {
   const { data: allDocs } = await db.from('documents').select('*').in('cat_id', idFilter);
   const { data: allVaccs } = await db.from('vaccinations').select('*').in('cat_id', idFilter);
 
+  // Ouderfoto's per nestje ophalen.
+  const litterIds = [...new Set((kittensData || []).map((k) => k.litter_id).filter(Boolean))];
+  let littersById = {};
+  if (litterIds.length) {
+    const { data: lits } = await db.from('litters').select('id, sire_name, dam_name, sire_image_url, dam_image_url').in('id', litterIds);
+    (lits || []).forEach((l) => { littersById[l.id] = l; });
+  }
+
   return (kittensData || []).map((k) => {
     const weights = (weightsData || []).filter((w) => w.cat_id === k.id).map((w) => ({
       date: new Date(w.weigh_date).toLocaleDateString('nl-NL', { day: 'numeric', month: 'short' }),
       grams: w.weight_grams,
     }));
-    const media = (allMedia || []).filter((m) => m.cat_id === k.id || m.media_url?.includes(k.id));
-    const documents = (allDocs || []).filter((d) => d.cat_id === k.id);
+    // Alleen gepubliceerde foto's en documenten.
+    const mediaVisible = (allMedia || []).filter((m) => (m.cat_id === k.id || m.media_url?.includes(k.id)) && m.is_public !== false);
+    const documents = (allDocs || []).filter((d) => d.cat_id === k.id && d.is_private === false);
     const treatments = (allVaccs || [])
       .filter((v) => v.cat_id === k.id && v.next_due_date)
       .map((v) => ({ type: v.vaccine_name, due: v.next_due_date, note: v.veterinarian_info }))
       .sort((a, b) => new Date(a.due) - new Date(b.due));
-    return { ...k, weights, media, documents, treatments };
+    const lit = littersById[k.litter_id] || {};
+    return {
+      ...k, weights, media: mediaVisible, documents, treatments,
+      sire_name: lit.sire_name || null, dam_name: lit.dam_name || null,
+      sire_image_url: lit.sire_image_url || null, dam_image_url: lit.dam_image_url || null,
+    };
   });
 }
 
