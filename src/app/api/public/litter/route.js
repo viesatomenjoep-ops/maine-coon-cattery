@@ -53,6 +53,7 @@ export async function GET(request) {
     dam_image_url: litter.dam_image_url || null,
     ad_text: litter.ad_text || null,
     ad_gallery: Array.isArray(litter.ad_gallery) ? litter.ad_gallery : [],
+    ad_video: litter.ad_video?.url || null,
   };
 
   return NextResponse.json({ litter: safeLitter, kittens });

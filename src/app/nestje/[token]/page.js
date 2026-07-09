@@ -184,6 +184,15 @@ export default function LitterAdPage({ params }) {
           </Reveal>
         )}
 
+        {/* Advertentievideo */}
+        {litter.ad_video && (
+          <Reveal>
+            <section className="mx-auto max-w-3xl pb-8">
+              <video src={litter.ad_video} controls playsInline className="w-full rounded-[1.75rem] border border-ink/5 bg-black shadow-lux" />
+            </section>
+          </Reveal>
+        )}
+
         {/* Sfeergalerij van (het verwachte) nestje */}
         {gallery.length > 0 && (
           <section className="pb-6">

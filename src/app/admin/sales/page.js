@@ -385,6 +385,28 @@ function LitterAdEditor({ litter, updateLitter, deleteLitter, onDeleted }) {
       </Card>
 
       <Card>
+        <h4 className="font-display text-lg text-forest-900">Advertentievideo (1 filmpje)</h4>
+        <p className="mt-1 text-sm text-forest-600">Eén korte video, zichtbaar in de advertentie en voor de klant. Wordt automatisch gecomprimeerd en na 1 jaar opgeruimd.</p>
+        {litter.ad_video?.url ? (
+          <div className="mt-4 space-y-3">
+            <video src={litter.ad_video.url} controls playsInline className="w-full max-w-md rounded-xl border border-forest-900/10 bg-black" />
+            <button onClick={() => updateLitter(litter.id, { ad_video: null })} className="rounded-xl border border-red-200 px-4 py-2 text-sm font-medium text-red-600 transition hover:bg-red-50">Video verwijderen</button>
+          </div>
+        ) : (
+          <div className="mt-4">
+            <AdminUpload
+              onSuccess={(res) => { if (res.event === 'success') updateLitter(litter.id, { ad_video: { url: res.info.secure_url, public_id: res.info.public_id, uploaded_at: new Date().toISOString() } }); }}
+              options={{ folder: `cattery_litter_video/${litter.id}`, clientAllowedFormats: ['videos'] }}
+            >
+              {({ open }) => (
+                <button type="button" onClick={(e) => { e.preventDefault(); open(); }} className="rounded-xl bg-brass-500 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-brass-600">Video uploaden</button>
+              )}
+            </AdminUpload>
+          </div>
+        )}
+      </Card>
+
+      <Card>
         <h4 className="font-display text-lg text-forest-900">Advertentietekst</h4>
         <textarea defaultValue={litter.ad_text || ''} onBlur={(e) => { if (e.target.value !== (litter.ad_text || '')) updateLitter(litter.id, { ad_text: e.target.value }); }} rows={7}
           placeholder="Vertel het verhaal van je cattery en dit verwachte nestje…" className="mt-3 w-full rounded-xl border border-forest-900/15 bg-white px-4 py-3 text-sm leading-relaxed outline-none focus:border-brass-400 focus:ring-2 focus:ring-brass-200" />

@@ -60,8 +60,16 @@ export async function POST(request) {
       ).end(buffer);
     });
 
+    // Comprimeer bij aflevering: Cloudinary levert automatisch een kleiner,
+    // geoptimaliseerd bestand (f_auto,q_auto) voor foto's én video's.
+    const compress = (url, type) => {
+      if (!url || (type !== 'image' && type !== 'video')) return url;
+      return url.includes('/upload/f_auto') ? url : url.replace('/upload/', '/upload/f_auto,q_auto/');
+    };
+
     return NextResponse.json({
-      url: result.secure_url,
+      url: compress(result.secure_url, result.resource_type),
+      raw_url: result.secure_url,
       public_id: result.public_id,
       resource_type: result.resource_type,
       format: result.format,
