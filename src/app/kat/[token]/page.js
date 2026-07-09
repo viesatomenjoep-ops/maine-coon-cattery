@@ -85,6 +85,24 @@ export default function CatShowcasePage({ params }) {
       </section>
 
       <main className="mx-auto max-w-5xl px-6 py-14">
+        {/* Ouders — bovenaan, boven de gegevens */}
+        {(cat.sire_image_url || cat.dam_image_url) && (
+          <section className="mb-10">
+            <h2 className="mb-6 text-center font-display text-2xl text-forest-950">De ouders</h2>
+            <div className="mx-auto grid max-w-xl grid-cols-2 gap-6">
+              {[{ img: cat.sire_image_url, name: cat.sire_name, label: 'Vader' }, { img: cat.dam_image_url, name: cat.dam_name, label: 'Moeder' }].map((p) => (
+                <div key={p.label} className="text-center">
+                  <div className="group relative mx-auto aspect-square overflow-hidden rounded-[1.5rem] border border-ink/5 bg-forest-50 shadow-lux">
+                    {p.img ? <img src={p.img} alt={p.label} onClick={() => setZoom(p.img)} className="h-full w-full cursor-zoom-in object-cover transition duration-700 group-hover:scale-105" /> : <div className="flex h-full w-full items-center justify-center"><PawMark className="h-8 w-8 text-forest-200" /></div>}
+                  </div>
+                  <p className="mt-3 text-[11px] font-bold uppercase tracking-[0.2em] text-brass-600">{p.label}</p>
+                  <p className="font-display text-lg text-forest-900">{p.name || '—'}</p>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
         {/* Kerngegevens */}
         <section className="rounded-[2rem] border border-ink/5 bg-white p-7 shadow-lux md:p-9">
           <h2 className="mb-5 font-display text-2xl text-forest-950">Gegevens</h2>
@@ -100,24 +118,6 @@ export default function CatShowcasePage({ params }) {
             {cat.weights?.length > 0 && <Stat label="Laatste weging" value={`${cat.weights[cat.weights.length - 1].grams} g`} />}
           </dl>
         </section>
-
-        {/* Ouders */}
-        {(cat.sire_image_url || cat.dam_image_url) && (
-          <section className="mt-10">
-            <h2 className="mb-6 text-center font-display text-2xl text-forest-950">De ouders</h2>
-            <div className="mx-auto grid max-w-xl grid-cols-2 gap-6">
-              {[{ img: cat.sire_image_url, name: cat.sire_name, label: 'Vader' }, { img: cat.dam_image_url, name: cat.dam_name, label: 'Moeder' }].map((p) => (
-                <div key={p.label} className="text-center">
-                  <div className="group relative mx-auto aspect-square overflow-hidden rounded-[1.5rem] border border-ink/5 bg-forest-50 shadow-lux">
-                    {p.img ? <img src={p.img} alt={p.label} onClick={() => setZoom(p.img)} className="h-full w-full cursor-zoom-in object-cover transition duration-700 group-hover:scale-105" /> : <div className="flex h-full w-full items-center justify-center"><PawMark className="h-8 w-8 text-forest-200" /></div>}
-                  </div>
-                  <p className="mt-3 text-[11px] font-bold uppercase tracking-[0.2em] text-brass-600">{p.label}</p>
-                  <p className="font-display text-lg text-forest-900">{p.name || '—'}</p>
-                </div>
-              ))}
-            </div>
-          </section>
-        )}
 
         {/* Galerij */}
         {cat.gallery?.length > 0 && (

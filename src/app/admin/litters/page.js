@@ -268,21 +268,21 @@ export default function LittersPage() {
                     </p>
                   </div>
                 </div>
-                <div className="flex flex-wrap gap-3">
-                  <Link href={`/admin/litters/${lit.id}`} className="inline-flex items-center rounded-xl bg-emerald-600 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-emerald-700">Open nestje</Link>
+                <div className="flex flex-wrap gap-2.5">
+                  <Link href={`/admin/litters/${lit.id}`} className="inline-flex items-center rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-emerald-700">Open nestje</Link>
                   <button
                     onClick={() => {
                       if (!lit.share_token) return alert('De deel-link wordt actief zodra de database-update (share_token) is toegepast.');
                       navigator.clipboard.writeText(`${window.location.origin}/nestje/${lit.share_token}`);
                       alert('Advertentielink van dit nestje gekopieerd! Deel hem gerust via WhatsApp.');
                     }}
-                    className="inline-flex items-center rounded-xl bg-forest-800 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-forest-900"
+                    className="inline-flex items-center rounded-xl bg-forest-800 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-forest-900"
                   >
                     Deel-advertentie
                   </button>
-                  <Btn variant="solid" onClick={() => openLitter(lit.id)} className="!px-3 !py-1.5 !text-xs">Nestje bewerken</Btn>
-                  <Btn variant="brass" onClick={() => openNewKitten(lit.id)} className="!px-3 !py-1.5 !text-xs">+ Kitten toevoegen</Btn>
-                  <Btn variant="ghost" onClick={() => { if (confirm('Weet je zeker dat je dit nestje wilt verwijderen?')) deleteLitter(lit.id); }} className="!px-3 !py-1.5 !text-xs !text-red-600 hover:!bg-red-50">Verwijderen</Btn>
+                  <Btn variant="solid" onClick={() => openLitter(lit.id)} className="!px-4 !py-2.5 !text-sm">Nestje bewerken</Btn>
+                  <Btn variant="brass" onClick={() => openNewKitten(lit.id)} className="!px-4 !py-2.5 !text-sm">+ Kitten toevoegen</Btn>
+                  <Btn variant="ghost" onClick={() => { if (confirm('Weet je zeker dat je dit nestje wilt verwijderen?')) deleteLitter(lit.id); }} className="!px-4 !py-2.5 !text-sm !text-red-600 hover:!bg-red-50">Verwijderen</Btn>
                 </div>
               </div>
 
