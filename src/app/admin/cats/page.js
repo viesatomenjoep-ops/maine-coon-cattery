@@ -129,6 +129,23 @@ export default function CatsAdmin() {
         </div>
       ) : (
         <>
+          {litterKittens.length > 0 && (
+            <CatGroup title="Kittens" hint="horen bij een nestje" count={litterKittens.length}>
+              {litterKittens.map((k) => {
+                const nest = litterName(k.litter_id);
+                const parents = litterParents(k.litter_id);
+                return (
+                  <CatCard
+                    key={k.id}
+                    k={k}
+                    badge={<Badge cls="bg-emerald-100 text-emerald-700">Kitten · {sexLabel(k.gender)}</Badge>}
+                    subtitle={nest ? `Nestje: ${nest}${parents ? ` (${parents})` : ''}` : `${sexLabel(k.gender)} · nog geen nestje gekoppeld`}
+                  />
+                );
+              })}
+            </CatGroup>
+          )}
+
           {breedingFemales.length > 0 && (
             <CatGroup title="Fokpoezen" hint="de moeders" count={breedingFemales.length}>
               {breedingFemales.map((k) => (
@@ -150,23 +167,6 @@ export default function CatsAdmin() {
               {breedingOther.map((k) => (
                 <CatCard key={k.id} k={k} badge={<Badge cls="bg-stone-100 text-stone-700">Fokdier</Badge>} subtitle={`${sexLabel(k.gender)} · ${vachtLabel(k)}`} />
               ))}
-            </CatGroup>
-          )}
-
-          {litterKittens.length > 0 && (
-            <CatGroup title="Kittens" hint="horen bij een nestje" count={litterKittens.length}>
-              {litterKittens.map((k) => {
-                const nest = litterName(k.litter_id);
-                const parents = litterParents(k.litter_id);
-                return (
-                  <CatCard
-                    key={k.id}
-                    k={k}
-                    badge={<Badge cls="bg-emerald-100 text-emerald-700">Kitten · {sexLabel(k.gender)}</Badge>}
-                    subtitle={nest ? `Nestje: ${nest}${parents ? ` (${parents})` : ''}` : `${sexLabel(k.gender)} · nog geen nestje gekoppeld`}
-                  />
-                );
-              })}
             </CatGroup>
           )}
         </>

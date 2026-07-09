@@ -32,7 +32,7 @@ function CatPicker({ kittens, value, onChange }) {
             key={t.key}
             type="button"
             onClick={() => { setType(t.key); onChange(''); }}
-            className={`rounded-full px-4 py-1.5 text-xs font-semibold uppercase tracking-wide transition ${type === t.key ? 'bg-forest-800 text-white' : 'border border-forest-900/15 bg-white text-forest-700 hover:bg-forest-50'}`}
+            className={`rounded-full border px-4 py-1.5 text-xs font-semibold uppercase tracking-wide transition ${type === t.key ? 'border-emerald-500 bg-emerald-100 text-emerald-800 ring-2 ring-emerald-300' : 'border-forest-900/15 bg-white text-forest-700 hover:bg-forest-50'}`}
           >
             {t.label}
           </button>

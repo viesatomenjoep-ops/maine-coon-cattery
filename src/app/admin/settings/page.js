@@ -1,5 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { useStore } from '@/context/StoreContext';
 import { PageHead, Card, Field, Input, Btn } from '@/components/admin';
 
@@ -35,7 +36,24 @@ export default function SettingsPage() {
   return (
     <>
       <PageHead label="Configuratie" title="Instellingen" />
-      
+
+      <div className="mb-8 grid max-w-4xl gap-4 sm:grid-cols-2">
+        <Link href="/admin/content" className="group flex items-center gap-4 rounded-2xl border border-forest-900/10 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-brass-400/60 hover:shadow-md">
+          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-forest-50 text-2xl">🌍</span>
+          <div>
+            <p className="font-display text-lg text-forest-900">Website Editor</p>
+            <p className="text-sm text-forest-600">Pas teksten en foto's op je site aan</p>
+          </div>
+        </Link>
+        <Link href="/admin/backup" className="group flex items-center gap-4 rounded-2xl border border-forest-900/10 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-brass-400/60 hover:shadow-md">
+          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-forest-50 text-2xl">💾</span>
+          <div>
+            <p className="font-display text-lg text-forest-900">Back-up &amp; Export</p>
+            <p className="text-sm text-forest-600">Download een kopie van al je gegevens</p>
+          </div>
+        </Link>
+      </div>
+
       <form onSubmit={handleSave} className="space-y-8 max-w-4xl">
         <Card>
           <h2 className="font-display text-xl text-forest-900 mb-6 border-b border-forest-900/10 pb-4">Cattery Informatie</h2>

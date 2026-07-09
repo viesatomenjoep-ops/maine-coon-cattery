@@ -13,10 +13,8 @@ export default function AdminDashboard() {
     { href: '/admin/medical', label: 'Medisch Dashboard', icon: '🩺', desc: 'Vaccinaties & gezondheid' },
     { href: '/admin/sales', label: 'Verkoop & Portaal', icon: '💰', desc: 'Prijzen en beschikbaarheid' },
     { href: '/admin/customers', label: 'Klantenbestand', icon: '👥', desc: 'Beheer alle kopers' },
-    { href: '/admin/content', label: 'Website Editor', icon: '🌍', desc: 'Pas teksten op de site aan' },
     { href: '/admin/media', label: 'Foto- & Videogalerij', icon: '📸', desc: 'Beheer alle media' },
-    { href: '/admin/backup', label: 'Back-up & Export', icon: '💾', desc: 'Download een kopie van al je gegevens' },
-    { href: '/admin/settings', label: 'Instellingen', icon: '⚙️', desc: 'Systeemvoorkeuren' },
+    { href: '/admin/settings', label: 'Instellingen', icon: '⚙️', desc: 'Website-editor, back-up & voorkeuren' },
   ];
 
   return (
