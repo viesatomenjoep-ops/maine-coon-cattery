@@ -76,10 +76,10 @@ export default function AdminLayout({ children }) {
               );
             })}
             {isSuperadmin && (
-              <Link href="/admin/tenants" onClick={() => setOpen(false)}
-                className={`flex items-center gap-4 rounded-xl px-4 py-4 lg:py-3 text-base lg:text-sm transition ${pathname === '/admin/tenants' ? 'bg-brass-400 text-forest-950 font-medium' : 'text-forest-900 hover:bg-forest-50 hover:text-forest-950'}`}>
+              <Link href="/superadmin" onClick={() => setOpen(false)}
+                className="flex items-center gap-4 rounded-xl bg-ink px-4 py-4 lg:py-3 text-base lg:text-sm font-medium text-cream-50 transition hover:bg-ink/90">
                 <Icon name="customer" className="h-6 w-6 lg:h-5 lg:w-5" />
-                Catteries
+                Superadmin
               </Link>
             )}
           </nav>
