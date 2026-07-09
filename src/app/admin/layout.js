@@ -49,7 +49,7 @@ export default function AdminLayout({ children }) {
       {/* sidebar */}
       <aside className={`fixed inset-y-0 left-0 z-40 w-full transform border-r border-forest-900/10 bg-white transition-transform lg:static lg:w-[260px] lg:translate-x-0 ${open ? 'translate-x-0' : '-translate-x-full'}`}>
         <div className="flex h-full flex-col">
-          <div className="relative p-6 pt-8 pb-4 text-center">
+          <div className="relative p-6 pt-6 pb-3 text-center">
             {/* Mobiele sluit knop */}
             <button 
               onClick={() => setOpen(false)} 
@@ -64,16 +64,34 @@ export default function AdminLayout({ children }) {
               <span className="mt-1 block text-[9px] font-bold uppercase tracking-[0.2em] text-forest-600">Maine Coon Cattery</span>
             </Link>
           </div>
-          <nav className="flex-1 space-y-2 px-6 lg:px-4 lg:space-y-1">
+          {/* Gebruiker + uitloggen — bovenaan, makkelijk bereikbaar */}
+          <div className="px-6 pb-3 lg:px-4">
+            <div className="flex items-center justify-between gap-2 rounded-xl border border-forest-900/10 bg-forest-50/60 px-3 py-2">
+              <span className="min-w-0 truncate text-xs font-medium text-forest-800">{user.user_metadata?.name || 'Beheerder'}</span>
+              <button onClick={async () => { await logout(); window.location.href = '/'; }} className="shrink-0 rounded-lg border border-forest-900/10 bg-white px-3 py-1.5 text-xs font-semibold text-forest-700 transition hover:bg-forest-100">Uitloggen</button>
+            </div>
+          </div>
+
+          <nav className="flex-1 space-y-1 px-6 lg:px-4">
             {NAV.map((item) => {
               const active = pathname === item.href;
-              return (
-                <Link key={item.href} href={item.href} onClick={() => setOpen(false)}
-                  className={`flex items-center gap-4 rounded-xl px-4 py-4 lg:py-3 text-base lg:text-sm transition ${active ? 'bg-brass-400 text-forest-950 font-medium' : 'text-forest-900 hover:bg-forest-50 hover:text-forest-950'}`}>
+              const link = (
+                <Link href={item.href} onClick={() => setOpen(false)}
+                  className={`flex flex-1 items-center gap-4 rounded-xl px-4 py-4 lg:py-3 text-base lg:text-sm transition ${active ? 'bg-brass-400 text-forest-950 font-medium' : 'text-forest-900 hover:bg-forest-50 hover:text-forest-950'}`}>
                   <Icon name={item.icon} className="h-6 w-6 lg:h-5 lg:w-5" />
                   {item.label}
                 </Link>
               );
+              if (item.href === '/admin') {
+                return (
+                  <div key={item.href} className="flex items-center gap-2">
+                    {link}
+                    <a href="/" target="_blank" rel="noreferrer" title="Bekijk de website — opent apart, je blijft in het beheer" aria-label="Bekijk de website"
+                      className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-forest-900/15 bg-white text-lg transition hover:border-brass-400 hover:bg-forest-50 lg:h-10 lg:w-10">🌍</a>
+                  </div>
+                );
+              }
+              return <div key={item.href}>{link}</div>;
             })}
             {isSuperadmin && (
               <Link href="/superadmin" onClick={() => setOpen(false)}
@@ -82,24 +100,13 @@ export default function AdminLayout({ children }) {
                 Superadmin
               </Link>
             )}
-
-            {/* Naar de openbare website (opent in een nieuw tabblad, zodat je in het beheer blijft) */}
-            <a href="/" target="_blank" rel="noreferrer"
-              className="mt-2 flex items-start gap-3 rounded-xl border border-forest-900/15 bg-white px-4 py-3 text-forest-900 transition hover:border-brass-400 hover:bg-forest-50">
-              <span className="text-lg leading-none">🌍</span>
-              <span>
-                <span className="block text-sm font-medium">Bekijk de website</span>
-                <span className="block text-[11px] text-forest-600">Je openbare voorpagina — opent apart, je blijft in het beheer</span>
-              </span>
-            </a>
           </nav>
-          <div className="border-t border-forest-900/10 p-6 lg:p-4">
-            {currentTenant?.name && <p className="px-2 text-xs font-semibold text-forest-800">🏡 {currentTenant.name}</p>}
-            <p className="px-2 text-sm lg:text-xs text-forest-600">{user.user_metadata?.name || 'Beheerder'}</p>
-            <button onClick={async () => { await logout(); window.location.href = '/'; }} className="mt-2 w-full rounded-xl px-4 py-3 lg:py-2.5 text-left text-base lg:text-sm text-forest-900 transition hover:bg-forest-50">
-              Uitloggen
-            </button>
-          </div>
+
+          {currentTenant?.name && (
+            <div className="border-t border-forest-900/10 px-6 py-3 lg:px-4">
+              <p className="text-xs font-semibold text-forest-700">🏡 {currentTenant.name}</p>
+            </div>
+          )}
         </div>
       </aside>
 

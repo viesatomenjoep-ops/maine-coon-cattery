@@ -45,7 +45,7 @@ function CatCard({ k, badge, subtitle }) {
             Deel
           </button>
         )}
-        <span className="hidden items-center whitespace-nowrap rounded-xl bg-brass-400 px-4 py-2.5 text-sm font-medium text-forest-950 shadow-sm sm:inline-flex">Beheer dossier →</span>
+        <Link href={`/admin/cats/${k.id}`} className="inline-flex items-center whitespace-nowrap rounded-xl bg-brass-400 px-4 py-2.5 text-sm font-medium text-forest-950 shadow-sm transition hover:bg-brass-300">Beheer dossier →</Link>
       </div>
     </div>
   );
