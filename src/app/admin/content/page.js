@@ -86,8 +86,21 @@ export default function ContentEditor() {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    // Hydrate state from DB or default
+    // Hydrate state from DB or default.
     const st = siteContent || {};
+    // Een cattery die nog geen eigen content heeft, start volledig BLANCO
+    // (geen voorbeeldfoto's/teksten van een andere cattery). Bestaande sites
+    // (zoals Willem) behouden hun huidige inhoud en standaardwaarden.
+    const blank = Object.keys(st).length === 0;
+    if (blank) {
+      setData({
+        hero_slides: [], hero_hidden: false,
+        intro_hidden: false, intro_label: '', intro_title: '', intro_text: '', intro_tested: '',
+        timeline_hidden: false, timeline_label: '', timeline_title: '', timeline_desc: '', timeline_stages: [],
+        portal_cta_title: '', portal_cta_desc: '',
+      });
+      return;
+    }
     setData({
       hero_slides: st.hero_slides || fallbackSlides,
       hero_hidden: st.hero_hidden || false,
