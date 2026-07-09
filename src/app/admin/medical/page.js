@@ -85,12 +85,13 @@ export default function MedicalPage() {
       <div className="mb-6 rounded-2xl border border-forest-900/10 bg-white p-5">
         <h2 className="font-display text-lg text-forest-900">Standaard gezondheidsschema</h2>
         <p className="mt-1 text-sm text-forest-600">Je kunt voor elke categorie een datum + herinnering instellen. Zodra een behandeling gedaan is, vink je hem af — dan stopt de melding.</p>
-        <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-5">
+        <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
           {[
             { i: '💊', t: 'Ontworming', d: 'Vanaf 4 weken — kittens én de moeder' },
             { i: '💉', t: 'Vaccinatie 9 weken', d: 'Eerste enting rond 9 weken' },
             { i: '💉', t: 'Vaccinatie 12 weken', d: 'Tweede enting rond 12 weken' },
             { i: '📍', t: 'Transponderchip', d: 'Rond 9 weken — chip plaatsen + registreren' },
+            { i: '📜', t: 'Stamboomregistratie', d: 'Stamboompapieren aanvragen/registreren' },
             { i: '🩺', t: 'Gezondheidscheck', d: 'Rond 9 weken — controle door de dierenarts' },
           ].map((x) => (
             <div key={x.t} className="rounded-xl border border-forest-900/10 bg-cream-50 p-3">

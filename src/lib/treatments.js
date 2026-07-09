@@ -6,6 +6,7 @@ export const TREATMENT_TYPES = [
   'Vaccinatie 9 weken',
   'Vaccinatie 12 weken',
   'Transponderchip',
+  'Stamboomregistratie',
   'Gezondheidscheck',
 ];
 
@@ -23,6 +24,7 @@ export const treatmentIcon = (type) => {
   if (t.includes('vaccinat') || t.includes('enting')) return '💉';
   if (t.includes('ontworm')) return '💊';
   if (t.includes('transponder') || t.includes('chip')) return '📍';
+  if (t.includes('stamboom') || t.includes('registrat')) return '📜';
   if (t.includes('gezond') || t.includes('check')) return '🩺';
   return '🐾';
 };
