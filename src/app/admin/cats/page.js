@@ -1,4 +1,5 @@
 'use client';
+import { useState } from 'react';
 import Link from 'next/link';
 import { useStore } from '@/context/StoreContext';
 import { PageHead, Btn } from '@/components/admin';
@@ -67,15 +68,25 @@ function CatGroup({ title, hint, count, children }) {
 export default function CatsAdmin() {
   const { kittens, litters = [] } = useStore();
 
-  const breedingFemales = kittens.filter((k) => k.is_own_breeding_cat && isFemale(k.gender));
-  const breedingMales = kittens.filter((k) => k.is_own_breeding_cat && isMale(k.gender));
-  const breedingOther = kittens.filter((k) => k.is_own_breeding_cat && !isFemale(k.gender) && !isMale(k.gender));
-  const litterKittens = kittens.filter((k) => !k.is_own_breeding_cat);
+  const [q, setQ] = useState('');
   const litterName = (id) => litters.find((l) => l.id === id)?.name;
   const litterParents = (id) => {
     const l = litters.find((x) => x.id === id);
     return l ? `${l.sire_name || 'onbekend'} × ${l.dam_name || 'onbekend'}` : null;
   };
+  // Zoeken op naam, kleur, EMS/chip of nestje.
+  const match = (k) => {
+    const s = q.trim().toLowerCase();
+    if (!s) return true;
+    return [k.name, k.color, k.pattern, k.ems_code, k.chip_number, k.registration_no, litterName(k.litter_id)]
+      .filter(Boolean).some((v) => String(v).toLowerCase().includes(s));
+  };
+
+  const breedingFemales = kittens.filter((k) => k.is_own_breeding_cat && isFemale(k.gender) && match(k));
+  const breedingMales = kittens.filter((k) => k.is_own_breeding_cat && isMale(k.gender) && match(k));
+  const breedingOther = kittens.filter((k) => k.is_own_breeding_cat && !isFemale(k.gender) && !isMale(k.gender) && match(k));
+  const litterKittens = kittens.filter((k) => !k.is_own_breeding_cat && match(k));
+  const totalMatches = breedingFemales.length + breedingMales.length + breedingOther.length + litterKittens.length;
 
   return (
     <>
@@ -132,11 +143,30 @@ export default function CatsAdmin() {
       <div className="mb-2 flex items-baseline gap-2">
         <h2 className="font-display text-2xl text-forest-900">Katten &amp; dossiers</h2>
       </div>
-      <p className="mb-6 text-sm text-forest-600">Overzichtelijk gesorteerd: eerst je fokdieren (de moeders en vaders), daarna de kittens per nestje. Klik op een kaart om het volledige dossier te openen.</p>
+      <p className="mb-4 text-sm text-forest-600">Overzichtelijk gesorteerd: eerst de kittens, daarna je fokdieren (moeders en vaders). Klik op een kaart om het volledige dossier te openen.</p>
+
+      {/* Zoeken */}
+      <div className="relative mb-6 max-w-md">
+        <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-forest-400">🔍</span>
+        <input
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+          placeholder="Zoek een kitten of kat… (naam, kleur, chip, nestje)"
+          className="w-full rounded-xl border border-forest-900/15 bg-white py-2.5 pl-10 pr-9 text-sm outline-none focus:border-brass-400 focus:ring-2 focus:ring-brass-200"
+        />
+        {q && (
+          <button onClick={() => setQ('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-forest-400 hover:text-forest-700" aria-label="Wissen">✕</button>
+        )}
+      </div>
+      {q.trim() && <p className="mb-4 text-sm text-forest-600">{totalMatches} resultaat{totalMatches === 1 ? '' : 'en'} voor “{q}”.</p>}
 
       {kittens.length === 0 ? (
         <div className="rounded-2xl border border-forest-900/10 bg-white py-12 text-center text-forest-600">
           Geen katten gevonden in de database.
+        </div>
+      ) : totalMatches === 0 ? (
+        <div className="rounded-2xl border border-dashed border-forest-900/20 bg-white/60 py-12 text-center text-forest-600">
+          Geen katten gevonden voor “{q}”. Probeer een andere zoekterm.
         </div>
       ) : (
         <>

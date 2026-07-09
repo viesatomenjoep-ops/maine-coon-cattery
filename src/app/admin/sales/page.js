@@ -82,30 +82,28 @@ function AdEditor({ k, customers, documents, media, updateKitten, onCopyLink }) 
     <div className="grid gap-6 lg:grid-cols-2">
       {/* ---- KOLOM 1: de advertentie ---- */}
       <Card className="flex flex-col">
-        <div className="relative aspect-[4/3] overflow-hidden rounded-xl bg-forest-50 group">
-          {k.cover_image ? (
-            <img src={k.cover_image} alt={k.name} className="h-full w-full object-cover" />
-          ) : (
-            <ImageSlot label="Nog geen advertentiefoto" ratio="aspect-[4/3]" className="!rounded-xl" />
-          )}
-          <div className="absolute inset-0 flex items-center justify-center gap-2 bg-ink/40 opacity-0 transition group-hover:opacity-100">
-            <AdminUpload
-              onSuccess={(res) => { if (res.event === 'success') updateKitten(k.id, { cover_image: res.info.secure_url }); }}
-              options={{ folder: `cattery_sales/${k.id}`, clientAllowedFormats: ['images'] }}
-            >
-              {({ open, openCamera }) => (
-                <>
-                  <button type="button" onClick={(e) => { e.preventDefault(); open(); }} className="rounded-lg bg-white/90 px-3 py-1.5 text-xs font-semibold text-forest-900 shadow hover:bg-white">Upload foto</button>
-                  <button type="button" onClick={(e) => { e.preventDefault(); openCamera(); }} className="rounded-lg bg-white/90 px-3 py-1.5 text-xs font-semibold text-forest-900 shadow hover:bg-white">Camera</button>
-                </>
+        <AdminUpload
+          onSuccess={(res) => { if (res.event === 'success') updateKitten(k.id, { cover_image: res.info.secure_url }); }}
+          options={{ folder: `cattery_sales/${k.id}`, clientAllowedFormats: ['images'] }}
+        >
+          {({ open, openCamera, dropProps, dragOver }) => (
+            <div {...dropProps} className={`group relative aspect-[4/3] overflow-hidden rounded-xl bg-forest-50 ring-brass-400 transition ${dragOver ? 'ring-2' : ''}`}>
+              {k.cover_image ? (
+                <img src={k.cover_image} alt={k.name} className="h-full w-full object-cover" />
+              ) : (
+                <ImageSlot label="Sleep een foto hierheen of klik" ratio="aspect-[4/3]" className="!rounded-xl" />
               )}
-            </AdminUpload>
-            {k.cover_image && (
-              <button onClick={() => updateKitten(k.id, { cover_image: null })} className="rounded-lg bg-red-500/90 px-3 py-1.5 text-xs font-semibold text-white shadow hover:bg-red-500">Wis</button>
-            )}
-          </div>
-          <div className="pointer-events-none absolute left-3 top-3"><StatusPill status={matchStatus(k.status)} /></div>
-        </div>
+              <div className={`absolute inset-0 flex items-center justify-center gap-2 bg-ink/40 transition ${dragOver ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
+                <button type="button" onClick={(e) => { e.preventDefault(); open(); }} className="rounded-lg bg-white/90 px-3 py-1.5 text-xs font-semibold text-forest-900 shadow hover:bg-white">Upload foto</button>
+                <button type="button" onClick={(e) => { e.preventDefault(); openCamera(); }} className="rounded-lg bg-white/90 px-3 py-1.5 text-xs font-semibold text-forest-900 shadow hover:bg-white">Camera</button>
+                {k.cover_image && (
+                  <button onClick={() => updateKitten(k.id, { cover_image: null })} className="rounded-lg bg-red-500/90 px-3 py-1.5 text-xs font-semibold text-white shadow hover:bg-red-500">Wis</button>
+                )}
+              </div>
+              <div className="pointer-events-none absolute left-3 top-3"><StatusPill status={matchStatus(k.status)} /></div>
+            </div>
+          )}
+        </AdminUpload>
         <p className="mt-2 text-center text-[11px] text-forest-500">Deze foto hoort specifiek bij de advertentie van {k.name}.</p>
 
         <div className="mt-4 flex items-baseline justify-between">
@@ -271,20 +269,18 @@ function ParentPhoto({ label, src, folder, onSet }) {
   return (
     <div>
       <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-forest-700">{label}</p>
-      <div className="group relative aspect-square overflow-hidden rounded-xl bg-forest-50">
-        {src ? <img src={src} alt={label} className="h-full w-full object-cover" /> : <ImageSlot label="Geen foto" ratio="aspect-square" className="!rounded-xl" />}
-        <div className="absolute inset-0 flex items-center justify-center gap-2 bg-ink/40 opacity-0 transition group-hover:opacity-100">
-          <AdminUpload onSuccess={(res) => { if (res.event === 'success') onSet(res.info.secure_url); }} options={{ folder, clientAllowedFormats: ['images'] }}>
-            {({ open, openCamera }) => (
-              <>
-                <button type="button" onClick={(e) => { e.preventDefault(); open(); }} className="rounded-lg bg-white/90 px-2.5 py-1 text-[11px] font-semibold text-forest-900 shadow hover:bg-white">Upload</button>
-                <button type="button" onClick={(e) => { e.preventDefault(); openCamera(); }} className="rounded-lg bg-white/90 px-2.5 py-1 text-[11px] font-semibold text-forest-900 shadow hover:bg-white">Camera</button>
-              </>
-            )}
-          </AdminUpload>
-          {src && <button onClick={() => onSet(null)} className="rounded-lg bg-red-500/90 px-2.5 py-1 text-[11px] font-semibold text-white shadow">Wis</button>}
-        </div>
-      </div>
+      <AdminUpload onSuccess={(res) => { if (res.event === 'success') onSet(res.info.secure_url); }} options={{ folder, clientAllowedFormats: ['images'] }}>
+        {({ open, openCamera, dropProps, dragOver }) => (
+          <div {...dropProps} className={`group relative aspect-square overflow-hidden rounded-xl bg-forest-50 ring-brass-400 transition ${dragOver ? 'ring-2' : ''}`}>
+            {src ? <img src={src} alt={label} className="h-full w-full object-cover" /> : <ImageSlot label="Sleep hierheen of klik" ratio="aspect-square" className="!rounded-xl" />}
+            <div className={`absolute inset-0 flex items-center justify-center gap-2 bg-ink/40 transition ${dragOver ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
+              <button type="button" onClick={(e) => { e.preventDefault(); open(); }} className="rounded-lg bg-white/90 px-2.5 py-1 text-[11px] font-semibold text-forest-900 shadow hover:bg-white">Upload</button>
+              <button type="button" onClick={(e) => { e.preventDefault(); openCamera(); }} className="rounded-lg bg-white/90 px-2.5 py-1 text-[11px] font-semibold text-forest-900 shadow hover:bg-white">Camera</button>
+              {src && <button onClick={() => onSet(null)} className="rounded-lg bg-red-500/90 px-2.5 py-1 text-[11px] font-semibold text-white shadow">Wis</button>}
+            </div>
+          </div>
+        )}
+      </AdminUpload>
     </div>
   );
 }
@@ -376,9 +372,9 @@ function LitterAdEditor({ litter, updateLitter, deleteLitter, onDeleted }) {
               <button onClick={() => removePhoto(src)} className="absolute right-1 top-1 rounded-md bg-red-500/90 px-1.5 py-0.5 text-[10px] font-semibold text-white opacity-0 transition group-hover:opacity-100">Wis</button>
             </div>
           ))}
-          <AdminUpload onSuccess={(res) => { if (res.event === 'success') addPhoto(res.info.secure_url); }} options={{ folder: `cattery_litter_ad/${litter.id}`, clientAllowedFormats: ['images'] }}>
-            {({ open }) => (
-              <button type="button" onClick={(e) => { e.preventDefault(); open(); }} className="flex aspect-square items-center justify-center rounded-xl border-2 border-dashed border-forest-900/20 text-3xl text-forest-400 transition hover:border-brass-400 hover:text-brass-500">+</button>
+          <AdminUpload onSuccess={(res) => { if (res.event === 'success') addPhoto(res.info.secure_url); }} options={{ folder: `cattery_litter_ad/${litter.id}`, multiple: true, clientAllowedFormats: ['images'] }}>
+            {({ open, dropProps, dragOver }) => (
+              <button type="button" {...dropProps} onClick={(e) => { e.preventDefault(); open(); }} className={`flex aspect-square items-center justify-center rounded-xl border-2 border-dashed text-3xl transition ${dragOver ? 'border-brass-400 bg-brass-50 text-brass-500' : 'border-forest-900/20 text-forest-400 hover:border-brass-400 hover:text-brass-500'}`}>+</button>
             )}
           </AdminUpload>
         </div>

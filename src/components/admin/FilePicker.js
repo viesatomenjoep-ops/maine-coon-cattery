@@ -103,6 +103,14 @@ export default function FilePicker({
   const openFile = () => !disabled && fileRef.current?.click();
   const openCamera = () => !disabled && cameraRef.current?.click();
 
+  // Slepen vanaf je desktop-map naar een uploadvlak.
+  const [dragOver, setDragOver] = useState(false);
+  const dropProps = {
+    onDragOver: (e) => { e.preventDefault(); if (!disabled) setDragOver(true); },
+    onDragLeave: () => setDragOver(false),
+    onDrop: (e) => { e.preventDefault(); setDragOver(false); if (!disabled) enqueueFiles(e.dataTransfer?.files); },
+  };
+
   return (
     <>
       <input ref={fileRef} type="file" className="hidden" accept={accept} multiple={multiple} disabled={disabled} onChange={handlePick} />
@@ -111,9 +119,9 @@ export default function FilePicker({
       )}
 
       {children ? (
-        children({ openFile, openCamera, canCamera })
+        children({ openFile, openCamera, canCamera, dropProps, dragOver })
       ) : layout === 'buttons' ? (
-        <div className={`flex flex-wrap gap-2 ${className}`}>
+        <div {...dropProps} className={`flex flex-wrap gap-2 rounded-xl transition ${dragOver ? 'ring-2 ring-brass-400 ring-offset-2' : ''} ${className}`}>
           <button type="button" onClick={openFile} disabled={disabled} className={uploadClassName}>
             <FolderIcon />
             <span>{uploadLabel}</span>
@@ -189,7 +197,7 @@ export function AdminUpload({ children, onSuccess, options }) {
 
   return (
     <FilePicker accept={accept} multiple={options?.multiple} onFileReady={uploadOne}>
-      {({ openFile, openCamera, canCamera }) => children({ open: openFile, openCamera, canCamera })}
+      {({ openFile, openCamera, canCamera, dropProps, dragOver }) => children({ open: openFile, openCamera, canCamera, dropProps, dragOver })}
     </FilePicker>
   );
 }
