@@ -76,7 +76,7 @@ export default function AdminLayout({ children }) {
           </nav>
           <div className="border-t border-forest-900/10 p-6 lg:p-4">
             <p className="px-2 text-sm lg:text-xs text-forest-600">{user.user_metadata?.name || 'Beheerder'}</p>
-            <button onClick={() => { logout(); router.push('/'); }} className="mt-2 w-full rounded-xl px-4 py-3 lg:py-2.5 text-left text-base lg:text-sm text-forest-900 transition hover:bg-forest-50">
+            <button onClick={async () => { await logout(); window.location.href = '/'; }} className="mt-2 w-full rounded-xl px-4 py-3 lg:py-2.5 text-left text-base lg:text-sm text-forest-900 transition hover:bg-forest-50">
               Uitloggen
             </button>
           </div>
