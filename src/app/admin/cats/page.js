@@ -35,7 +35,18 @@ function CatCard({ k, badge, subtitle }) {
         </div>
         <p className="mt-1 text-sm text-forest-600 truncate">{subtitle}</p>
       </div>
-      <span className="relative z-0 hidden shrink-0 items-center whitespace-nowrap rounded-xl bg-brass-400 px-4 py-2.5 text-sm font-medium text-forest-950 shadow-sm sm:inline-flex">Beheer dossier →</span>
+      <div className="relative z-20 flex shrink-0 items-center gap-2">
+        {k.secret_token_nl && (
+          <button
+            onClick={(e) => { e.preventDefault(); navigator.clipboard.writeText(`${window.location.origin}/kat/${k.secret_token_nl}`); alert(`Showcase-link van ${k.name} gekopieerd! Deel hem gerust.`); }}
+            className="rounded-xl border border-forest-900/15 bg-white px-3 py-2 text-xs font-semibold text-forest-700 transition hover:bg-forest-50"
+            title="Kopieer de publieke advertentie/showcase-link"
+          >
+            Deel
+          </button>
+        )}
+        <span className="hidden items-center whitespace-nowrap rounded-xl bg-brass-400 px-4 py-2.5 text-sm font-medium text-forest-950 shadow-sm sm:inline-flex">Beheer dossier →</span>
+      </div>
     </div>
   );
 }
