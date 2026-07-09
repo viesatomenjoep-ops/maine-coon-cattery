@@ -1,8 +1,9 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import { PageHead, Card, Field, Input, Select, Textarea, Btn } from '@/components/admin';
 import MediaUpload from '@/components/admin/MediaUpload';
+import DocumentUploader, { DocumentList } from '@/components/admin/DocumentUploader';
 import { useStore } from '@/context/StoreContext';
 // import { CldUploadWidget } from 'next-cloudinary';
 
@@ -30,13 +31,14 @@ const CldUploadWidget = ({ children, onSuccess, options }) => {
   );
 };
 
-export default function CatDossier({ params }) {
+export default function CatDossier() {
   const router = useRouter();
-  const { kittens, customers, deleteKitten, updateKitten, addKitten, addDocument, addMedia, documents, media, addWeight, deleteWeight } = useStore();
-  const isNew = params.id === 'new';
+  const { id } = useParams();
+  const { kittens, customers, deleteKitten, updateKitten, addKitten, addDocument, addMedia, documents, media, addWeight, deleteWeight, deleteDocument } = useStore();
+  const isNew = id === 'new';
 
-  const catDocs = documents.filter(d => d.cat_id === params.id);
-  const catMedia = media.filter(m => m.media_url?.includes(params.id) || m.cat_id === params.id); // Or general media
+  const catDocs = documents.filter(d => d.cat_id === id);
+  const catMedia = media.filter(m => m.media_url?.includes(id) || m.cat_id === id); // Or general media
 
 
   let hasCloudinary = false;
@@ -77,12 +79,12 @@ export default function CatDossier({ params }) {
 
   useEffect(() => {
     if (!isNew) {
-      const cat = kittens.find((k) => k.id === params.id);
+      const cat = kittens.find((k) => k.id === id);
       if (cat) {
         setFormData(prev => ({ ...prev, ...cat }));
       }
     }
-  }, [params.id, isNew, kittens]);
+  }, [id, isNew, kittens]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -102,13 +104,13 @@ export default function CatDossier({ params }) {
 
       // Check if there is pending weight data
       if (formData.weightDate && formData.weightGrams && !isNew) {
-        await addWeight(params.id, formData.weightDate, formData.weightGrams);
+        await addWeight(id, formData.weightDate, formData.weightGrams);
         setFormData(prev => ({ ...prev, weightDate: '', weightGrams: '' }));
       }
 
       let res;
       if (!isNew) {
-        res = await updateKitten(params.id, formData);
+        res = await updateKitten(id, formData);
       } else {
         res = await addKitten(formData);
       }
@@ -128,7 +130,7 @@ export default function CatDossier({ params }) {
 
   const handleDelete = () => {
     if (confirm('Weet je zeker dat je dit dossier (en alle bijbehorende gegevens) definitief wilt verwijderen?')) {
-      if (!isNew) deleteKitten(params.id);
+      if (!isNew) deleteKitten(id);
       router.push('/admin/cats');
     }
   };
@@ -238,45 +240,16 @@ export default function CatDossier({ params }) {
                   <Field label="Geldig tot"><Input type="date" name="vaccineValidUntil" value={formData.vaccineValidUntil} onChange={handleChange} /></Field>
                   
                   <div className="col-span-full mt-6 rounded-xl border border-brass-200 bg-brass-50 p-4">
-                    <p className="mb-2 text-sm font-semibold text-brass-900">Digitale Kluis (PDF / Scans van Dierenarts)</p>
-                    {true ? (
-                      <CldUploadWidget 
-                        signatureEndpoint="/api/sign-cloudinary-params"
-                        onSuccess={async (res) => { 
-                          if(res.event === 'success') {
-                            await addDocument({ url: res.info.secure_url, name: 'Medisch Document', category: 'Medisch', cat_id: params.id });
-                            alert('Document succesvol geüpload en opgeslagen in de kluis!');
-                          } 
-                        }}
-                        options={{ sources: ['local', 'url', 'camera'], multiple: true, folder: `cattery_medisch/${params.id}`, clientAllowedFormats: ['pdf', 'images', 'png', 'jpg', 'jpeg'] }}
-                      >
-                        {({ open }) => (
-                          <Btn type="button" variant="ghost" onClick={(e) => { e.preventDefault(); open(); }} className="bg-white border-brass-300 text-brass-800 hover:bg-brass-100">
-                            Bestand Uploaden
-                          </Btn>
-                        )}
-                      </CldUploadWidget>
+                    <p className="mb-3 text-sm font-semibold text-brass-900">Digitale Kluis (PDF / Scans van Dierenarts)</p>
+                    {isNew ? (
+                      <p className="text-xs italic text-forest-600">Sla het dossier eerst op voordat je documenten kunt uploaden.</p>
                     ) : (
-                      <p className="text-xs text-red-600">Cloudinary (ENV) niet geconfigureerd.</p>
-                    )}
-                    
-                    {catDocs.length > 0 && (
-                      <div className="mt-3 flex flex-wrap gap-2">
-                        {catDocs.map(d => (
-                          <div key={d.id} className="group relative flex items-center">
-                            <a href={d.file_url} target="_blank" className="text-xs text-brass-700 bg-white border border-brass-200 px-2 py-1 rounded hover:bg-brass-100 transition truncate max-w-[200px]">
-                              📄 {d.notes || 'Document'}
-                            </a>
-                            <button 
-                              type="button" 
-                              onClick={() => { if(confirm('Document definitief verwijderen?')) useStore.getState().deleteDocument(d.id); }} 
-                              className="absolute -top-2 -right-2 hidden group-hover:flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white hover:bg-red-600"
-                            >
-                              X
-                            </button>
-                          </div>
-                        ))}
-                      </div>
+                      <>
+                        <DocumentUploader kittenId={id} folder={`cattery_documents/${id}`} />
+                        <div className="mt-4">
+                          <DocumentList documents={catDocs} onDelete={deleteDocument} />
+                        </div>
+                      </>
                     )}
                   </div>
                   <div className="col-span-full"><ActionBar /></div>
@@ -300,7 +273,7 @@ export default function CatDossier({ params }) {
                           alert('Stamboom afbeelding is geüpload! Vergeet niet op Opslaan te drukken.');
                         } 
                       }}
-                      options={{ folder: `cattery_stamboom/${params.id}` }}
+                      options={{ folder: `cattery_stamboom/${id}` }}
                     >
                       {({ open }) => (
                         <Btn type="button" variant="ghost" onClick={(e) => { e.preventDefault(); open(); }} className="bg-white border-brass-300 text-brass-800 hover:bg-brass-100 mb-4">
@@ -342,7 +315,7 @@ export default function CatDossier({ params }) {
                           return;
                         }
                         if (!isNew) {
-                          await addWeight(params.id, formData.weightDate, formData.weightGrams);
+                          await addWeight(id, formData.weightDate, formData.weightGrams);
                           setFormData(prev => ({ ...prev, weightDate: '', weightGrams: '' }));
                           alert('Het gewicht is succesvol toegevoegd.');
                         } else {
@@ -370,7 +343,7 @@ export default function CatDossier({ params }) {
                               <td className="p-3 text-forest-800">{new Date(w.date).toLocaleDateString('nl-NL')}</td>
                               <td className="p-3 font-medium text-forest-900">{w.grams} g</td>
                               <td className="p-3 text-right">
-                                <button type="button" onClick={() => { if(confirm('Weet je zeker dat je dit gewicht wilt verwijderen?')) deleteWeight(params.id, w.id); }} className="text-red-500 hover:text-red-700 text-xs font-semibold uppercase">Verwijder</button>
+                                <button type="button" onClick={() => { if(confirm('Weet je zeker dat je dit gewicht wilt verwijderen?')) deleteWeight(id, w.id); }} className="text-red-500 hover:text-red-700 text-xs font-semibold uppercase">Verwijder</button>
                               </td>
                             </tr>
                           ))}
@@ -447,7 +420,7 @@ export default function CatDossier({ params }) {
                 <div className="space-y-4">
                   <h2 className="font-display text-xl text-forest-900">Media Galerij</h2>
                   <MediaUpload 
-                    catId={params.id} 
+                    catId={id} 
                     onUploadSuccess={async (url) => {
                        await addMedia({ url, name: formData.name });
                        alert('Media succesvol geüpload!');
@@ -455,7 +428,7 @@ export default function CatDossier({ params }) {
                   />
                   
                   <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3">
-                    {media.filter(m => m.media_url?.includes(params.id) || m.cat_id === params.id).map(m => (
+                    {media.filter(m => m.media_url?.includes(id) || m.cat_id === id).map(m => (
                       <div key={m.id} className="relative group">
                         <img src={m.media_url} alt="" className="aspect-square w-full rounded-xl object-cover shadow-sm border border-forest-900/10" />
                         <button 

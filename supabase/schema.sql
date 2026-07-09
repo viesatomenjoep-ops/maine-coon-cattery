@@ -1,16 +1,18 @@
 -- ==============================================================================
--- 1. DROP OUDE TABELLEN (ZODAT WE 100% SCHOON BEGINNEN)
--- Let op: Dit verwijdert alle bestaande data definitief!
+-- 1. VEILIGHEID: dit script is NIET-DESTRUCTIEF.
+-- Alle tabellen worden aangemaakt met CREATE TABLE IF NOT EXISTS, dus bestaande
+-- data blijft behouden. Wil je bewust 100% opnieuw beginnen (ALLE DATA WEG),
+-- draai dan handmatig de DROP TABLE ... CASCADE statements hieronder.
 -- ==============================================================================
-DROP TABLE IF EXISTS public.site_content CASCADE;
-DROP TABLE IF EXISTS public.media CASCADE;
-DROP TABLE IF EXISTS public.timeline_updates CASCADE;
-DROP TABLE IF EXISTS public.vaccinations CASCADE;
-DROP TABLE IF EXISTS public.documents CASCADE;
-DROP TABLE IF EXISTS public.cat_weights CASCADE;
-DROP TABLE IF EXISTS public.cats CASCADE;
-DROP TABLE IF EXISTS public.litters CASCADE;
-DROP TABLE IF EXISTS public.customers CASCADE;
+-- DROP TABLE IF EXISTS public.site_content CASCADE;
+-- DROP TABLE IF EXISTS public.media CASCADE;
+-- DROP TABLE IF EXISTS public.timeline_updates CASCADE;
+-- DROP TABLE IF EXISTS public.vaccinations CASCADE;
+-- DROP TABLE IF EXISTS public.documents CASCADE;
+-- DROP TABLE IF EXISTS public.cat_weights CASCADE;
+-- DROP TABLE IF EXISTS public.cats CASCADE;
+-- DROP TABLE IF EXISTS public.litters CASCADE;
+-- DROP TABLE IF EXISTS public.customers CASCADE;
 
 -- ==============================================================================
 -- 2. EXTENSIE VOOR UUIDs
@@ -22,7 +24,7 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 -- ==============================================================================
 
 -- 3.1 KLANTEN (CUSTOMERS)
-CREATE TABLE public.customers (
+CREATE TABLE IF NOT EXISTS public.customers (
     id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
     name TEXT NOT NULL,
     address TEXT,
@@ -33,7 +35,9 @@ CREATE TABLE public.customers (
 );
 
 -- 3.2 NESTJES (LITTERS)
-CREATE TABLE public.litters (
+-- Let op: sire_id/dam_id verwijzen naar public.cats en worden onderaan dit
+-- script via ALTER TABLE toegevoegd (cats bestaat pas na deze tabel).
+CREATE TABLE IF NOT EXISTS public.litters (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     customer_id UUID REFERENCES public.customers(id) ON DELETE SET NULL,
     name VARCHAR(255) NOT NULL,
@@ -41,11 +45,15 @@ CREATE TABLE public.litters (
     description TEXT,
     sire_name VARCHAR(255),
     dam_name VARCHAR(255),
+    breed VARCHAR(255) DEFAULT 'Maine Coon (MCO)',
+    status VARCHAR(50) DEFAULT 'verwacht',
+    expected_count INTEGER,
+    cover_image_url TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- 3.3 KATTEN (CATS)
-CREATE TABLE public.cats (
+-- 3.3 KATTEN (CATS) — bevat zowel fokdieren als kittens
+CREATE TABLE IF NOT EXISTS public.cats (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     litter_id UUID REFERENCES public.litters(id) ON DELETE SET NULL,
     customer_id UUID REFERENCES public.customers(id) ON DELETE SET NULL,
@@ -65,22 +73,34 @@ CREATE TABLE public.cats (
     secret_token_be UUID DEFAULT uuid_generate_v4() UNIQUE,
     published BOOLEAN DEFAULT FALSE,
     customer_name VARCHAR(255),
+    registration_no VARCHAR(255),
+    ems_code VARCHAR(50),
+    breeder VARCHAR(255),
+    sire_name VARCHAR(255),
+    dam_name VARCHAR(255),
+    is_own_breeding_cat BOOLEAN DEFAULT FALSE,
+    birth_weight_g INTEGER,
+    reserved_by VARCHAR(255),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
 -- 3.4 DOCUMENTEN (DOCUMENTS)
-CREATE TABLE public.documents (
+CREATE TABLE IF NOT EXISTS public.documents (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     cat_id UUID REFERENCES public.cats(id) ON DELETE CASCADE,
+    litter_id UUID REFERENCES public.litters(id) ON DELETE CASCADE,
     document_type VARCHAR(50),
+    title VARCHAR(255),
     file_url TEXT NOT NULL,
+    cloudinary_public_id TEXT,
+    mime_type VARCHAR(100),
     notes TEXT,
     is_private BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
 -- 3.5 VACCINATIES (VACCINATIONS)
-CREATE TABLE public.vaccinations (
+CREATE TABLE IF NOT EXISTS public.vaccinations (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     cat_id UUID REFERENCES public.cats(id) ON DELETE CASCADE,
     vaccine_name VARCHAR(255),
@@ -92,7 +112,7 @@ CREATE TABLE public.vaccinations (
 );
 
 -- 3.6 TIJDLIJN/NIEUWS UPDATES (TIMELINE_UPDATES)
-CREATE TABLE public.timeline_updates (
+CREATE TABLE IF NOT EXISTS public.timeline_updates (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     cat_id UUID REFERENCES public.cats(id) ON DELETE CASCADE,
     title VARCHAR(255),
@@ -101,7 +121,7 @@ CREATE TABLE public.timeline_updates (
 );
 
 -- 3.7 MEDIA/GALERIJ (MEDIA)
-CREATE TABLE public.media (
+CREATE TABLE IF NOT EXISTS public.media (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     cat_id UUID REFERENCES public.cats(id) ON DELETE CASCADE,
     litter_id UUID REFERENCES public.litters(id) ON DELETE CASCADE,
@@ -112,7 +132,7 @@ CREATE TABLE public.media (
 );
 
 -- 3.8 GEWICHTEN & GROEICURVES (CAT_WEIGHTS)
-CREATE TABLE public.cat_weights (
+CREATE TABLE IF NOT EXISTS public.cat_weights (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     cat_id UUID REFERENCES public.cats(id) ON DELETE CASCADE,
     weigh_date DATE NOT NULL,
@@ -121,7 +141,7 @@ CREATE TABLE public.cat_weights (
 );
 
 -- 3.9 SITE CONTENT (HOMEPAGE TEXTS)
-CREATE TABLE public.site_content (
+CREATE TABLE IF NOT EXISTS public.site_content (
   key text PRIMARY KEY,
   content jsonb NOT NULL DEFAULT '{}'::jsonb,
   created_at timestamp with time zone DEFAULT current_timestamp,
@@ -153,4 +173,11 @@ CREATE POLICY "Admins can insert cat weights" ON public.cat_weights FOR INSERT W
 CREATE POLICY "Admins can update cat weights" ON public.cat_weights FOR UPDATE USING (true);
 CREATE POLICY "Admins can delete cat weights" ON public.cat_weights FOR DELETE USING (true);
 
--- Klaar! De database is nu 100% goed geconfigureerd voor de gehele website, zonder neppe testdata.
+-- ==============================================================================
+-- 5. LITTERS ↔ CATS KOPPELING (Sire/Dam)
+-- Wordt hier toegevoegd omdat cats pas na litters bestaat (circulaire referentie).
+-- ==============================================================================
+ALTER TABLE public.litters ADD COLUMN IF NOT EXISTS sire_id UUID REFERENCES public.cats(id) ON DELETE SET NULL;
+ALTER TABLE public.litters ADD COLUMN IF NOT EXISTS dam_id UUID REFERENCES public.cats(id) ON DELETE SET NULL;
+
+-- Klaar! De database is nu volledig geconfigureerd voor de gehele website.

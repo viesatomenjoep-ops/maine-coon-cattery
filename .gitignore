@@ -3,3 +3,6 @@ node_modules/
 out/
 .env*.local
 .vercel
+
+# Supabase CLI lokale/tijdelijke bestanden (kunnen credentials bevatten)
+supabase/.temp/

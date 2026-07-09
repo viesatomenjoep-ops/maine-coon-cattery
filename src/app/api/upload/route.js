@@ -39,7 +39,7 @@ export async function POST(request) {
 
     const result = await new Promise((resolve, reject) => {
       cloudinary.uploader.upload_stream(
-        { folder: formData.get('folder') || 'cattery_media' },
+        { folder: formData.get('folder') || 'cattery_media', resource_type: 'auto' },
         function (error, result) {
           if (error) {
             reject(error);
@@ -50,7 +50,15 @@ export async function POST(request) {
       ).end(buffer);
     });
 
-    return NextResponse.json({ url: result.secure_url });
+    return NextResponse.json({
+      url: result.secure_url,
+      public_id: result.public_id,
+      resource_type: result.resource_type,
+      format: result.format,
+      bytes: result.bytes,
+      original_filename: result.original_filename,
+      mime_type: file.type || (result.format ? `${result.resource_type}/${result.format}` : null),
+    });
   } catch (error) {
     console.error("Upload failed:", error);
     return NextResponse.json({ error: error.message }, { status: 500 });

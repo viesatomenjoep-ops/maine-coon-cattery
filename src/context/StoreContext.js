@@ -113,8 +113,14 @@ export function StoreProvider({ children }) {
       name: litter.name, 
       date_of_birth: litter.born || null,
       description: litter.description || null,
-      sire_name: litter.sire_name,
-      dam_name: litter.dam_name 
+      sire_name: litter.sire_name || null,
+      dam_name: litter.dam_name || null,
+      sire_id: litter.sire_id || null,
+      dam_id: litter.dam_id || null,
+      breed: litter.breed || 'Maine Coon (MCO)',
+      status: litter.status || 'verwacht',
+      expected_count: (litter.expected_count === '' || litter.expected_count == null) ? null : Number(litter.expected_count),
+      cover_image_url: litter.cover_image_url || null
     }]).select();
     if (!error && data) {
       setLitters(s => [...s, data[0]]);
@@ -148,7 +154,12 @@ export function StoreProvider({ children }) {
       cover_image: kit.cover_image || null,
       published: kit.published || false,
       date_of_birth: kit.dateOfBirth || kit.date_of_birth || null,
-      chip_number: kit.chipNumber || kit.chip_number || null,
+      chip_number: kit.chip_no || kit.chipNumber || kit.chip_number || null,
+      registration_no: kit.registration_no || null,
+      ems_code: kit.ems_code || null,
+      birth_weight_g: (kit.birth_weight_g === '' || kit.birth_weight_g == null) ? null : Number(kit.birth_weight_g),
+      reserved_by: kit.reserved_by || null,
+      is_own_breeding_cat: false,
       pedigree_data: {
         ...(kit.pedigree_data || {}),
         chipImplantDate: kit.chipImplantDate || '',
@@ -214,6 +225,65 @@ export function StoreProvider({ children }) {
   const deleteKitten = async (id) => {
     await supabase.from('cats').delete().eq('id', id);
     setKittens(s => s.filter(k => k.id !== id));
+  };
+
+  // ---- fokdieren (breeding cats, opgeslagen in de cats-tabel) ----
+  const mapBreedingCat = (cat) => ({
+    name: cat.name || 'Naamloos',
+    registration_no: cat.registration_no || null,
+    gender: cat.gender || null,
+    ems_code: cat.ems_code || null,
+    color: cat.color || null,
+    pattern: cat.pattern || null,
+    date_of_birth: cat.date_of_birth || null,
+    chip_number: cat.chip_number || null,
+    breeder: cat.breeder || null,
+    sire_name: cat.sire_name || null,
+    dam_name: cat.dam_name || null,
+    is_own_breeding_cat: cat.is_own_breeding_cat ?? true,
+    pedigree_data: { ...(cat.pedigree_data || {}), breed: cat.breed || 'Maine Coon (MCO)' }
+  });
+
+  const addBreedingCat = async (cat) => {
+    const { data, error } = await supabase.from('cats').insert([mapBreedingCat(cat)]).select();
+    if (!error && data) {
+      setKittens(s => [data[0], ...s]);
+      return { data: data[0] };
+    }
+    console.error("Error adding breeding cat:", error);
+    return { error };
+  };
+
+  const updateBreedingCat = async (id, cat) => {
+    const patch = mapBreedingCat(cat);
+    const { error } = await supabase.from('cats').update(patch).eq('id', id);
+    if (error) {
+      console.error("Error updating breeding cat:", error);
+      return { error };
+    }
+    setKittens(s => s.map(k => (k.id === id ? { ...k, ...patch } : k)));
+    return { success: true };
+  };
+
+  // ---- documenten (rijk: koppeling naar kat/nestje + Cloudinary-metadata) ----
+  const addDocumentFull = async (doc) => {
+    const { data, error } = await supabase.from('documents').insert([{
+      cat_id: doc.cat_id || null,
+      litter_id: doc.litter_id || null,
+      document_type: doc.document_type || doc.doc_type || 'overig',
+      title: doc.title || null,
+      file_url: doc.file_url || doc.url,
+      cloudinary_public_id: doc.cloudinary_public_id || null,
+      mime_type: doc.mime_type || null,
+      notes: doc.notes || null,
+      is_private: doc.is_private ?? true
+    }]).select();
+    if (!error && data) {
+      setDocuments(s => [data[0], ...s]);
+      return { data: data[0] };
+    }
+    console.error("Error adding document:", error);
+    return { error };
   };
 
   // ---- customers ----
@@ -348,12 +418,15 @@ export function StoreProvider({ children }) {
     }));
   };
 
+  const breedingCats = kittens.filter(k => k.is_own_breeding_cat);
+
   return (
     <StoreContext.Provider value={{
-      news, litters, kittens, documents, media, customers, siteContent,
+      news, litters, kittens, breedingCats, documents, media, customers, siteContent,
       addNews, deleteNews, addLitter, updateLitter, deleteLitter,
       addKitten, updateKitten, deleteKitten,
-      addDocument, deleteDocument, addMedia, deleteMedia, addMedical, deleteMedical,
+      addBreedingCat, updateBreedingCat,
+      addDocument, addDocumentFull, deleteDocument, addMedia, deleteMedia, addMedical, deleteMedical,
       addWeight, deleteWeight,
       addCustomer, updateCustomer, deleteCustomer,
       saveSiteContent

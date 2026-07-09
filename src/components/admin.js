@@ -1,4 +1,5 @@
 'use client';
+import { forwardRef } from 'react';
 
 export function PageHead({ label, title, children }) {
   return (
@@ -12,9 +13,9 @@ export function PageHead({ label, title, children }) {
   );
 }
 
-export function Card({ children, className = '' }) {
-  return <div className={`rounded-2xl border border-forest-900/10 bg-cream-50 p-6 shadow-soft ${className}`}>{children}</div>;
-}
+export const Card = forwardRef(function Card({ children, className = '' }, ref) {
+  return <div ref={ref} className={`rounded-2xl border border-forest-900/10 bg-cream-50 p-6 shadow-soft ${className}`}>{children}</div>;
+});
 
 export function Field({ label, children }) {
   return (
