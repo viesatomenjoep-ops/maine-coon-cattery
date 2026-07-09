@@ -238,6 +238,7 @@ export function StoreProvider({ children }) {
     if (patch.customer_nationality !== undefined) dbPatch.customer_nationality = patch.customer_nationality;
     if (patch.cover_image !== undefined) dbPatch.cover_image = patch.cover_image;
     if (patch.published !== undefined) dbPatch.published = patch.published;
+    if (patch.ad_settings !== undefined) dbPatch.ad_settings = patch.ad_settings;
     if (patch.dateOfBirth !== undefined) dbPatch.date_of_birth = patch.dateOfBirth === '' ? null : patch.dateOfBirth;
     if (patch.chipNumber !== undefined) dbPatch.chip_number = patch.chipNumber;
     if (patch.chip_no !== undefined) dbPatch.chip_number = patch.chip_no;

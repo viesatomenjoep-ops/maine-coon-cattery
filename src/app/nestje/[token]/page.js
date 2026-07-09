@@ -124,6 +124,13 @@ export default function LitterAdPage({ params }) {
           )}
         </div>
 
+        {/* Advertentietekst / verhaal van de cattery */}
+        {litter.ad_text && (
+          <div className="mx-auto mb-12 max-w-3xl rounded-3xl border border-forest-900/10 bg-white/70 p-8 shadow-soft md:p-10">
+            <p className="whitespace-pre-line text-center text-base leading-relaxed text-forest-800 md:text-lg">{litter.ad_text}</p>
+          </div>
+        )}
+
         {kittens.length === 0 ? (
           <p className="text-center text-forest-600">Er zijn nog geen kittens gepubliceerd in dit nestje.</p>
         ) : (

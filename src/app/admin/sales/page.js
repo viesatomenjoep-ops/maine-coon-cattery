@@ -67,6 +67,9 @@ function AdEditor({ k, customers, documents, media, updateKitten, onCopyLink }) 
 
   const { litters = [], updateLitter, updateDocument, updateMedia } = useStore();
   const litter = litters.find((l) => l.id === k.litter_id) || null;
+  const adv = k.ad_settings || {};
+  const advOn = (key) => adv[key] !== false; // standaard aan
+  const setAdv = (key, val) => updateKitten(k.id, { ad_settings: { ...adv, [key]: val } });
   const customer = customers?.find((c) => c.id === k.customer_id) || null;
   const catDocs = documents.filter((d) => d.cat_id === k.id);
   const catMedia = media.filter((m) => m.cat_id === k.id);
@@ -218,6 +221,32 @@ function AdEditor({ k, customers, documents, media, updateKitten, onCopyLink }) 
         )}
       </Card>
 
+      {/* ---- Advertentie-weergave (vinkjes) + advertentietekst ---- */}
+      <Card>
+        <h4 className="font-display text-lg text-forest-900">Advertentie-weergave</h4>
+        <p className="mt-1 text-sm text-forest-600">Bepaal met vinkjes wat er op de advertentie zichtbaar is voor {k.name}.</p>
+        <div className="mt-4 grid gap-2 sm:grid-cols-2">
+          <ToggleRow label="Prijs weergeven" checked={advOn('showPrice')} onToggle={(v) => setAdv('showPrice', v)} />
+          <ToggleRow label="Ouderfoto's weergeven" checked={advOn('showParents')} onToggle={(v) => setAdv('showParents', v)} />
+          <ToggleRow label="Zorg (ontworming/inenting) weergeven" checked={advOn('showCare')} onToggle={(v) => setAdv('showCare', v)} />
+          <ToggleRow label="Groeicurve weergeven" checked={advOn('showGrowth')} onToggle={(v) => setAdv('showGrowth', v)} />
+        </div>
+
+        {litter && (
+          <div className="mt-5">
+            <label className="text-xs font-medium uppercase tracking-wide text-forest-700">Advertentietekst (voor dit nestje)</label>
+            <textarea
+              defaultValue={litter.ad_text || ''}
+              onBlur={(e) => { if (e.target.value !== (litter.ad_text || '')) updateLitter(litter.id, { ad_text: e.target.value }); }}
+              rows={6}
+              placeholder="Vertel het verhaal van je cattery… Deze tekst verschijnt bovenaan de advertentie, met de kittens eronder."
+              className="mt-1.5 w-full rounded-xl border border-forest-900/15 bg-white px-4 py-3 text-sm leading-relaxed outline-none focus:border-brass-400 focus:ring-2 focus:ring-brass-200"
+            />
+            <p className="mt-1 text-xs text-forest-500">Wordt gedeeld door het hele nestje. Sla op door buiten het veld te klikken.</p>
+          </div>
+        )}
+      </Card>
+
       {/* ---- Bestanden publiceren (vinkjes) ---- */}
       <Card>
         <h4 className="font-display text-lg text-forest-900">Bestanden op de advertentie</h4>
@@ -257,6 +286,15 @@ function ParentPhoto({ label, src, folder, onSet }) {
         </div>
       </div>
     </div>
+  );
+}
+
+function ToggleRow({ label, checked, onToggle }) {
+  return (
+    <label className="flex cursor-pointer items-center justify-between gap-3 rounded-xl border border-forest-900/10 bg-white p-3">
+      <span className="text-sm text-forest-800">{label}</span>
+      <input type="checkbox" checked={checked} onChange={(e) => onToggle(e.target.checked)} className="h-5 w-5 accent-emerald-600" />
+    </label>
   );
 }
 

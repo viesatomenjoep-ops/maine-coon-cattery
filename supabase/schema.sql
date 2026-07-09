@@ -71,6 +71,7 @@ CREATE TABLE IF NOT EXISTS public.litters (
     expected_count INTEGER,
     cover_image_url TEXT,
     sire_image_url TEXT,
+    ad_text TEXT,
     dam_image_url TEXT,
     share_token UUID DEFAULT uuid_generate_v4(),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
@@ -116,6 +117,7 @@ CREATE TABLE IF NOT EXISTS public.cats (
     dam_name VARCHAR(255),
     is_own_breeding_cat BOOLEAN DEFAULT FALSE,
     birth_weight_g INTEGER,
+    ad_settings JSONB DEFAULT '{}'::jsonb,
     reserved_by VARCHAR(255),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );

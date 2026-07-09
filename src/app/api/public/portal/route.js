@@ -41,10 +41,20 @@ async function enrichKittens(db, kittensData) {
       .map((v) => ({ type: v.vaccine_name, date: v.vaccination_date || v.next_due_date, note: v.veterinarian_info }))
       .sort((a, b) => new Date(b.date) - new Date(a.date));
     const lit = littersById[k.litter_id] || {};
+    // Advertentie-zichtbaarheid (vinkjes), standaard alles aan.
+    const adv = k.ad_settings || {};
+    const on = (key) => adv[key] !== false;
     return {
-      ...k, weights, media: mediaVisible, documents, treatments, careDone,
+      ...k,
+      weights: on('showGrowth') ? weights : [],
+      media: mediaVisible,
+      documents,
+      treatments: on('showCare') ? treatments : [],
+      careDone: on('showCare') ? careDone : [],
       sire_name: lit.sire_name || null, dam_name: lit.dam_name || null,
-      sire_image_url: lit.sire_image_url || null, dam_image_url: lit.dam_image_url || null,
+      sire_image_url: on('showParents') ? (lit.sire_image_url || null) : null,
+      dam_image_url: on('showParents') ? (lit.dam_image_url || null) : null,
+      showPrice: on('showPrice'),
     };
   });
 }
@@ -93,8 +103,9 @@ export async function GET(request) {
   }
 
   if (cat) {
-    const price = nationality === 'BE' ? cat.price_be : cat.price_nl;
     const enriched = await enrichKittens(db, [cat]);
+    const showPrice = (cat.ad_settings || {}).showPrice !== false;
+    const price = showPrice ? (nationality === 'BE' ? cat.price_be : cat.price_nl) : null;
     const kitten = { ...enriched[0], price, nationality };
     const updates = await newsFor(db, [cat.id], [cat]);
     const pseudoCustomer = { name: cat.reserved_by || cat.customer_name || 'Welkom', email: null };

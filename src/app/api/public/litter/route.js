@@ -27,17 +27,19 @@ export async function GET(request) {
   const { data: docs } = await db.from('documents').select('*').in('cat_id', idFilter);
 
   const kittens = (kits || []).map((k) => {
+    const adv = k.ad_settings || {};
+    const on = (key) => adv[key] !== false; // standaard aan
     const kv = (vaccs || []).filter((v) => v.cat_id === k.id);
     const done = kv.filter((v) => v.vaccination_date).length;
-    const upcoming = kv.filter((v) => v.next_due_date)
+    const upcoming = on('showCare') ? kv.filter((v) => v.next_due_date && !v.completed)
       .map((v) => ({ type: v.vaccine_name, due: v.next_due_date }))
-      .sort((a, b) => new Date(a.due) - new Date(b.due));
+      .sort((a, b) => new Date(a.due) - new Date(b.due)) : [];
     const kd = (docs || []).filter((d) => d.cat_id === k.id);
     const hasPassport = kd.some((d) => norm(d.document_type) === 'paspoort');
     // Alleen advertentie-veilige velden teruggeven (geen tokens/privégegevens).
     return {
       id: k.id, name: k.name, gender: k.gender, color: k.color, pattern: k.pattern,
-      status: k.status, price_nl: k.price_nl, cover_image: k.cover_image,
+      status: k.status, price_nl: on('showPrice') ? k.price_nl : null, cover_image: k.cover_image,
       date_of_birth: k.date_of_birth, ems_code: k.ems_code, registration_no: k.registration_no,
       chip_number: k.chip_number ? true : false, vaccCount: done, upcoming, hasPassport,
     };
@@ -48,6 +50,7 @@ export async function GET(request) {
     dam_name: litter.dam_name, date_of_birth: litter.date_of_birth,
     sire_image_url: litter.sire_image_url || null,
     dam_image_url: litter.dam_image_url || null,
+    ad_text: litter.ad_text || null,
   };
 
   return NextResponse.json({ litter: safeLitter, kittens });
