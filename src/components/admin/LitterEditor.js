@@ -272,6 +272,7 @@ export default function LitterEditor({ initialLitterId = null, onClose }) {
   const [litter, setLitter] = useState(EMPTY_LITTER);
   const [savingLitter, setSavingLitter] = useState(false);
   const [coverUploading, setCoverUploading] = useState(false);
+  const [savingCover, setSavingCover] = useState(false);
   const [kit, setKit] = useState({ ...EMPTY_KIT });
   const [savingKit, setSavingKit] = useState(false);
   const [kitCoverUploading, setKitCoverUploading] = useState(false);
@@ -313,6 +314,20 @@ export default function LitterEditor({ initialLitterId = null, onClose }) {
     } catch (err) { alert('Uploaden mislukt: ' + err.message); }
     setCoverUploading(false);
     e.target.value = '';
+  };
+
+  const saveCover = async () => {
+    if (!litterId) { alert('Sla eerst het nestje op; de profielfoto wordt dan meegenomen.'); return; }
+    setSavingCover(true);
+    await updateLitter(litterId, { cover_image_url: litter.cover_image_url || null });
+    setSavingCover(false);
+    alert('Profielfoto van het nest opgeslagen.');
+  };
+
+  const removeCover = async () => {
+    if (!confirm('Weet je zeker dat je de profielfoto van dit nestje wilt verwijderen?')) return;
+    setLitter((l) => ({ ...l, cover_image_url: '' }));
+    if (litterId) await updateLitter(litterId, { cover_image_url: null });
   };
 
   const handleKitCover = async (e) => {
@@ -374,6 +389,31 @@ export default function LitterEditor({ initialLitterId = null, onClose }) {
         {onClose && <Btn variant="ghost" onClick={onClose} className="!px-3 !py-1.5 !text-xs">← Terug</Btn>}
       </div>
 
+      {/* 0. Profielfoto van het nest */}
+      <section>
+        <SectionTitle hint="Een foto van alle kittens samen. Deze verschijnt als profielfoto in het nestjes-overzicht.">Profielfoto van het nest</SectionTitle>
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
+          {litter.cover_image_url ? (
+            <img src={litter.cover_image_url} alt="Profielfoto nest" className="h-48 w-full rounded-2xl border border-forest-900/10 object-cover shadow sm:w-72" />
+          ) : (
+            <div className="flex h-48 w-full items-center justify-center rounded-2xl border border-dashed border-forest-900/20 bg-forest-50 text-forest-300 sm:w-72">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" className="h-10 w-10"><rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="9" cy="9" r="2" /><path d="m21 15-5-5L5 21" /></svg>
+            </div>
+          )}
+          <div className="flex flex-1 flex-col gap-3">
+            <label className={`inline-flex w-fit cursor-pointer items-center justify-center rounded-xl border border-forest-900/15 bg-white px-5 py-2.5 text-sm font-medium text-forest-800 transition hover:bg-forest-100 ${coverUploading ? 'opacity-60' : ''}`}>
+              {coverUploading ? 'Uploaden…' : (litter.cover_image_url ? 'Foto vervangen' : 'Foto uploaden')}
+              <input type="file" accept="image/*" onChange={handleCover} className="hidden" disabled={coverUploading} />
+            </label>
+            <div className="flex flex-wrap gap-3">
+              <Btn variant="brass" onClick={saveCover} disabled={savingCover || coverUploading}>{savingCover ? 'Opslaan…' : 'Foto opslaan'}</Btn>
+              {litter.cover_image_url && <Btn variant="danger" onClick={removeCover} disabled={savingCover}>Verwijderen</Btn>}
+            </div>
+            {!litterId && <p className="text-xs text-forest-600">Sla eerst het nestje op om de foto los op te slaan; hij wordt ook meegenomen bij "Nestje opslaan".</p>}
+          </div>
+        </div>
+      </section>
+
       {/* 1. Nestgegevens */}
       <section>
         <SectionTitle hint="De basisgegevens van dit nestje.">Nestgegevens</SectionTitle>
@@ -384,16 +424,7 @@ export default function LitterEditor({ initialLitterId = null, onClose }) {
             <Field label="Status"><Select value={litter.status} onChange={(e) => setLitter({ ...litter, status: e.target.value })}>{LITTER_STATUSES.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}</Select></Field>
             <Field label="Aantal kittens"><Input type="number" min="0" value={litter.expected_count} onChange={(e) => setLitter({ ...litter, expected_count: e.target.value })} placeholder="Optioneel" /></Field>
           </div>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <Field label="Geboortedatum"><Input type="date" value={litter.date_of_birth} onChange={(e) => setLitter({ ...litter, date_of_birth: e.target.value })} /></Field>
-            <Field label="Cover-afbeelding (optioneel)">
-              <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center">
-                <input type="file" accept="image/*" onChange={handleCover} className="w-full text-sm file:mb-2 file:mr-4 file:w-full file:rounded-xl file:border-0 file:bg-forest-50 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-forest-700 hover:file:bg-forest-100 sm:file:mb-0 sm:file:w-auto" />
-                {coverUploading && <span className="text-xs text-forest-500">Uploaden…</span>}
-                {litter.cover_image_url && <img src={litter.cover_image_url} alt="Preview" className="h-10 w-10 rounded object-cover shadow" />}
-              </div>
-            </Field>
-          </div>
+          <Field label="Geboortedatum"><Input type="date" value={litter.date_of_birth} onChange={(e) => setLitter({ ...litter, date_of_birth: e.target.value })} /></Field>
           <Field label="Beschrijving (wervende tekst)">
             <Textarea value={litter.description} onChange={(e) => setLitter({ ...litter, description: e.target.value })} className="min-h-[90px]" placeholder="Vertel iets leuks over dit nestje…" />
           </Field>

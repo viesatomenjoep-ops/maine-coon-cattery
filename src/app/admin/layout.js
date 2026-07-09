@@ -9,7 +9,6 @@ import { Logo, PawMark } from '@/components/ui';
 const NAV = [
   { href: '/admin', label: 'Startscherm', icon: 'grid' },
   { href: '/admin/overview', label: 'Cattery Overzicht', icon: 'cat' },
-  { href: '/admin/breeding', label: 'Fokdieren', icon: 'health' },
   { href: '/admin/litters', label: 'Nestjes & Kittens', icon: 'tag' },
 ];
 

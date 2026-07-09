@@ -233,7 +233,7 @@ export default function LittersPage() {
                   </div>
                 </div>
                 <div className="flex flex-wrap gap-3">
-                  <Btn variant="solid" onClick={() => openLitter(lit.id)} className="!px-3 !py-1.5 !text-xs">Bewerk nestje</Btn>
+                  <Btn variant="solid" onClick={() => openLitter(lit.id)} className="!px-3 !py-1.5 !text-xs">Nestje bewerken</Btn>
                   <Btn variant="brass" onClick={() => openNewKitten(lit.id)} className="!px-3 !py-1.5 !text-xs">+ Kitten toevoegen</Btn>
                   <Btn variant="ghost" onClick={() => { if (confirm('Weet je zeker dat je dit nestje wilt verwijderen?')) deleteLitter(lit.id); }} className="!px-3 !py-1.5 !text-xs !text-red-600 hover:!bg-red-50">Verwijderen</Btn>
                 </div>

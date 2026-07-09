@@ -64,9 +64,18 @@ export default function CatsAdmin() {
         <div className="grid gap-6 grid-cols-1 md:grid-cols-2 2xl:grid-cols-3">
           {kittens.map((k) => (
             <div key={k.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-5 rounded-2xl border border-forest-900/15 bg-white p-6 shadow-soft transition hover:border-brass-400 hover:shadow-md">
-              <div className="min-w-0">
-                <p className="font-display text-2xl font-semibold text-forest-950 truncate">{k.name}</p>
-                <p className="text-xs font-bold uppercase tracking-widest text-forest-500 mt-1 truncate">{k.sex}</p>
+              <div className="flex min-w-0 items-center gap-4">
+                {k.cover_image ? (
+                  <img src={k.cover_image} alt={k.name} className="h-14 w-14 shrink-0 rounded-xl object-cover shadow-sm border border-forest-900/10" />
+                ) : (
+                  <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl border border-forest-900/10 bg-forest-50 text-forest-300">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="h-6 w-6"><rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="9" cy="9" r="2" /><path d="m21 15-5-5L5 21" /></svg>
+                  </div>
+                )}
+                <div className="min-w-0">
+                  <p className="font-display text-2xl font-semibold text-forest-950 truncate">{k.name}</p>
+                  <p className="text-xs font-bold uppercase tracking-widest text-forest-500 mt-1 truncate">{k.sex}</p>
+                </div>
               </div>
               <Link href={`/admin/cats/${k.id}`} className="shrink-0 w-full sm:w-auto">
                 <Btn variant="brass" className="w-full sm:w-auto whitespace-nowrap px-5 py-3 text-sm shadow-sm">

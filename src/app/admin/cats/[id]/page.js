@@ -233,6 +233,37 @@ export default function CatDossier() {
               {activeTab === 'paspoort' && (
                 <div className="grid gap-4 grid-cols-1 lg:grid-cols-2">
                   <h2 className="col-span-full font-display text-xl text-forest-900">Beschrijving van het dier</h2>
+
+                  {/* Profielfoto van de kitten (cover_image, getoond in overzichten) */}
+                  <div className="col-span-full rounded-xl border border-forest-900/10 bg-cream-50 p-4">
+                    <p className="mb-1 text-sm font-semibold text-forest-900">Profielfoto</p>
+                    <p className="mb-3 text-xs text-forest-600">Deze foto wordt getoond in de overzichten (kattenbeheer, nestje, verkoop en klantenportaal). Vergeet niet op "Dossier Opslaan" te drukken.</p>
+                    <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
+                      {formData.cover_image ? (
+                        <img src={formData.cover_image} alt="Profielfoto" className="h-40 w-40 rounded-2xl border border-forest-900/10 object-cover shadow" />
+                      ) : (
+                        <div className="flex h-40 w-40 items-center justify-center rounded-2xl border border-dashed border-forest-900/20 bg-forest-50 text-forest-300">
+                          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" className="h-9 w-9"><rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="9" cy="9" r="2" /><path d="m21 15-5-5L5 21" /></svg>
+                        </div>
+                      )}
+                      <div className="flex flex-1 flex-col gap-3">
+                        <CldUploadWidget
+                          onSuccess={(res) => { if (res.event === 'success') setFormData(prev => ({ ...prev, cover_image: res.info.secure_url })); }}
+                          options={{ folder: `cattery_covers/${id}` }}
+                        >
+                          {({ open }) => (
+                            <Btn type="button" variant="ghost" onClick={(e) => { e.preventDefault(); open(); }} className="w-fit bg-white">
+                              {formData.cover_image ? 'Profielfoto Vervangen' : 'Profielfoto Uploaden'}
+                            </Btn>
+                          )}
+                        </CldUploadWidget>
+                        {formData.cover_image && (
+                          <Btn type="button" variant="danger" className="w-fit" onClick={() => setFormData(prev => ({ ...prev, cover_image: null }))}>Verwijderen</Btn>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
                   <Field label="Naam *"><Input required name="name" value={formData.name} onChange={handleChange} placeholder="Big Giant Resort's Dajana" /></Field>
                   <Field label="Diersoort"><Input name="species" value={formData.species} onChange={handleChange} /></Field>
                   <Field label="Ras"><Input name="breed" value={formData.breed} onChange={handleChange} /></Field>
