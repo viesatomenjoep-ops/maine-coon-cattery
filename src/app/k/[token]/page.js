@@ -1,6 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
-import { notFound } from 'next/navigation';
+import { useState, useEffect, use } from 'react';
 import { Logo, PawMark } from '@/components/ui';
 import { supabase } from '@/lib/supabase';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
@@ -55,9 +54,10 @@ function TimelineUpdate({ update }) {
 }
 
 export default function CustomerPortal({ params }) {
-  const { token } = params;
+  const { token } = use(params);
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
 
   useEffect(() => {
     async function fetchCustomerData() {
@@ -69,6 +69,7 @@ export default function CustomerPortal({ params }) {
         .single();
         
       if (!customerData) {
+        setError(true);
         setLoading(false);
         return;
       }
@@ -136,8 +137,16 @@ export default function CustomerPortal({ params }) {
     return <div className="grid min-h-screen place-items-center bg-cream-50 text-forest-700">Je unieke portaal wordt geladen...</div>;
   }
 
-  if (!data) {
-    return notFound();
+  if (error || !data) {
+    return (
+      <div className="grid min-h-screen place-items-center bg-cream-50">
+        <div className="text-center max-w-md px-6">
+          <PawMark className="mx-auto mb-4 h-10 w-10 text-brass-400" />
+          <h1 className="font-display text-3xl text-forest-950 mb-3">Link niet gevonden</h1>
+          <p className="text-forest-700">Deze link is niet geldig of is verlopen. Neem contact op met de cattery voor een nieuwe link.</p>
+        </div>
+      </div>
+    );
   }
 
   const forceDownload = async (url, filename) => {
