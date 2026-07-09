@@ -4,6 +4,7 @@ import { Logo, PawMark } from '@/components/ui';
 import { supabase } from '@/lib/supabase';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { treatmentIcon, urgency, formatDate } from '@/lib/treatments';
+import Lightbox from '@/components/Lightbox';
 
 // Helper component for updates
 function TimelineUpdate({ update }) {
@@ -28,6 +29,7 @@ export default function CustomerPortal({ params }) {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [zoom, setZoom] = useState(null); // foto voor fullscreen weergave
 
   useEffect(() => {
     async function fetchCustomerData() {
@@ -95,7 +97,7 @@ export default function CustomerPortal({ params }) {
               {kittens.map(k => (
                 <div key={k.id} className="overflow-hidden rounded-2xl border border-forest-900/10 bg-white shadow-soft">
                   {k.cover_image ? (
-                    <img src={k.cover_image} alt={k.name} className="h-48 w-full object-cover" />
+                    <img src={k.cover_image} alt={k.name} onClick={() => setZoom(k.cover_image)} className="h-48 w-full cursor-zoom-in object-cover transition hover:opacity-95" />
                   ) : (
                     <div className="h-48 w-full bg-forest-50 flex items-center justify-center">
                       <PawMark className="h-8 w-8 text-forest-200" />
@@ -118,14 +120,14 @@ export default function CustomerPortal({ params }) {
                         <div className="flex items-start gap-6">
                           <div className="text-center">
                             <div className="h-24 w-24 overflow-hidden rounded-2xl border border-forest-900/10 bg-forest-50">
-                              {k.sire_image_url ? <img src={k.sire_image_url} alt="Vader" className="h-full w-full object-cover" /> : <div className="flex h-full w-full items-center justify-center"><PawMark className="h-6 w-6 text-forest-200" /></div>}
+                              {k.sire_image_url ? <img src={k.sire_image_url} alt="Vader" onClick={() => setZoom(k.sire_image_url)} className="h-full w-full cursor-zoom-in object-cover" /> : <div className="flex h-full w-full items-center justify-center"><PawMark className="h-6 w-6 text-forest-200" /></div>}
                             </div>
                             <p className="mt-2 text-[10px] font-bold uppercase tracking-wide text-forest-600/60">Vader</p>
                             <p className="text-xs font-semibold text-forest-900">{k.sire_name || '—'}</p>
                           </div>
                           <div className="text-center">
                             <div className="h-24 w-24 overflow-hidden rounded-2xl border border-forest-900/10 bg-forest-50">
-                              {k.dam_image_url ? <img src={k.dam_image_url} alt="Moeder" className="h-full w-full object-cover" /> : <div className="flex h-full w-full items-center justify-center"><PawMark className="h-6 w-6 text-forest-200" /></div>}
+                              {k.dam_image_url ? <img src={k.dam_image_url} alt="Moeder" onClick={() => setZoom(k.dam_image_url)} className="h-full w-full cursor-zoom-in object-cover" /> : <div className="flex h-full w-full items-center justify-center"><PawMark className="h-6 w-6 text-forest-200" /></div>}
                             </div>
                             <p className="mt-2 text-[10px] font-bold uppercase tracking-wide text-forest-600/60">Moeder</p>
                             <p className="text-xs font-semibold text-forest-900">{k.dam_name || '—'}</p>
@@ -160,7 +162,7 @@ export default function CustomerPortal({ params }) {
                         {k.pedigree_data.dam && <p className="text-sm text-forest-700 mt-1">Moeder: <span className="font-medium text-forest-900">{k.pedigree_data.dam}</span></p>}
                         {k.pedigree_data.image_url && (
                           <div className="mt-3 flex flex-col sm:flex-row gap-3 items-start sm:items-center bg-white p-3 rounded-xl border border-forest-900/10 shadow-sm">
-                            <img src={k.pedigree_data.image_url} alt="Stamboom" className="h-16 w-16 object-cover rounded-lg border border-forest-900/10 shrink-0" />
+                            <img src={k.pedigree_data.image_url} alt="Stamboom" onClick={() => setZoom(k.pedigree_data.image_url)} className="h-16 w-16 cursor-zoom-in object-cover rounded-lg border border-forest-900/10 shrink-0" />
                             <div className="flex-1 w-full flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                               <a href={k.pedigree_data.image_url} target="_blank" rel="noreferrer" className="inline-block text-sm font-semibold text-forest-900 hover:text-brass-600 transition truncate">
                                 Stamboom Afbeelding
@@ -182,7 +184,7 @@ export default function CustomerPortal({ params }) {
                         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
                           {k.media.map(m => (
                             <div key={m.id} className="flex flex-col gap-2 rounded-xl bg-white p-2 border border-forest-900/10 shadow-sm">
-                              <img src={m.media_url} alt="Kitten foto" className="aspect-square w-full rounded-lg object-cover cursor-pointer hover:opacity-90 transition" onClick={() => window.open(m.media_url, '_blank')} />
+                              <img src={m.media_url} alt="Kitten foto" className="aspect-square w-full rounded-lg object-cover cursor-zoom-in hover:opacity-90 transition" onClick={() => setZoom(m.media_url)} />
                               <button onClick={() => forceDownload(m.media_url, m.name || `foto-${k.name}.jpg`)} className="w-full inline-flex items-center justify-center gap-1.5 rounded bg-forest-50 border border-forest-900/5 px-2 py-2 text-[10px] font-bold text-forest-800 hover:bg-forest-100 hover:text-forest-950 transition uppercase tracking-wider">
                                 <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
                                 Download
@@ -311,6 +313,8 @@ export default function CustomerPortal({ params }) {
           <p>Deze link is strikt persoonlijk en gekoppeld aan <b>{customer.email || 'je account'}</b>.</p>
         </div>
       </main>
+
+      <Lightbox src={zoom} onClose={() => setZoom(null)} />
     </div>
   );
 }

@@ -3,6 +3,7 @@ import { useState, useEffect, use } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Logo, PawMark } from '@/components/ui';
 import { treatmentIcon, urgency, formatDate } from '@/lib/treatments';
+import Lightbox from '@/components/Lightbox';
 
 const norm = (s) => (s || '').toLowerCase();
 const isAvailable = (s) => norm(s) === 'beschikbaar';
@@ -28,6 +29,7 @@ export default function LitterAdPage({ params }) {
   const [form, setForm] = useState({ name: '', contact: '', message: '' });
   const [submitting, setSubmitting] = useState(false);
   const [sentFor, setSentFor] = useState([]); // ids waarvoor al interesse gestuurd is
+  const [zoom, setZoom] = useState(null); // foto voor fullscreen weergave
 
   useEffect(() => {
     async function load() {
@@ -106,14 +108,14 @@ export default function LitterAdPage({ params }) {
             <div className="mt-8 flex items-start justify-center gap-8">
               <div className="text-center">
                 <div className="mx-auto h-28 w-28 overflow-hidden rounded-2xl border border-forest-900/10 bg-forest-50 shadow-sm">
-                  {litter.sire_image_url ? <img src={litter.sire_image_url} alt="Vader" className="h-full w-full object-cover" /> : <div className="flex h-full w-full items-center justify-center"><PawMark className="h-7 w-7 text-forest-200" /></div>}
+                  {litter.sire_image_url ? <img src={litter.sire_image_url} alt="Vader" onClick={() => setZoom(litter.sire_image_url)} className="h-full w-full cursor-zoom-in object-cover" /> : <div className="flex h-full w-full items-center justify-center"><PawMark className="h-7 w-7 text-forest-200" /></div>}
                 </div>
                 <p className="mt-2 text-xs font-bold uppercase tracking-wide text-forest-600/60">Vader</p>
                 <p className="text-sm font-semibold text-forest-900">{litter.sire_name || '—'}</p>
               </div>
               <div className="text-center">
                 <div className="mx-auto h-28 w-28 overflow-hidden rounded-2xl border border-forest-900/10 bg-forest-50 shadow-sm">
-                  {litter.dam_image_url ? <img src={litter.dam_image_url} alt="Moeder" className="h-full w-full object-cover" /> : <div className="flex h-full w-full items-center justify-center"><PawMark className="h-7 w-7 text-forest-200" /></div>}
+                  {litter.dam_image_url ? <img src={litter.dam_image_url} alt="Moeder" onClick={() => setZoom(litter.dam_image_url)} className="h-full w-full cursor-zoom-in object-cover" /> : <div className="flex h-full w-full items-center justify-center"><PawMark className="h-7 w-7 text-forest-200" /></div>}
                 </div>
                 <p className="mt-2 text-xs font-bold uppercase tracking-wide text-forest-600/60">Moeder</p>
                 <p className="text-sm font-semibold text-forest-900">{litter.dam_name || '—'}</p>
@@ -133,7 +135,7 @@ export default function LitterAdPage({ params }) {
               return (
                 <div key={k.id} className="overflow-hidden rounded-2xl border border-forest-900/10 bg-white shadow-soft">
                   {k.cover_image ? (
-                    <img src={k.cover_image} alt={k.name} className="h-56 w-full object-cover" />
+                    <img src={k.cover_image} alt={k.name} onClick={() => setZoom(k.cover_image)} className="h-56 w-full cursor-zoom-in object-cover transition hover:opacity-95" />
                   ) : (
                     <div className="flex h-56 w-full items-center justify-center bg-forest-50"><PawMark className="h-8 w-8 text-forest-200" /></div>
                   )}
@@ -220,6 +222,8 @@ export default function LitterAdPage({ params }) {
           </div>
         </div>
       )}
+
+      <Lightbox src={zoom} onClose={() => setZoom(null)} />
     </div>
   );
 }
