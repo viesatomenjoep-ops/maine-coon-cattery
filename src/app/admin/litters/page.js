@@ -179,7 +179,7 @@ export default function LittersPage() {
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-7 w-7"><path strokeLinecap="round" strokeLinejoin="round" d="M3 10.5 12 4l9 6.5" /><path strokeLinecap="round" strokeLinejoin="round" d="M5 9.5V20h14V9.5" /><path strokeLinecap="round" strokeLinejoin="round" d="M9 20v-5a3 3 0 0 1 6 0v5" /></svg>
               </span>
               <div>
-                <h2 className="font-display text-xl text-forest-900">Nieuw nestje aanmaken</h2>
+                <h2 className="font-display text-xl text-forest-900">Nieuw nestje</h2>
                 <p className="mt-1 text-sm text-forest-600">Registreer een nieuw nestje met ouders, ras, status en cover-afbeelding.</p>
               </div>
               <span className="mt-auto text-sm font-semibold text-brass-700">Openen →</span>
@@ -194,7 +194,7 @@ export default function LittersPage() {
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-7 w-7"><path strokeLinecap="round" strokeLinejoin="round" d="M12 21c4.5 0 7-2.5 7-6 0-2-1-3.5-2.5-4.5C16 8 15 6 12 6S8 8 7.5 10.5C6 11.5 5 13 5 15c0 3.5 2.5 6 7 6Z" /><path strokeLinecap="round" strokeLinejoin="round" d="M6.5 5.5 8 8.5M17.5 5.5 16 8.5M9.5 14h.01M14.5 14h.01" /></svg>
               </span>
               <div>
-                <h2 className="font-display text-xl text-forest-900">Kitten toevoegen</h2>
+                <h2 className="font-display text-xl text-forest-900">Nieuwe kitten</h2>
                 <p className="mt-1 text-sm text-forest-600">Voeg een kitten toe aan een bestaand nestje, met alle details.</p>
               </div>
               <span className="mt-auto text-sm font-semibold text-brass-700">Openen →</span>
@@ -320,7 +320,7 @@ export default function LittersPage() {
 
       {/* Litters & Kittens Tree */}
       <div className="mt-12 space-y-8">
-        <h2 className="font-display text-2xl text-forest-900">Overzicht Fokbestand</h2>
+        <h2 className="font-display text-2xl text-forest-900">Nieuw nestje / kitten aanmaken</h2>
 
         {litters.length === 0 && <p className="text-forest-700">Geen nestjes gevonden. Voeg er bovenaan eentje toe.</p>}
 
