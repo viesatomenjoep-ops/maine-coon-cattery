@@ -58,9 +58,9 @@ export default function AdminLayout({ children }) {
               ← Ga terug
             </button>
 
-            <Link href="/" className="inline-block transition hover:opacity-80 lg:mt-0 mt-12">
-              <img src="/logo.png" alt="Wendy's Dream Logo" className="mx-auto h-16 w-auto object-contain" />
-              <span className="mt-3 block font-display text-2xl font-semibold tracking-tight text-forest-950">Wendy's Dream</span>
+            <Link href="/admin" className="inline-block transition hover:opacity-80 lg:mt-0 mt-12">
+              <img src="/logo.png" alt="Cattery Logo" className="mx-auto h-16 w-auto object-contain" />
+              <span className="mt-3 block font-display text-2xl font-semibold tracking-tight text-forest-950">{currentTenant?.name || "Wendy's Dream"}</span>
               <span className="mt-1 block text-[9px] font-bold uppercase tracking-[0.2em] text-forest-600">Maine Coon Cattery</span>
             </Link>
           </div>
@@ -82,6 +82,16 @@ export default function AdminLayout({ children }) {
                 Superadmin
               </Link>
             )}
+
+            {/* Naar de openbare website (opent in een nieuw tabblad, zodat je in het beheer blijft) */}
+            <a href="/" target="_blank" rel="noreferrer"
+              className="mt-2 flex items-start gap-3 rounded-xl border border-forest-900/15 bg-white px-4 py-3 text-forest-900 transition hover:border-brass-400 hover:bg-forest-50">
+              <span className="text-lg leading-none">🌍</span>
+              <span>
+                <span className="block text-sm font-medium">Bekijk de website</span>
+                <span className="block text-[11px] text-forest-600">Je openbare voorpagina — opent apart, je blijft in het beheer</span>
+              </span>
+            </a>
           </nav>
           <div className="border-t border-forest-900/10 p-6 lg:p-4">
             {currentTenant?.name && <p className="px-2 text-xs font-semibold text-forest-800">🏡 {currentTenant.name}</p>}
