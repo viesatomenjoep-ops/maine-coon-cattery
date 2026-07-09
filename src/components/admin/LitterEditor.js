@@ -293,8 +293,9 @@ export default function LitterEditor({ initialLitterId = null, onClose }) {
   }, [initialLitterId, litters]);
 
   const savedLitter = litterId ? litters.find((l) => l.id === litterId) : null;
-  const sireOptions = breedingCats.filter((c) => c.gender === 'male');
-  const damOptions = breedingCats.filter((c) => c.gender === 'female');
+  const isMaleGender = (g) => ['m', 'male', 'kater', 'mannelijk'].includes((g || '').toString().trim().toLowerCase());
+  const sireOptions = breedingCats.filter((c) => isMaleGender(c.gender));
+  const damOptions = breedingCats.filter((c) => !isMaleGender(c.gender));
   const nestKittens = litterId ? kittens.filter((k) => k.litter_id === litterId && !k.is_own_breeding_cat) : [];
   const litterDocs = litterId ? documents.filter((d) => d.litter_id === litterId) : [];
   const sireCat = litter.sire_id ? kittens.find((k) => k.id === litter.sire_id) : null;

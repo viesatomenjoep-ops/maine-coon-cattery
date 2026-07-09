@@ -31,6 +31,11 @@ const CldUploadWidget = ({ children, onSuccess, options }) => {
   );
 };
 
+const MALE_TOKENS = ['m', 'male', 'kater', 'mannelijk'];
+const genderToSex = (g) => (MALE_TOKENS.includes((g || '').toString().trim().toLowerCase()) ? 'Kater' : 'Poes');
+const STATUS_MAP = { beschikbaar: 'Beschikbaar', gereserveerd: 'Gereserveerd', verkocht: 'Verkocht', houden: 'Houden', 'eigen fok': 'Eigen fok' };
+const normStatus = (s) => STATUS_MAP[(s || '').toString().trim().toLowerCase()] || (s || 'Beschikbaar');
+
 export default function CatDossier() {
   const router = useRouter();
   const { id } = useParams();
@@ -52,9 +57,13 @@ export default function CatDossier() {
     name: '',
     species: 'Cat',
     breed: 'Maine Coon',
-    sex: 'Vrouwelijk',
+    sex: 'Poes',
     dateOfBirth: '',
     color: '',
+    ems_code: '',
+    registration_no: '',
+    birth_weight_g: '',
+    reserved_by: '',
     chipNumber: '',
     chipImplantDate: '',
     chipLocation: '',
@@ -81,7 +90,27 @@ export default function CatDossier() {
     if (!isNew) {
       const cat = kittens.find((k) => k.id === id);
       if (cat) {
-        setFormData(prev => ({ ...prev, ...cat }));
+        setFormData(prev => ({
+          ...prev,
+          ...cat,
+          sex: genderToSex(cat.gender),
+          breed: cat.pedigree_data?.breed || 'Maine Coon',
+          species: cat.pedigree_data?.species || prev.species || 'Cat',
+          color: cat.color || '',
+          dateOfBirth: cat.date_of_birth || '',
+          ems_code: cat.ems_code || '',
+          registration_no: cat.registration_no || '',
+          birth_weight_g: cat.birth_weight_g ?? '',
+          reserved_by: cat.reserved_by || '',
+          chipNumber: cat.chip_number || '',
+          chipImplantDate: cat.pedigree_data?.chipImplantDate || '',
+          chipLocation: cat.pedigree_data?.chipLocation || '',
+          vetName: cat.pedigree_data?.vetName || '',
+          status: normStatus(cat.status),
+          priceNL: cat.price_nl ?? '',
+          priceBE: cat.price_be ?? '',
+          pedigree_data: cat.pedigree_data || prev.pedigree_data,
+        }));
       }
     }
   }, [id, isNew, kittens]);
@@ -208,12 +237,13 @@ export default function CatDossier() {
                   <Field label="Ras"><Input name="breed" value={formData.breed} onChange={handleChange} /></Field>
                   <Field label="Geslacht">
                     <Select name="sex" value={formData.sex} onChange={handleChange}>
-                      <option value="Vrouwelijk">Vrouwelijk (Poes)</option>
-                      <option value="Mannelijk">Mannelijk (Kater)</option>
+                      <option value="Poes">Vrouwelijk (Poes)</option>
+                      <option value="Kater">Mannelijk (Kater)</option>
                     </Select>
                   </Field>
                   <Field label="Geboortedatum"><Input type="date" name="dateOfBirth" value={formData.dateOfBirth} onChange={handleChange} /></Field>
                   <Field label="Kleur"><Input name="color" value={formData.color} onChange={handleChange} placeholder="blue-silver-torbie" /></Field>
+                  <Field label="Geboortegewicht (gram)"><Input type="number" min="0" name="birth_weight_g" value={formData.birth_weight_g} onChange={handleChange} placeholder="Bijv. 110" /></Field>
                   <div className="col-span-full"><ActionBar /></div>
                 </div>
               )}
@@ -260,6 +290,10 @@ export default function CatDossier() {
               {activeTab === 'stamboom' && (
                 <div className="grid gap-4">
                   <h2 className="font-display text-xl text-forest-900">Stamboom & Afstamming</h2>
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <Field label="Stamboomnummer (registratie)"><Input name="registration_no" value={formData.registration_no} onChange={handleChange} placeholder="Bijv. NHSB 1234567" /></Field>
+                    <Field label="EMS-code"><Input name="ems_code" value={formData.ems_code} onChange={handleChange} placeholder="Bijv. MCO n 22" /></Field>
+                  </div>
                   <Field label="Vader (Sire)"><Input name="sire" value={formData.pedigree_data?.sire || ''} onChange={handleChange} placeholder="Naam van de vader" /></Field>
                   <Field label="Moeder (Dam)"><Input name="dam" value={formData.pedigree_data?.dam || ''} onChange={handleChange} placeholder="Naam van de moeder" /></Field>
                   
@@ -367,6 +401,7 @@ export default function CatDossier() {
                       <option value="Beschikbaar">Beschikbaar</option>
                       <option value="Gereserveerd">Gereserveerd</option>
                       <option value="Verkocht">Verkocht</option>
+                      <option value="Houden">Houden</option>
                       <option value="Eigen fok">Eigen fok</option>
                     </Select>
                   </Field>
@@ -378,6 +413,7 @@ export default function CatDossier() {
                       ))}
                     </Select>
                   </Field>
+                  <Field label="Gereserveerd door (naam)"><Input name="reserved_by" value={formData.reserved_by} onChange={handleChange} placeholder="Optioneel" /></Field>
                   
                   <div className="col-span-full grid grid-cols-2 gap-4 items-end">
                     <Field label="Prijs NL (€)">

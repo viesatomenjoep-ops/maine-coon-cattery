@@ -211,17 +211,26 @@ export default function LittersPage() {
           return (
             <Card key={lit.id} className="overflow-hidden p-0">
               <div className="flex flex-wrap items-center justify-between gap-4 border-b border-forest-900/10 bg-forest-900/5 p-5">
-                <div>
-                  <h3 className="font-display text-xl text-forest-950">
-                    {lit.name}
-                    {statusLabel && <span className="ml-3 rounded-full bg-brass-100 px-2.5 py-0.5 text-xs font-semibold uppercase tracking-wide text-brass-700 align-middle">{statusLabel}</span>}
-                  </h3>
-                  <p className="mt-1 text-sm text-forest-700">
-                    {lit.sire_name || 'Onbekende vader'} x {lit.dam_name || 'Onbekende moeder'}
-                    <span className="mx-2 opacity-50">|</span>
-                    {lit.date_of_birth ? new Date(lit.date_of_birth).toLocaleDateString('nl-NL') : 'Datum onbekend'}
-                    {lit.expected_count ? <><span className="mx-2 opacity-50">|</span>Verwacht: {lit.expected_count}</> : null}
-                  </p>
+                <div className="flex items-center gap-4">
+                  {lit.cover_image_url ? (
+                    <img src={lit.cover_image_url} alt={lit.name} className="h-16 w-16 shrink-0 rounded-xl object-cover shadow" />
+                  ) : (
+                    <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-xl border border-forest-100 bg-forest-50 text-forest-300">
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" className="h-7 w-7"><rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="9" cy="9" r="2" /><path d="m21 15-5-5L5 21" /></svg>
+                    </div>
+                  )}
+                  <div>
+                    <h3 className="font-display text-xl text-forest-950">
+                      {lit.name}
+                      {statusLabel && <span className="ml-3 rounded-full bg-brass-100 px-2.5 py-0.5 text-xs font-semibold uppercase tracking-wide text-brass-700 align-middle">{statusLabel}</span>}
+                    </h3>
+                    <p className="mt-1 text-sm text-forest-700">
+                      {lit.sire_name || 'Onbekende vader'} x {lit.dam_name || 'Onbekende moeder'}
+                      <span className="mx-2 opacity-50">|</span>
+                      {lit.date_of_birth ? new Date(lit.date_of_birth).toLocaleDateString('nl-NL') : 'Datum onbekend'}
+                      {lit.expected_count ? <><span className="mx-2 opacity-50">|</span>Verwacht: {lit.expected_count}</> : null}
+                    </p>
+                  </div>
                 </div>
                 <div className="flex flex-wrap gap-3">
                   <Btn variant="solid" onClick={() => openLitter(lit.id)} className="!px-3 !py-1.5 !text-xs">Bewerk nestje</Btn>

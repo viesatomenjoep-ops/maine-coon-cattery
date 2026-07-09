@@ -8,6 +8,8 @@ const GENDERS = [
   { value: 'female', label: 'Poes (female)' },
   { value: 'male', label: 'Kater (male)' },
 ];
+const MALE_TOKENS = ['m', 'male', 'kater', 'mannelijk'];
+const normGender = (g) => (MALE_TOKENS.includes((g || '').toString().trim().toLowerCase()) ? 'male' : 'female');
 const PATTERNS = [
   'Classic Tabby', 'Mackerel Tabby', 'Spotted Tabby', 'Ticked Tabby',
   'Solid (Effen)', 'Smoke', 'Shaded', 'Shell/Chinchilla',
@@ -66,7 +68,7 @@ export default function BreedingPage() {
       name: cat.name || '',
       registration_no: cat.registration_no || '',
       breed: cat.pedigree_data?.breed || 'Maine Coon (MCO)',
-      gender: cat.gender || 'female',
+      gender: normGender(cat.gender),
       ems_code: cat.ems_code || '',
       color: cat.color || '',
       pattern: cat.pattern || '',
@@ -142,7 +144,7 @@ export default function BreedingPage() {
                   <div className="min-w-0">
                     <h3 className="font-display text-lg text-forest-950">{cat.name}</h3>
                     <p className="text-sm text-forest-700">
-                      {GENDERS.find((g) => g.value === cat.gender)?.label || cat.gender || '—'}
+                      {GENDERS.find((g) => g.value === normGender(cat.gender))?.label || '—'}
                       {cat.ems_code ? <span className="mx-2 opacity-50">|</span> : null}{cat.ems_code}
                     </p>
                     {cat.registration_no && <p className="text-xs text-forest-600">Reg.: {cat.registration_no}</p>}
