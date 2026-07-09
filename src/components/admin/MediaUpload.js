@@ -30,8 +30,6 @@ export default function MediaUpload({ catId, onUploadSuccess }) {
           onFileReady={uploadOne}
           uploadLabel="Kies bestand(en)"
           cameraLabel="Open camera"
-          uploadClassName="inline-flex items-center justify-center rounded-xl bg-forest-800 px-5 py-2.5 text-sm font-medium text-cream-100 transition hover:bg-forest-900"
-          cameraClassName="inline-flex items-center justify-center rounded-xl border border-forest-900/15 bg-white px-5 py-2.5 text-sm font-medium text-forest-800 transition hover:bg-forest-50"
         />
       </div>
 

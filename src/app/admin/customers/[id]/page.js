@@ -1,12 +1,12 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import { useStore } from '@/context/StoreContext';
 import { PageHead, Card, Btn } from '@/components/admin';
 
-export default function CustomerDetailPage({ params }) {
-  const { id } = params;
+export default function CustomerDetailPage() {
+  const { id } = useParams();
   const router = useRouter();
   const { customers, updateCustomer, deleteCustomer, kittens, updateKitten, litters, updateLitter } = useStore();
   const [customer, setCustomer] = useState(null);
@@ -16,13 +16,23 @@ export default function CustomerDetailPage({ params }) {
   const [selectedLitter, setSelectedLitter] = useState('');
 
   useEffect(() => {
-    if (customers.length > 0) {
-      const found = customers.find(c => c.id === id);
-      if (found) setCustomer(found);
-    }
+    if (!id || customers.length === 0) return;
+    const found = customers.find((c) => c.id === id);
+    setCustomer(found || null);
   }, [id, customers]);
 
-  if (!customer) return <div className="p-10 text-forest-700">Laden...</div>;
+  if (customers.length === 0) {
+    return <div className="p-10 text-forest-700">Laden...</div>;
+  }
+
+  if (!customer) {
+    return (
+      <div className="space-y-4 p-10">
+        <p className="text-forest-700">Deze klant bestaat niet (meer).</p>
+        <Link href="/admin/customers" className="text-sm font-semibold text-emerald-700 hover:text-emerald-900">← Terug naar klanten</Link>
+      </div>
+    );
+  }
 
   // Find assigned items
   const assignedKittens = kittens.filter(k => k.customer_id === id);
@@ -88,19 +98,18 @@ export default function CustomerDetailPage({ params }) {
       <PageHead 
         title={customer.name} 
         label="Klantprofiel"
-        action={
-          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 mt-4 sm:mt-0 w-full sm:w-auto">
-            {customer.whatsapp_number && (
-              <Btn onClick={sendWhatsApp} className="bg-green-600 hover:bg-green-700 text-white w-full sm:w-auto justify-center">
-                WhatsApp Sturen
-              </Btn>
-            )}
-            <Btn onClick={handleDelete} className="bg-red-50 text-red-700 border border-red-200 hover:bg-red-100 w-full sm:w-auto justify-center">
-              Klant Verwijderen
+      >
+        <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 mt-4 sm:mt-0 w-full sm:w-auto">
+          {customer.whatsapp_number && (
+            <Btn onClick={sendWhatsApp} className="bg-green-600 hover:bg-green-700 text-white w-full sm:w-auto justify-center">
+              WhatsApp Sturen
             </Btn>
-          </div>
-        }
-      />
+          )}
+          <Btn onClick={handleDelete} className="bg-red-50 text-red-700 border border-red-200 hover:bg-red-100 w-full sm:w-auto justify-center">
+            Klant Verwijderen
+          </Btn>
+        </div>
+      </PageHead>
 
       <div className="grid gap-8 lg:grid-cols-2">
         <Card>

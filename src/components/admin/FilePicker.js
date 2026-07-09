@@ -2,9 +2,27 @@
 import { useRef, useState } from 'react';
 import { rotateImageFile, isImageFile } from '@/lib/rotateImage';
 
-const btnBase = 'inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium transition disabled:opacity-50';
-const btnSolid = `${btnBase} bg-forest-800 text-cream-100 hover:bg-forest-900`;
-const btnGhost = `${btnBase} border border-forest-900/15 bg-white text-forest-800 hover:bg-forest-50`;
+const tileBase = 'inline-flex items-center justify-center gap-2.5 rounded-xl border px-4 py-2.5 text-sm font-medium text-ink transition disabled:opacity-50';
+const btnTile = `${tileBase} border-stone-300/80 bg-gradient-to-b from-stone-100 to-stone-200/90 shadow-sm hover:from-stone-200 hover:to-stone-300/80 hover:border-stone-400/60`;
+const btnGhost = `${tileBase} border-forest-900/15 bg-white text-ink hover:bg-stone-50`;
+const btnSolid = `${tileBase} bg-ink text-cream-100 hover:bg-ink/90`;
+
+function FolderIcon({ className = 'h-4 w-4' }) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className={className} aria-hidden>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M3 7.5A1.5 1.5 0 0 1 4.5 6H9l1.5 2h9A1.5 1.5 0 0 1 21 9.5v9A1.5 1.5 0 0 1 19.5 20h-15A1.5 1.5 0 0 1 3 18.5v-11Z" />
+    </svg>
+  );
+}
+
+function CameraIcon({ className = 'h-4 w-4' }) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className={className} aria-hidden>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M4 8.25h2.25l1.5-2h8.5l1.5 2H20a1.5 1.5 0 0 1 1.5 1.5v8.5A1.5 1.5 0 0 1 20 19.5H4A1.5 1.5 0 0 1 2.5 18V9.75A1.5 1.5 0 0 1 4 8.25Z" />
+      <circle cx="12" cy="13.25" r="2.75" />
+    </svg>
+  );
+}
 
 /**
  * Universele bestandskiezer voor het adminportaal:
@@ -22,8 +40,8 @@ export default function FilePicker({
   showCamera = true,
   layout = 'buttons',
   className = '',
-  uploadClassName = btnSolid,
-  cameraClassName = btnGhost,
+  uploadClassName = btnTile,
+  cameraClassName = btnTile,
   children,
 }) {
   const fileRef = useRef(null);
@@ -97,11 +115,13 @@ export default function FilePicker({
       ) : layout === 'buttons' ? (
         <div className={`flex flex-wrap gap-2 ${className}`}>
           <button type="button" onClick={openFile} disabled={disabled} className={uploadClassName}>
-            📁 {uploadLabel}
+            <FolderIcon />
+            <span>{uploadLabel}</span>
           </button>
           {canCamera && (
             <button type="button" onClick={openCamera} disabled={disabled} className={cameraClassName}>
-              📷 {cameraLabel}
+              <CameraIcon />
+              <span>{cameraLabel}</span>
             </button>
           )}
         </div>
