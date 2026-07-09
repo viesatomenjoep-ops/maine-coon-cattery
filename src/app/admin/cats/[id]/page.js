@@ -18,11 +18,12 @@ const normStatus = (s) => STATUS_MAP[(s || '').toString().trim().toLowerCase()] 
 export default function CatDossier() {
   const router = useRouter();
   const { id } = useParams();
-  const { kittens, customers, deleteKitten, updateKitten, addKitten, addDocument, addMedia, deleteMedia, documents, media, addWeight, deleteWeight, deleteDocument } = useStore();
+  const { kittens, customers, deleteKitten, updateKitten, addKitten, addDocument, addMedia, deleteMedia, documents, media, addWeight, deleteWeight, deleteDocument, addNote, deleteNote } = useStore();
   const isNew = id === 'new';
 
   const catDocs = documents.filter(d => d.cat_id === id);
   const catMedia = media.filter(m => m.media_url?.includes(id) || m.cat_id === id); // Or general media
+  const currentCat = kittens.find((k) => k.id === id) || {};
 
 
   let hasCloudinary = false;
@@ -30,6 +31,7 @@ export default function CatDossier() {
   
   // States voor de verschillende tabbladen of secties
   const [activeTab, setActiveTab] = useState('paspoort');
+  const [noteForm, setNoteForm] = useState({ date: new Date().toISOString().slice(0, 10), note: '' });
   
   // Voorbeeld data state (in de toekomst wordt dit Supabase)
   const [formData, setFormData] = useState({
@@ -158,7 +160,8 @@ export default function CatDossier() {
     { id: 'stamboom', label: '4. Stamboom & Afstamming' },
     { id: 'gewicht', label: '5. Groei & Weegcurves' },
     { id: 'verkoop', label: '6. Portaal & Verkoop' },
-    { id: 'media', label: '7. Media & Galerij' }
+    { id: 'media', label: '7. Media & Galerij' },
+    { id: 'notities', label: '8. Algemene notities' }
   ];
 
   return (
@@ -578,6 +581,52 @@ export default function CatDossier() {
                     />
                   )}
                   <ActionBar />
+                </div>
+              )}
+
+              {activeTab === 'notities' && (
+                <div className="space-y-4">
+                  <div>
+                    <h2 className="font-display text-xl text-forest-900">Algemene notities</h2>
+                    <p className="mt-1 text-sm text-forest-600">Interne notities voor de administrator, met datum. Alleen zichtbaar in het beheer — niet voor klanten.</p>
+                  </div>
+                  {isNew ? (
+                    <p className="text-sm italic text-forest-600">Sla het dossier eerst op voordat je notities kunt toevoegen.</p>
+                  ) : (
+                    <>
+                      <div className="rounded-2xl border border-forest-900/10 bg-cream-50 p-4">
+                        <div className="grid gap-3 sm:grid-cols-[180px_1fr]">
+                          <label className="block">
+                            <span className="text-xs font-medium uppercase tracking-wide text-forest-700">Datum</span>
+                            <input type="date" value={noteForm.date} onChange={(e) => setNoteForm({ ...noteForm, date: e.target.value })} className="mt-1 w-full rounded-xl border border-forest-900/15 bg-white px-4 py-2.5 text-sm outline-none focus:border-brass-400 focus:ring-2 focus:ring-brass-200" />
+                          </label>
+                          <label className="block">
+                            <span className="text-xs font-medium uppercase tracking-wide text-forest-700">Notitie</span>
+                            <textarea value={noteForm.note} onChange={(e) => setNoteForm({ ...noteForm, note: e.target.value })} rows={3} placeholder="Bijv. Telefoontje met dierenarts over…" className="mt-1 w-full rounded-xl border border-forest-900/15 bg-white px-4 py-2.5 text-sm outline-none focus:border-brass-400 focus:ring-2 focus:ring-brass-200" />
+                          </label>
+                        </div>
+                        <div className="mt-3 flex justify-end">
+                          <button onClick={async () => { if (!noteForm.note.trim()) return alert('Schrijf eerst een notitie.'); const res = await addNote(id, { date: noteForm.date, note: noteForm.note.trim() }); if (res?.error) return alert('Opslaan mislukt: ' + (res.error.message || '')); setNoteForm({ date: new Date().toISOString().slice(0, 10), note: '' }); }} className="rounded-xl bg-brass-500 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-brass-600">Notitie opslaan</button>
+                        </div>
+                      </div>
+
+                      {(currentCat.notes || []).length === 0 ? (
+                        <p className="text-sm italic text-forest-600/70">Nog geen notities.</p>
+                      ) : (
+                        <div className="space-y-2">
+                          {(currentCat.notes || []).map((n) => (
+                            <div key={n.id} className="flex items-start justify-between gap-3 rounded-xl border border-forest-900/10 bg-white p-3">
+                              <div className="min-w-0">
+                                <p className="text-xs font-semibold text-brass-600" suppressHydrationWarning>{n.date ? new Date(n.date).toLocaleDateString('nl-NL') : '—'}</p>
+                                <p className="mt-0.5 whitespace-pre-line text-sm text-forest-800">{n.note}</p>
+                              </div>
+                              <button onClick={() => { if (confirm('Deze notitie verwijderen?')) deleteNote(id, n.id); }} className="shrink-0 text-xs text-red-500 hover:text-red-700">Verwijder</button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </>
+                  )}
                 </div>
               )}
             </div>

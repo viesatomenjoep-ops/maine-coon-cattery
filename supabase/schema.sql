@@ -190,6 +190,16 @@ CREATE TABLE IF NOT EXISTS public.push_subscriptions (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+
+-- 3.8c ALGEMENE NOTITIES PER KAT (CAT_NOTES) — interne admin-notities
+CREATE TABLE IF NOT EXISTS public.cat_notes (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    cat_id UUID REFERENCES public.cats(id) ON DELETE CASCADE,
+    note_date DATE,
+    note TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
 -- 3.9 SITE CONTENT (HOMEPAGE TEXTS)
 -- Per-tenant website-content: uniek op (tenant_id, key) — zie migratie 20260709190000.
 CREATE TABLE IF NOT EXISTS public.site_content (

@@ -66,6 +66,11 @@ export function StoreProvider({ children }) {
 
         const { data: vData } = await onTenant(supabase.from('vaccinations').select('*'));
         const { data: wData } = await onTenant(supabase.from('cat_weights').select('*')).order('weigh_date', { ascending: true });
+        let noteData = null;
+        try {
+          const notesRes = await onTenant(supabase.from('cat_notes').select('*')).order('note_date', { ascending: false });
+          noteData = notesRes.data;
+        } catch (e) { /* cat_notes tabel bestaat mogelijk nog niet */ }
 
         const { data: kData } = await onTenant(supabase.from('cats').select('*')).order('created_at', { ascending: false });
         if (kData) {
@@ -78,14 +83,18 @@ export function StoreProvider({ children }) {
               due: v.next_due_date || null,
               completed: v.completed || false
             })) || [];
-            
+
             const catWeights = wData?.filter(w => w.cat_id === k.id).map(w => ({
               id: w.id,
               date: w.weigh_date,
               grams: w.weight_grams
             })) || [];
-            
-            return { ...k, medical: med, weights: catWeights };
+
+            const catNotes = noteData?.filter(n => n.cat_id === k.id).map(n => ({
+              id: n.id, date: n.note_date, note: n.note
+            })) || [];
+
+            return { ...k, medical: med, weights: catWeights, notes: catNotes };
           });
           setKittens(kittensWithMed);
         }
@@ -515,6 +524,26 @@ export function StoreProvider({ children }) {
     }));
   };
 
+  // ---- algemene notities (interne admin-notities per kat) ----
+  const addNote = async (catId, { date, note }) => {
+    const { data, error } = await supabase.from('cat_notes').insert([withTid({
+      cat_id: catId, note_date: date || null, note: note || ''
+    })]).select();
+    if (error) { console.error('Error adding note:', error); return { error }; }
+    const dbEntry = { id: data[0].id, date: data[0].note_date, note: data[0].note };
+    setKittens(s => s.map(k => (k.id === catId
+      ? { ...k, notes: [dbEntry, ...(k.notes || [])] }
+      : k)));
+    return { data: dbEntry };
+  };
+
+  const deleteNote = async (catId, noteId) => {
+    await supabase.from('cat_notes').delete().eq('id', noteId);
+    setKittens(s => s.map(k => (k.id === catId
+      ? { ...k, notes: (k.notes || []).filter(n => n.id !== noteId) }
+      : k)));
+  };
+
   // ---- interesse-aanvragen (leads vanaf de publieke advertentielink) ----
   const updateInterest = async (id, patch) => {
     const { error } = await supabase.from('kitten_interests').update(patch).eq('id', id);
@@ -552,7 +581,7 @@ export function StoreProvider({ children }) {
       addKitten, updateKitten, deleteKitten,
       addBreedingCat, updateBreedingCat,
       addDocument, addDocumentFull, deleteDocument, updateDocument, addMedia, deleteMedia, updateMedia, addMedical, deleteMedical, updateMedical,
-      addWeight, deleteWeight,
+      addWeight, deleteWeight, addNote, deleteNote,
       addCustomer, updateCustomer, deleteCustomer,
       saveSiteContent
     }}>
