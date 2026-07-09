@@ -7,6 +7,7 @@ import { Logo, PawMark } from '@/components/ui';
 import { useLanguage } from '@/context/LanguageContext';
 
 const LAST_EMAIL_KEY = 'wd_last_email';
+const LAST_PW_KEY = 'wd_last_pw';
 
 export default function LoginPage() {
   const { login } = useAuth();
@@ -19,12 +20,15 @@ export default function LoginPage() {
   const [remember, setRemember] = useState(true);
   const [loading, setLoading] = useState(false);
 
-  // Onthoud het laatst gebruikte e-mailadres, zodat inloggen sneller gaat
-  // (werkt samen met de wachtwoordkluis / Face ID van je telefoon).
+  // Onthoud het laatst gebruikte e-mailadres én wachtwoord op dit apparaat,
+  // zodat inloggen de volgende keer vanzelf gaat (werkt ook samen met de
+  // wachtwoordkluis / Face ID van je telefoon).
   useEffect(() => {
     try {
-      const saved = localStorage.getItem(LAST_EMAIL_KEY);
-      if (saved) setEmail(saved);
+      const savedEmail = localStorage.getItem(LAST_EMAIL_KEY);
+      if (savedEmail) setEmail(savedEmail);
+      const savedPw = localStorage.getItem(LAST_PW_KEY);
+      if (savedPw) setPassword(savedPw);
     } catch {}
   }, []);
 
@@ -43,8 +47,13 @@ export default function LoginPage() {
 
     if (res.ok) {
       try {
-        if (remember) localStorage.setItem(LAST_EMAIL_KEY, email.trim());
-        else localStorage.removeItem(LAST_EMAIL_KEY);
+        if (remember) {
+          localStorage.setItem(LAST_EMAIL_KEY, email.trim());
+          localStorage.setItem(LAST_PW_KEY, password);
+        } else {
+          localStorage.removeItem(LAST_EMAIL_KEY);
+          localStorage.removeItem(LAST_PW_KEY);
+        }
       } catch {}
       router.push(res.role === 'admin' ? '/admin' : '/portal');
     } else {
@@ -158,7 +167,7 @@ export default function LoginPage() {
             </button>
 
             <p className="text-center text-[11px] text-ink/50 leading-relaxed">
-              Tip: sla je wachtwoord op in je telefoon. De volgende keer log je in met Face ID / Touch ID.
+              Tip: laat "Onthoud mijn gegevens" aan staan, dan zijn je e-mail en wachtwoord de volgende keer al ingevuld. Sla je wachtwoord ook op in je telefoon voor Face ID / Touch ID.
             </p>
           </form>
         </div>

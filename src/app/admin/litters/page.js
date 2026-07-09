@@ -284,8 +284,8 @@ export default function LittersPage() {
                             </td>
                             <td className="pr-4 text-right text-forest-800">€ {k.price_nl || 0}</td>
                             <td className="flex h-auto flex-col items-start justify-end gap-2 py-2 pr-5 text-right sm:h-[57px] sm:flex-row sm:items-center sm:gap-3 sm:py-0">
-                              <Link href={`/admin/cats/${k.id}`} className="text-xs font-medium text-emerald-600 transition hover:text-emerald-800">Open Dossier</Link>
-                              <button onClick={() => { if (confirm('Weet je zeker dat je dit kitten wilt verwijderen?')) deleteKitten(k.id); }} className="text-xs text-red-500 underline transition hover:text-red-700">Verwijder</button>
+                              <Link href={`/admin/cats/${k.id}`} className="inline-flex items-center rounded-xl bg-emerald-600 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-emerald-700">Open dossier</Link>
+                              <button onClick={() => { if (confirm('Weet je zeker dat je dit kitten wilt verwijderen?')) deleteKitten(k.id); }} className="inline-flex items-center rounded-xl border border-red-200 px-3 py-1.5 text-xs font-medium text-red-600 transition hover:bg-red-50">Verwijderen</button>
                             </td>
                           </tr>
                         ))}
