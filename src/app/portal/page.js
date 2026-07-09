@@ -22,10 +22,10 @@ export default function PortalPage() {
   useEffect(() => {
     async function fetchData() {
       try {
-        const { data: kData } = await supabase.from('cats').select('*').eq('published', true);
-        const { data: lData } = await supabase.from('litters').select('*');
-        if (kData) setListed(kData);
-        if (lData) setLitters(lData);
+        const res = await fetch('/api/public/browse');
+        const json = await res.json();
+        if (json.cats) setListed(json.cats);
+        if (json.litters) setLitters(json.litters);
       } catch (err) {
         console.error(err);
       } finally {

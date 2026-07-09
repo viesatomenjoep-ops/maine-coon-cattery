@@ -44,13 +44,11 @@ export default function KittenDossier() {
   useEffect(() => {
     async function fetchData() {
       try {
-        const { data: catData } = await supabase.from('cats').select('*').eq('id', id).single();
-        if (catData) {
-          setK(catData);
-          if (catData.litter_id) {
-            const { data: litterData } = await supabase.from('litters').select('*').eq('id', catData.litter_id).single();
-            if (litterData) setLitter(litterData);
-          }
+        const res = await fetch(`/api/public/kitten?id=${encodeURIComponent(id)}`);
+        if (res.ok) {
+          const json = await res.json();
+          if (json.cat) setK(json.cat);
+          if (json.litter) setLitter(json.litter);
         }
       } catch (error) {
         console.error(error);

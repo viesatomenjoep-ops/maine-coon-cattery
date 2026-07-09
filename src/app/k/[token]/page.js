@@ -31,81 +31,16 @@ export default function CustomerPortal({ params }) {
 
   useEffect(() => {
     async function fetchCustomerData() {
-      // 1. Haal de klant op via de unieke token
-      const { data: customerData } = await supabase
-        .from('customers')
-        .select('*')
-        .eq('token', token)
-        .single();
-        
-      if (!customerData) {
+      try {
+        const res = await fetch(`/api/public/portal?token=${encodeURIComponent(token)}`);
+        if (!res.ok) { setError(true); setLoading(false); return; }
+        const json = await res.json();
+        setData(json);
+      } catch {
         setError(true);
-        setLoading(false);
-        return;
       }
-
-      // 2. Haal de kittens en nestjes op die aan deze klant gekoppeld zijn
-      const { data: kittensData } = await supabase.from('cats').select('*').eq('customer_id', customerData.id);
-      const { data: littersData } = await supabase.from('litters').select('*').eq('customer_id', customerData.id);
-
-      // 3. Haal nieuws/updates, media en medische gegevens op voor deze kittens
-      const catIds = (kittensData || []).map(k => k.id);
-      
-      const { data: weightsData } = await supabase.from('cat_weights').select('*').in('cat_id', catIds.length ? catIds : ['00000000-0000-0000-0000-000000000000']).order('weigh_date', { ascending: true });
-      
-      const kittensWithWeights = (kittensData || []).map(k => {
-        const catWeights = (weightsData || []).filter(w => w.cat_id === k.id).map(w => ({
-          date: new Date(w.weigh_date).toLocaleDateString('nl-NL', { day: 'numeric', month: 'short' }),
-          grams: w.weight_grams
-        }));
-        return { ...k, weights: catWeights };
-      });
-
-      const { data: allMedia } = await supabase.from('media').select('*').order('created_at', { ascending: false });
-      const { data: allDocs } = await supabase.from('documents').select('*').order('created_at', { ascending: false });
-      const { data: allVaccs } = await supabase.from('vaccinations').select('*').in('cat_id', catIds.length ? catIds : ['00000000-0000-0000-0000-000000000000']);
-
-      const kittensWithEverything = kittensWithWeights.map(k => {
-        const catMedia = allMedia?.filter(m => m.cat_id === k.id || m.media_url?.includes(k.id)) || [];
-        const catDocs = allDocs?.filter(d => d.cat_id === k.id) || [];
-        // Aankomende zorg: geplande ontworming/inenting (next_due_date in de toekomst of net verstreken).
-        const treatments = (allVaccs || [])
-          .filter(v => v.cat_id === k.id && v.next_due_date)
-          .map(v => ({ type: v.vaccine_name, due: v.next_due_date, note: v.veterinarian_info }))
-          .sort((a, b) => new Date(a.due) - new Date(b.due));
-        return { ...k, media: catMedia, documents: catDocs, treatments };
-      });
-
-      const litterIds = (littersData || []).map(l => l.id);
-
-      // Fetch gerelateerd nieuws (timeline_updates heeft hopelijk een cat_id of we halen gewoon alles op en filteren)
-      // Omdat we geen litter_id in timeline_updates hebben (alleen cat_id), doen we het via catIds.
-      // Als er nieuws is met cat_id in de lijst, tonen we dat.
-      const { data: allNews } = await supabase.from('timeline_updates').select('*').order('created_at', { ascending: false });
-      
-      let customerUpdates = [];
-      if (allNews) {
-        customerUpdates = allNews
-          .filter(n => !n.cat_id || catIds.includes(n.cat_id)) // Toon algemeen nieuws én specifiek kitten nieuws
-          .map(n => ({
-            id: n.id,
-            date: n.created_at ? new Date(n.created_at).toLocaleDateString('nl-NL') : 'Onbekend',
-            title: n.title,
-            text: n.content,
-            tag: n.cat_id ? kittensData.find(k => k.id === n.cat_id)?.name || 'Kitten update' : 'Cattery nieuws'
-          }));
-      }
-
-      // 4. Bouw het dashboard object op
-      setData({
-        customer: customerData,
-        kittens: kittensWithEverything,
-        litters: littersData || [],
-        updates: customerUpdates
-      });
       setLoading(false);
     }
-    
     fetchCustomerData();
   }, [token]);
 

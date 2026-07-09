@@ -31,24 +31,14 @@ export default function LitterAdPage({ params }) {
 
   useEffect(() => {
     async function load() {
-      const { data: litter } = await supabase.from('litters').select('*').eq('share_token', token).single();
-      if (!litter) { setError(true); setLoading(false); return; }
-      const { data: kits } = await supabase.from('cats').select('*').eq('litter_id', litter.id);
-      const catIds = (kits || []).map((k) => k.id);
-      const idFilter = catIds.length ? catIds : ['00000000-0000-0000-0000-000000000000'];
-      const { data: vaccs } = await supabase.from('vaccinations').select('*').in('cat_id', idFilter);
-      const { data: docs } = await supabase.from('documents').select('*').in('cat_id', idFilter);
-      const enriched = (kits || []).map((k) => {
-        const kv = (vaccs || []).filter((v) => v.cat_id === k.id);
-        const done = kv.filter((v) => v.vaccination_date).length;
-        const upcoming = kv.filter((v) => v.next_due_date)
-          .map((v) => ({ type: v.vaccine_name, due: v.next_due_date }))
-          .sort((a, b) => new Date(a.due) - new Date(b.due));
-        const kd = (docs || []).filter((d) => d.cat_id === k.id);
-        const hasPassport = kd.some((d) => norm(d.document_type) === 'paspoort');
-        return { ...k, vaccCount: done, upcoming, hasPassport };
-      });
-      setData({ litter, kittens: enriched });
+      try {
+        const res = await fetch(`/api/public/litter?token=${encodeURIComponent(token)}`);
+        if (!res.ok) { setError(true); setLoading(false); return; }
+        const json = await res.json();
+        setData(json);
+      } catch {
+        setError(true);
+      }
       setLoading(false);
     }
     load();
@@ -57,14 +47,21 @@ export default function LitterAdPage({ params }) {
   const submitInterest = async () => {
     if (!form.name.trim()) return alert('Vul je naam in.');
     setSubmitting(true);
-    const { error: err } = await supabase.from('kitten_interests').insert([{
-      cat_id: interestFor.id,
-      litter_id: data.litter.id,
-      name: form.name.trim(),
-      contact: form.contact.trim() || null,
-      message: form.message.trim() || null,
-      status: 'nieuw',
-    }]);
+    let err = null;
+    try {
+      const res = await fetch('/api/public/interest', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          token,
+          cat_id: interestFor.id,
+          name: form.name.trim(),
+          contact: form.contact.trim(),
+          message: form.message.trim(),
+        }),
+      });
+      if (!res.ok) err = true;
+    } catch { err = true; }
     setSubmitting(false);
     if (err) { alert('Er ging iets mis. Probeer het later opnieuw.'); return; }
     setSentFor((s) => [...s, interestFor.id]);
