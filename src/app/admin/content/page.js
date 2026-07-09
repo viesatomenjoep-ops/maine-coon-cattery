@@ -81,7 +81,7 @@ function SectionHeader({ title, hidden, onToggle }) {
 }
 
 export default function ContentEditor() {
-  const { siteContent, saveSiteContent } = useStore();
+  const { siteContent, saveSiteContent, currentTenant } = useStore();
   const [data, setData] = useState(null);
   const [saving, setSaving] = useState(false);
 
@@ -135,12 +135,25 @@ export default function ContentEditor() {
 
   return (
     <div className="pb-32 max-w-[1400px] mx-auto">
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex items-center justify-between mb-4">
         <PageHead label="CMS" title="Visuele Website Editor" />
         <Btn variant="brass" onClick={handleSave} className="shadow-lux fixed bottom-8 right-8 z-50 text-lg px-8 py-4 rounded-full">
           {saving ? 'Opslaan...' : '💾 Wijzigingen Opslaan'}
         </Btn>
       </div>
+
+      {currentTenant?.slug && (
+        <div className="mb-8 flex flex-col gap-2 rounded-2xl border border-forest-900/10 bg-white p-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="min-w-0">
+            <p className="text-sm font-semibold text-forest-900">🌍 Jouw openbare website</p>
+            <p className="truncate text-xs text-forest-600 font-mono">{typeof window !== 'undefined' ? `${window.location.origin}/site/${currentTenant.slug}` : `/site/${currentTenant.slug}`}</p>
+          </div>
+          <div className="flex shrink-0 gap-2">
+            <a href={`/site/${currentTenant.slug}`} target="_blank" rel="noreferrer" className="inline-flex items-center rounded-xl border border-forest-900/15 bg-white px-4 py-2 text-sm font-semibold text-forest-700 transition hover:bg-forest-50">Bekijk site</a>
+            <button onClick={() => { navigator.clipboard.writeText(`${window.location.origin}/site/${currentTenant.slug}`); alert('Website-link gekopieerd!'); }} className="inline-flex items-center rounded-xl bg-brass-400 px-4 py-2 text-sm font-semibold text-forest-950 transition hover:bg-brass-300">Kopieer link</button>
+          </div>
+        </div>
+      )}
 
       <p className="mb-12 max-w-3xl text-sm text-forest-700/70 bg-white p-4 rounded-xl border border-forest-900/10 shadow-sm">
         Pas hier de teksten en afbeeldingen aan. Klik op teksten om ze te bewerken en houd je muis over een foto om die te vervangen of te verwijderen. Met de knop rechtsboven elke sectie kun je een hele sectie verbergen op de website. Vergeet niet op <strong>Wijzigingen Opslaan</strong> te klikken.

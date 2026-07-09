@@ -186,8 +186,9 @@ CREATE TABLE IF NOT EXISTS public.push_subscriptions (
 );
 
 -- 3.9 SITE CONTENT (HOMEPAGE TEXTS)
+-- Per-tenant website-content: uniek op (tenant_id, key) — zie migratie 20260709190000.
 CREATE TABLE IF NOT EXISTS public.site_content (
-  key text PRIMARY KEY,
+  key text,
   content jsonb NOT NULL DEFAULT '{}'::jsonb,
   created_at timestamp with time zone DEFAULT current_timestamp,
   updated_at timestamp with time zone DEFAULT current_timestamp

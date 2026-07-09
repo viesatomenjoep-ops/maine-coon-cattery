@@ -95,7 +95,11 @@ export function StoreProvider({ children }) {
         const { data: iData } = await onTenant(supabase.from('kitten_interests').select('*')).order('created_at', { ascending: false });
         if (iData) setInterests(iData);
 
-        const { data: sData, error: sErr } = await onTenant(supabase.from('site_content').select('*').eq('key', 'homepage_nl')).single();
+        // Site-content per tenant: ingelogd → eigen cattery; anoniem (homepage /)
+        // → de eerste/hoofd-cattery.
+        let scQ = supabase.from('site_content').select('*').eq('key', 'homepage_nl');
+        if (tid) scQ = scQ.eq('tenant_id', tid);
+        const { data: sData } = await scQ.order('created_at', { ascending: true }).limit(1).maybeSingle();
         if (sData?.content) setSiteContent(sData.content);
       } catch (err) {
         console.error("Supabase fetch error:", err);
@@ -355,7 +359,13 @@ export function StoreProvider({ children }) {
   // ---- site content ----
   const saveSiteContent = async (newContent) => {
     setSiteContent(newContent);
-    await supabase.from('site_content').upsert(withTid({ key: 'homepage_nl', content: newContent }));
+    const row = withTid({ key: 'homepage_nl', content: newContent });
+    // Per-tenant opslaan (uniek op tenant_id + key). Fallback naar de oude
+    // sleutel als de nieuwe index nog niet is toegepast.
+    let { error } = await supabase.from('site_content').upsert(row, { onConflict: 'tenant_id,key' });
+    if (error) {
+      await supabase.from('site_content').upsert(row, { onConflict: 'key' });
+    }
   };
 
   // ---- documents ----
