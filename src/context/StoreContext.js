@@ -11,6 +11,7 @@ export function StoreProvider({ children }) {
   const [documents, setDocuments] = useState([]);
   const [media, setMedia] = useState([]);
   const [customers, setCustomers] = useState([]);
+  const [interests, setInterests] = useState([]);
   const [siteContent, setSiteContent] = useState({});
 
   // Initiele data fetch
@@ -39,7 +40,8 @@ export function StoreProvider({ children }) {
               id: v.id,
               type: v.vaccine_name,
               date: v.vaccination_date,
-              note: v.veterinarian_info
+              note: v.veterinarian_info,
+              due: v.next_due_date || null
             })) || [];
             
             const catWeights = wData?.filter(w => w.cat_id === k.id).map(w => ({
@@ -55,6 +57,9 @@ export function StoreProvider({ children }) {
 
         const { data: cData } = await supabase.from('customers').select('*').order('created_at', { ascending: false });
         if (cData) setCustomers(cData);
+
+        const { data: iData } = await supabase.from('kitten_interests').select('*').order('created_at', { ascending: false });
+        if (iData) setInterests(iData);
 
         const { data: sData, error: sErr } = await supabase.from('site_content').select('*').eq('key', 'homepage_nl').single();
         if (sData?.content) setSiteContent(sData.content);
@@ -358,17 +363,26 @@ export function StoreProvider({ children }) {
     const post = {
       cat_id: catId,
       vaccine_name: entry.type,
-      vaccination_date: entry.date,
-      veterinarian_info: entry.note
+      vaccination_date: entry.date || null,
+      veterinarian_info: entry.note,
+      next_due_date: entry.due || null
     };
-    const { data, error } = await supabase.from('vaccinations').insert([post]).select();
+    let { data, error } = await supabase.from('vaccinations').insert([post]).select();
+    // Veilige fallback als de kolom next_due_date nog niet bestaat in de database.
+    if (error && /next_due_date/.test(error.message || '')) {
+      const { next_due_date, ...legacy } = post;
+      ({ data, error } = await supabase.from('vaccinations').insert([legacy]).select());
+    }
     if (!error && data) {
-      const dbEntry = { id: data[0].id, ...entry };
+      const dbEntry = { id: data[0].id, ...entry, due: entry.due || null };
       setKittens(s => s.map(k => {
         if (k.id === catId) return { ...k, medical: [...(k.medical || []), dbEntry] };
         return k;
       }));
+      return { success: true };
     }
+    console.error('Error adding medical:', error);
+    return { error };
   };
 
   const deleteMedical = async (catId, index) => {
@@ -425,11 +439,23 @@ export function StoreProvider({ children }) {
     }));
   };
 
+  // ---- interesse-aanvragen (leads vanaf de publieke advertentielink) ----
+  const updateInterest = async (id, patch) => {
+    const { error } = await supabase.from('kitten_interests').update(patch).eq('id', id);
+    if (!error) setInterests(s => s.map(i => (i.id === id ? { ...i, ...patch } : i)));
+    return { error };
+  };
+  const deleteInterest = async (id) => {
+    await supabase.from('kitten_interests').delete().eq('id', id);
+    setInterests(s => s.filter(i => i.id !== id));
+  };
+
   const breedingCats = kittens.filter(k => k.is_own_breeding_cat);
 
   return (
     <StoreContext.Provider value={{
-      news, litters, kittens, breedingCats, documents, media, customers, siteContent,
+      news, litters, kittens, breedingCats, documents, media, customers, interests, siteContent,
+      updateInterest, deleteInterest,
       addNews, deleteNews, addLitter, updateLitter, deleteLitter,
       addKitten, updateKitten, deleteKitten,
       addBreedingCat, updateBreedingCat,

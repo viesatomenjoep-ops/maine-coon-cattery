@@ -32,6 +32,30 @@ const KITTEN_STATUSES = [
 ];
 const norm = (s) => (s || '').toLowerCase();
 
+// Toon het geslacht altijd netjes als "Kater" of "Poes", ongeacht hoe het is opgeslagen.
+const sexLabel = (g) => {
+  const v = (g || '').toLowerCase();
+  if (/kater|mann|\bmale\b|\bm\b/.test(v)) return 'Kater';
+  if (/poes|vrouw|female|\bf\b/.test(v)) return 'Poes';
+  return g || 'Onbekend';
+};
+
+const KITTEN_STATUS_META = {
+  beschikbaar: { label: 'Beschikbaar', cls: 'bg-emerald-100 text-emerald-700' },
+  gereserveerd: { label: 'Gereserveerd', cls: 'bg-amber-100 text-amber-700' },
+  verkocht: { label: 'Verkocht', cls: 'bg-red-100 text-red-700' },
+  houden: { label: 'Houden', cls: 'bg-sky-100 text-sky-700' },
+};
+function KittenStatusBadge({ status }) {
+  const m = KITTEN_STATUS_META[norm(status)] || KITTEN_STATUS_META.beschikbaar;
+  return (
+    <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold uppercase tracking-wide ${m.cls}`}>
+      <span className="h-1.5 w-1.5 rounded-full bg-current opacity-70" />
+      {m.label}
+    </span>
+  );
+}
+
 const EMPTY_KIT = {
   litter_id: '', name: '', sex: 'Kater', color: '', pattern: '', status: 'beschikbaar',
   chip_no: '', registration_no: '', birth_weight_g: '', ems_code: '', reserved_by: '',
@@ -41,7 +65,7 @@ const EMPTY_KIT = {
 export default function LittersPage() {
   const {
     litters = [], kittens = [], documents = [],
-    deleteLitter, addKitten, updateKitten, deleteKitten, deleteDocument,
+    deleteLitter, addKitten, deleteKitten, deleteDocument,
   } = useStore();
 
   const [mode, setMode] = useState(null); // null = tegelkeuze, 'litter' of 'kitten'
@@ -104,8 +128,12 @@ export default function LittersPage() {
     <>
       <PageHead label="Fokkerij" title="Nestjes & Kittens" />
 
-      <div ref={formRef} className="scroll-mt-24">
+      <div className="flex flex-col">
+
+      <div ref={formRef} className="order-2 mt-12 scroll-mt-24">
         {mode === null && (
+          <>
+          <h2 className="mb-4 font-display text-2xl text-forest-900">Nieuw aanmaken</h2>
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
             <button
               type="button"
@@ -137,6 +165,7 @@ export default function LittersPage() {
               <span className="mt-auto text-sm font-semibold text-brass-700">Openen →</span>
             </button>
           </div>
+          </>
         )}
 
         {mode === 'litter' && (
@@ -201,8 +230,8 @@ export default function LittersPage() {
         )}
       </div>
 
-      {/* Litters & Kittens Tree */}
-      <div className="mt-12 space-y-8">
+      {/* Litters & Kittens Tree — advertenties eerst */}
+      <div className="order-1 space-y-8">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h2 className="font-display text-2xl text-forest-900">Nestjes overzicht</h2>
           <Btn variant="solid" onClick={openNewLitter} className="!px-4 !py-2 !text-sm">+ Nieuw nestje</Btn>
@@ -241,6 +270,16 @@ export default function LittersPage() {
                 </div>
                 <div className="flex flex-wrap gap-3">
                   <Link href={`/admin/litters/${lit.id}`} className="inline-flex items-center rounded-xl bg-emerald-600 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-emerald-700">Open nestje</Link>
+                  <button
+                    onClick={() => {
+                      if (!lit.share_token) return alert('De deel-link wordt actief zodra de database-update (share_token) is toegepast.');
+                      navigator.clipboard.writeText(`${window.location.origin}/nestje/${lit.share_token}`);
+                      alert('Advertentielink van dit nestje gekopieerd! Deel hem gerust via WhatsApp.');
+                    }}
+                    className="inline-flex items-center rounded-xl bg-forest-800 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-forest-900"
+                  >
+                    Deel-advertentie
+                  </button>
                   <Btn variant="solid" onClick={() => openLitter(lit.id)} className="!px-3 !py-1.5 !text-xs">Nestje bewerken</Btn>
                   <Btn variant="brass" onClick={() => openNewKitten(lit.id)} className="!px-3 !py-1.5 !text-xs">+ Kitten toevoegen</Btn>
                   <Btn variant="ghost" onClick={() => { if (confirm('Weet je zeker dat je dit nestje wilt verwijderen?')) deleteLitter(lit.id); }} className="!px-3 !py-1.5 !text-xs !text-red-600 hover:!bg-red-50">Verwijderen</Btn>
@@ -251,46 +290,41 @@ export default function LittersPage() {
                 {nestKittens.length === 0 ? (
                   <p className="p-5 text-sm italic text-forest-600">Nog geen kittens in dit nestje.</p>
                 ) : (
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-sm">
-                      <thead>
-                        <tr className="border-b border-forest-900/5 bg-white text-left text-xs uppercase tracking-wide text-forest-600/60">
-                          <th className="w-12 py-3 pl-5 pr-4">Foto</th>
-                          <th className="pr-4">Kitten Naam</th>
-                          <th className="pr-4">Geslacht</th>
-                          <th className="pr-4">Vacht (Kleur & Patroon)</th>
-                          <th className="pr-4">Status</th>
-                          <th className="pr-4 text-right">Prijs (NL)</th>
-                          <th className="pr-5 text-right">Acties</th>
-                        </tr>
-                      </thead>
-                      <tbody className="bg-white">
-                        {nestKittens.map((k) => (
-                          <tr key={k.id} className="border-b border-forest-900/5 transition last:border-none hover:bg-forest-50/50">
-                            <td className="py-2 pl-5 pr-4">
-                              {k.cover_image ? (
-                                <img src={k.cover_image} className="h-10 w-10 rounded bg-forest-100 object-cover" alt="" />
-                              ) : (
-                                <div className="h-10 w-10 rounded border border-forest-100 bg-forest-50" />
-                              )}
-                            </td>
-                            <td className="pr-4 font-semibold text-forest-900">{k.name}</td>
-                            <td className="pr-4 text-forest-700">{k.gender || k.sex}</td>
-                            <td className="pr-4 text-forest-700">{[k.color, k.pattern].filter(Boolean).join(' ') || 'Onbekend'}</td>
-                            <td className="pr-4">
-                              <Select value={norm(k.status)} onChange={(e) => updateKitten(k.id, { status: e.target.value })} className="!cursor-pointer !border-none !bg-transparent !px-0 !py-1 !text-xs font-medium text-brass-700">
-                                {KITTEN_STATUSES.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
-                              </Select>
-                            </td>
-                            <td className="pr-4 text-right text-forest-800">€ {k.price_nl || 0}</td>
-                            <td className="flex h-auto flex-col items-start justify-end gap-2 py-2 pr-5 text-right sm:h-[57px] sm:flex-row sm:items-center sm:gap-3 sm:py-0">
-                              <Link href={`/admin/cats/${k.id}`} className="inline-flex items-center rounded-xl bg-emerald-600 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-emerald-700">Open dossier</Link>
-                              <button onClick={() => { if (confirm('Weet je zeker dat je dit kitten wilt verwijderen?')) deleteKitten(k.id); }} className="inline-flex items-center rounded-xl border border-red-200 px-3 py-1.5 text-xs font-medium text-red-600 transition hover:bg-red-50">Verwijderen</button>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                  <div className="divide-y divide-forest-900/10 bg-white">
+                    {nestKittens.map((k) => (
+                      <div key={k.id} className="group relative flex flex-col gap-4 p-5 transition hover:bg-forest-50/40 sm:flex-row sm:items-center">
+                        {/* Hele kaart is klikbaar -> volledig dossier */}
+                        <Link href={`/admin/cats/${k.id}`} className="absolute inset-0 z-10" aria-label={`Open dossier van ${k.name}`} />
+
+                        {/* Foto */}
+                        {k.cover_image ? (
+                          <img src={k.cover_image} className="relative z-0 h-24 w-24 shrink-0 rounded-xl bg-forest-100 object-cover shadow-sm sm:h-20 sm:w-20" alt={k.name} />
+                        ) : (
+                          <div className="relative z-0 flex h-24 w-24 shrink-0 items-center justify-center rounded-xl border border-forest-100 bg-forest-50 text-[11px] text-forest-400 sm:h-20 sm:w-20">Geen foto</div>
+                        )}
+
+                        {/* Advertentie-info */}
+                        <div className="relative z-0 min-w-0 flex-1">
+                          <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                            <h4 className="font-display text-xl text-forest-950">{k.name}</h4>
+                            <KittenStatusBadge status={k.status} />
+                          </div>
+                          <p className="mt-1 text-sm text-forest-700">
+                            {sexLabel(k.gender || k.sex)}
+                            <span className="mx-2 opacity-40">|</span>
+                            {[k.color, k.pattern].filter(Boolean).join(' ') || 'Vacht onbekend'}
+                            <span className="mx-2 opacity-40">|</span>
+                            <span className="font-medium text-forest-900">€ {k.price_nl || 0}</span>
+                          </p>
+                        </div>
+
+                        {/* Acties */}
+                        <div className="relative z-20 flex shrink-0 flex-col gap-2 sm:flex-row sm:items-center">
+                          <Link href={`/admin/cats/${k.id}`} className="inline-flex items-center justify-center rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-emerald-700">Open dossier</Link>
+                          <button onClick={() => { if (confirm('Weet je zeker dat je dit kitten wilt verwijderen?')) deleteKitten(k.id); }} className="inline-flex items-center justify-center rounded-xl border border-red-200 px-4 py-2.5 text-sm font-medium text-red-600 transition hover:bg-red-50">Verwijderen</button>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 )}
 
@@ -306,6 +340,8 @@ export default function LittersPage() {
             </Card>
           );
         })}
+      </div>
+
       </div>
     </>
   );

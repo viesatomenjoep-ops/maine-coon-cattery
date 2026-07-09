@@ -5,7 +5,7 @@ import { rotateImageFile, isImageFile } from '@/lib/rotateImage';
 const tileBase = 'inline-flex items-center justify-center gap-2.5 rounded-xl border px-4 py-2.5 text-sm font-medium text-ink transition disabled:opacity-50';
 const btnTile = `${tileBase} border-stone-300/80 bg-gradient-to-b from-stone-100 to-stone-200/90 shadow-sm hover:from-stone-200 hover:to-stone-300/80 hover:border-stone-400/60`;
 const btnGhost = `${tileBase} border-forest-900/15 bg-white text-ink hover:bg-stone-50`;
-const btnSolid = `${tileBase} bg-ink text-cream-100 hover:bg-ink/90`;
+const btnSolid = `${tileBase} !text-white border-emerald-600 bg-emerald-600 hover:bg-emerald-700 hover:border-emerald-700`;
 
 function FolderIcon({ className = 'h-4 w-4' }) {
   return (

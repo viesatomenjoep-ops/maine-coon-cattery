@@ -49,6 +49,19 @@ CREATE TABLE IF NOT EXISTS public.litters (
     status VARCHAR(50) DEFAULT 'verwacht',
     expected_count INTEGER,
     cover_image_url TEXT,
+    share_token UUID DEFAULT uuid_generate_v4(),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- 3.2b INTERESSE-AANVRAGEN (KITTEN_INTERESTS) — leads vanaf de publieke advertentielink
+CREATE TABLE IF NOT EXISTS public.kitten_interests (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    cat_id UUID REFERENCES public.cats(id) ON DELETE CASCADE,
+    litter_id UUID REFERENCES public.litters(id) ON DELETE SET NULL,
+    name VARCHAR(255) NOT NULL,
+    contact VARCHAR(255),
+    message TEXT,
+    status VARCHAR(30) DEFAULT 'nieuw',
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
@@ -107,6 +120,7 @@ CREATE TABLE IF NOT EXISTS public.vaccinations (
     batch_number VARCHAR(100),
     vaccination_date DATE,
     valid_until DATE,
+    next_due_date DATE,
     veterinarian_info TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
 import { StoreProvider } from '@/context/StoreContext';
 import { Logo, PawMark } from '@/components/ui';
+import TreatmentReminders from '@/components/admin/TreatmentReminders';
 
 const NAV = [
   { href: '/admin', label: 'Startscherm', icon: 'grid' },
@@ -98,7 +99,10 @@ export default function AdminLayout({ children }) {
           
           <div className="w-[58px]" />
         </header>
-        <div className="p-4 sm:p-6 md:p-10">{children}</div>
+        <div className="p-4 sm:p-6 md:p-10">
+          <TreatmentReminders />
+          {children}
+        </div>
       </div>
     </div>
   );

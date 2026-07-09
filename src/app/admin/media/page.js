@@ -8,10 +8,50 @@ import jsPDF from 'jspdf';
 
 const NativeUploadWidget = AdminUpload;
 
+// Onderscheid: kitten (hoort bij een nestje), fokkater of fokpoes.
+const isMale = (g) => /kater|mann|\bmale\b|\bm\b/i.test(g || '');
+const isFemale = (g) => /poes|vrouw|female|\bf\b/i.test(g || '');
+const catGroup = (k) => (!k.is_own_breeding_cat ? 'kitten' : isMale(k.gender) ? 'kater' : isFemale(k.gender) ? 'poes' : 'overig');
+const GROUP_TABS = [
+  { key: 'kitten', label: 'Kitten', plural: 'kittens' },
+  { key: 'kater', label: 'Kater', plural: 'katers' },
+  { key: 'poes', label: 'Poes', plural: 'poezen' },
+];
+
+// Eerst het type kiezen (Kitten/Kater/Poes), daarna de specifieke kat.
+function CatPicker({ kittens, value, onChange }) {
+  const selected = kittens.find((k) => k.id === value);
+  const [type, setType] = useState(selected ? catGroup(selected) : 'kitten');
+  const list = kittens.filter((k) => catGroup(k) === type);
+  const tab = GROUP_TABS.find((t) => t.key === type) || GROUP_TABS[0];
+  return (
+    <div>
+      <div className="mb-2 flex flex-wrap gap-2">
+        {GROUP_TABS.map((t) => (
+          <button
+            key={t.key}
+            type="button"
+            onClick={() => { setType(t.key); onChange(''); }}
+            className={`rounded-full px-4 py-1.5 text-xs font-semibold uppercase tracking-wide transition ${type === t.key ? 'bg-forest-800 text-white' : 'border border-forest-900/15 bg-white text-forest-700 hover:bg-forest-50'}`}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
+      <Select value={value} onChange={(e) => onChange(e.target.value)}>
+        <option value="">Kies een {tab.label.toLowerCase()}…</option>
+        {list.map((k) => <option key={k.id} value={k.id}>{k.name}{k.color ? ` (${k.color})` : ''}</option>)}
+      </Select>
+      {list.length === 0 && <p className="mt-1.5 text-xs italic text-forest-500">Nog geen {tab.plural} gevonden.</p>}
+    </div>
+  );
+}
+
 export default function MediaDocumentenPage() {
   const { kittens, documents, media, addDocument, deleteDocument, addMedia, deleteMedia } = useStore();
-  const [targetMedical, setTargetMedical] = useState(kittens[0]?.id || '');
-  const [targetContract, setTargetContract] = useState(kittens[0]?.id || '');
+  const [targetMedical, setTargetMedical] = useState('');
+  const [targetContract, setTargetContract] = useState('');
+  const [archiveCat, setArchiveCat] = useState('');
   
   // States voor de previews na uploaden
   const [previewMedical, setPreviewMedical] = useState(null);
@@ -42,6 +82,9 @@ export default function MediaDocumentenPage() {
     ...documents.map(d => ({ ...d, isDoc: true, kittenName: kittens.find(k=>k.id===d.cat_id)?.name || 'Algemeen', label: d.document_type })),
     ...media.map(m => ({ ...m, isDoc: false, kittenName: 'Galerij', label: 'Algemeen' }))
   ].sort((a,b) => new Date(b.created_at) - new Date(a.created_at));
+
+  // Alleen de bestanden van de geselecteerde kat (kitten/kater/poes).
+  const catUploads = allUploads.filter((u) => u.cat_id === archiveCat);
 
   const [selectedItems, setSelectedItems] = useState([]);
 
@@ -137,15 +180,12 @@ export default function MediaDocumentenPage() {
           </div>
           
           <div className="flex-1 space-y-4">
-            <label className="block">
-              <span className="text-xs font-medium uppercase tracking-wide text-forest-700">Voor welk kitten?</span>
-              <Select value={targetMedical} onChange={(e)=>setTargetMedical(e.target.value)} className="mt-1.5">
-                <option value="">Selecteer een kitten...</option>
-                {kittens.map(k=><option key={k.id} value={k.id}>{k.name} ({k.color})</option>)}
-              </Select>
-            </label>
+            <div>
+              <span className="text-xs font-medium uppercase tracking-wide text-forest-700">Voor welke kat? Kies eerst het type.</span>
+              <div className="mt-1.5"><CatPicker kittens={kittens} value={targetMedical} onChange={setTargetMedical} /></div>
+            </div>
 
-            <NativeUploadWidget 
+            <NativeUploadWidget
               options={{ folder: `cattery_medical/${targetMedical || 'general'}`, accept: 'image/*,application/pdf' }}
               onSuccess={(res) => handleUploadSuccess('Medisch', targetMedical, res)}
             >
@@ -185,15 +225,12 @@ export default function MediaDocumentenPage() {
           </div>
           
           <div className="flex-1 space-y-4">
-            <label className="block">
-              <span className="text-xs font-medium uppercase tracking-wide text-forest-700">Voor welk kitten?</span>
-              <Select value={targetContract} onChange={(e)=>setTargetContract(e.target.value)} className="mt-1.5">
-                <option value="">Selecteer een kitten...</option>
-                {kittens.map(k=><option key={k.id} value={k.id}>{k.name}</option>)}
-              </Select>
-            </label>
+            <div>
+              <span className="text-xs font-medium uppercase tracking-wide text-forest-700">Voor welke kat? Kies eerst het type.</span>
+              <div className="mt-1.5"><CatPicker kittens={kittens} value={targetContract} onChange={setTargetContract} /></div>
+            </div>
 
-            <NativeUploadWidget 
+            <NativeUploadWidget
               options={{ folder: `cattery_contracts/${targetContract || 'general'}`, accept: 'application/pdf,image/*' }}
               onSuccess={(res) => handleUploadSuccess('Contract', targetContract, res)}
             >
@@ -274,11 +311,18 @@ export default function MediaDocumentenPage() {
           )}
         </div>
         
-        {allUploads.length === 0 ? (
-          <p className="text-forest-700">Nog geen documenten of media geüpload in de database.</p>
+        <Card>
+          <span className="text-xs font-medium uppercase tracking-wide text-forest-700">Bekijk bestanden van welke kat? Kies eerst het type.</span>
+          <div className="mt-1.5 max-w-md"><CatPicker kittens={kittens} value={archiveCat} onChange={setArchiveCat} /></div>
+        </Card>
+
+        {!archiveCat ? (
+          <p className="rounded-2xl border border-dashed border-forest-900/20 bg-white/60 py-10 text-center text-forest-600">Selecteer hierboven een kitten, kater of poes om de bijbehorende bestanden te zien.</p>
+        ) : catUploads.length === 0 ? (
+          <p className="text-forest-700">Nog geen documenten of media voor {kittens.find((k) => k.id === archiveCat)?.name || 'deze kat'}.</p>
         ) : (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {allUploads.map((doc) => {
+            {catUploads.map((doc) => {
               const url = doc.file_url || doc.media_url;
               return (
               <div key={doc.id} className={`flex items-center gap-4 rounded-xl border p-3 shadow-sm transition ${selectedItems.includes(doc.id) ? 'border-brass-400 bg-brass-50/50' : 'border-forest-900/10 bg-white hover:border-forest-900/20'}`}>

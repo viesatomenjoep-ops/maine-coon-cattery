@@ -93,13 +93,21 @@ export function DocumentList({ documents = [], onDelete }) {
 export default function DocumentUploader({ catId, kittenId, litterId, folder = 'cattery_documents', defaultType = 'overig', types, onUploaded }) {
   const { addDocumentFull } = useStore();
   const [docType, setDocType] = useState(defaultType);
+  const [customType, setCustomType] = useState('');
   const options = types && types.length ? DOC_TYPES.filter((t) => types.includes(t.value)) : DOC_TYPES;
   const [title, setTitle] = useState('');
   const [uploading, setUploading] = useState(false);
   const targetCatId = catId || kittenId || null;
+  // Bij "eigen sectie" gebruiken we de zelf ingetypte naam als documenttype.
+  const isCustom = docType === '__new__';
+  const effectiveType = isCustom ? customType.trim() : docType;
 
   const handleFile = async (file) => {
     if (!file) return;
+    if (isCustom && !effectiveType) {
+      alert('Vul eerst een naam in voor je eigen sectie.');
+      return;
+    }
     setUploading(true);
     try {
       const fd = new FormData();
@@ -111,7 +119,7 @@ export default function DocumentUploader({ catId, kittenId, litterId, folder = '
       const result = await addDocumentFull({
         cat_id: targetCatId,
         litter_id: litterId || null,
-        document_type: docType,
+        document_type: effectiveType || 'overig',
         title: title || file.name,
         file_url: data.url,
         cloudinary_public_id: data.public_id,
@@ -130,13 +138,24 @@ export default function DocumentUploader({ catId, kittenId, litterId, folder = '
 
   return (
     <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
-      <label className="block sm:w-40">
-        <span className="text-xs font-medium uppercase tracking-wide text-forest-700">Type</span>
+      <label className="block sm:w-48">
+        <span className="text-xs font-medium uppercase tracking-wide text-forest-700">Type / sectie</span>
         <div className="mt-1.5">
           <Select value={docType} onChange={(e) => setDocType(e.target.value)}>
             {options.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
+            <option value="__new__">➕ Eigen sectie…</option>
           </Select>
         </div>
+        {isCustom && (
+          <div className="mt-2">
+            <Input
+              value={customType}
+              onChange={(e) => setCustomType(e.target.value)}
+              placeholder="Naam eigen sectie, bijv. Verzekering"
+              autoFocus
+            />
+          </div>
+        )}
       </label>
       <label className="block flex-1">
         <span className="text-xs font-medium uppercase tracking-wide text-forest-700">Titel (optioneel)</span>
@@ -148,6 +167,7 @@ export default function DocumentUploader({ catId, kittenId, litterId, folder = '
         accept="image/*,application/pdf"
         disabled={uploading}
         onFileReady={handleFile}
+        className="!gap-3 sm:!gap-4"
         uploadLabel={uploading ? 'Uploaden…' : '+ Document'}
         cameraLabel="Open camera"
         uploadClassName={`inline-flex cursor-pointer items-center justify-center whitespace-nowrap rounded-xl bg-brass-400 px-5 py-2.5 text-sm font-medium text-forest-950 transition hover:bg-brass-300 ${uploading ? 'opacity-60' : ''}`}

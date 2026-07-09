@@ -3,6 +3,7 @@ import { useState, useEffect, use } from 'react';
 import { Logo, PawMark } from '@/components/ui';
 import { supabase } from '@/lib/supabase';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { treatmentIcon, urgency, formatDate } from '@/lib/treatments';
 
 // Helper component for updates
 function TimelineUpdate({ update }) {
@@ -62,11 +63,17 @@ export default function CustomerPortal({ params }) {
 
       const { data: allMedia } = await supabase.from('media').select('*').order('created_at', { ascending: false });
       const { data: allDocs } = await supabase.from('documents').select('*').order('created_at', { ascending: false });
+      const { data: allVaccs } = await supabase.from('vaccinations').select('*').in('cat_id', catIds.length ? catIds : ['00000000-0000-0000-0000-000000000000']);
 
       const kittensWithEverything = kittensWithWeights.map(k => {
         const catMedia = allMedia?.filter(m => m.cat_id === k.id || m.media_url?.includes(k.id)) || [];
         const catDocs = allDocs?.filter(d => d.cat_id === k.id) || [];
-        return { ...k, media: catMedia, documents: catDocs };
+        // Aankomende zorg: geplande ontworming/inenting (next_due_date in de toekomst of net verstreken).
+        const treatments = (allVaccs || [])
+          .filter(v => v.cat_id === k.id && v.next_due_date)
+          .map(v => ({ type: v.vaccine_name, due: v.next_due_date, note: v.veterinarian_info }))
+          .sort((a, b) => new Date(a.due) - new Date(b.due));
+        return { ...k, media: catMedia, documents: catDocs, treatments };
       });
 
       const litterIds = (littersData || []).map(l => l.id);
@@ -219,6 +226,30 @@ export default function CustomerPortal({ params }) {
                               </button>
                             </div>
                           ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Aankomende zorg (gezondheidsplanning) */}
+                    {k.treatments && k.treatments.length > 0 && (
+                      <div className="mt-6 pt-6 border-t border-forest-900/10">
+                        <h4 className="text-sm font-bold uppercase tracking-wider text-forest-800 mb-4">Aankomende zorg</h4>
+                        <div className="space-y-2">
+                          {k.treatments.map((t, i) => {
+                            const u = urgency(t.due);
+                            return (
+                              <div key={i} className="flex items-center justify-between gap-3 rounded-xl bg-white p-3 border border-forest-900/10 shadow-sm">
+                                <div className="flex items-center gap-3 min-w-0">
+                                  <span className="text-xl">{treatmentIcon(t.type)}</span>
+                                  <div className="min-w-0">
+                                    <p className="text-sm font-semibold text-forest-900 truncate">{t.type}{t.note ? ` · ${t.note}` : ''}</p>
+                                    <p className="text-xs text-forest-600">{formatDate(t.due)}</p>
+                                  </div>
+                                </div>
+                                {u && <span className={`shrink-0 rounded-full border px-2.5 py-0.5 text-[10px] font-semibold ${u.cls}`}>{u.label}</span>}
+                              </div>
+                            );
+                          })}
                         </div>
                       </div>
                     )}

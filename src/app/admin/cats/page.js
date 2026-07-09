@@ -1,11 +1,70 @@
 'use client';
 import Link from 'next/link';
 import { useStore } from '@/context/StoreContext';
-import { PageHead, Card, Btn } from '@/components/admin';
-import { StatusPill } from '@/components/ui';
+import { PageHead, Btn } from '@/components/admin';
+
+const isMale = (g) => /kater|mann|\bmale\b|\bm\b/i.test(g || '');
+const isFemale = (g) => /poes|vrouw|female|\bf\b/i.test(g || '');
+const sexLabel = (g) => (isMale(g) ? 'Kater' : isFemale(g) ? 'Poes' : (g || 'Onbekend'));
+const vachtLabel = (k) => [k.color, k.pattern].filter(Boolean).join(' ') || 'Maine Coon';
+
+function Badge({ children, cls }) {
+  return (
+    <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold uppercase tracking-wide ${cls}`}>
+      <span className="h-1.5 w-1.5 rounded-full bg-current opacity-70" />
+      {children}
+    </span>
+  );
+}
+
+function CatCard({ k, badge, subtitle }) {
+  return (
+    <div className="group relative flex items-center gap-4 rounded-2xl border border-forest-900/15 bg-white p-5 shadow-soft transition hover:border-brass-400 hover:shadow-md">
+      <Link href={`/admin/cats/${k.id}`} className="absolute inset-0 z-10" aria-label={`Beheer dossier van ${k.name}`} />
+      {k.cover_image ? (
+        <img src={k.cover_image} alt={k.name} className="relative z-0 h-16 w-16 shrink-0 rounded-xl object-cover shadow-sm border border-forest-900/10" />
+      ) : (
+        <div className="relative z-0 flex h-16 w-16 shrink-0 items-center justify-center rounded-xl border border-forest-900/10 bg-forest-50 text-forest-300">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="h-6 w-6"><rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="9" cy="9" r="2" /><path d="m21 15-5-5L5 21" /></svg>
+        </div>
+      )}
+      <div className="relative z-0 min-w-0 flex-1">
+        <div className="flex flex-wrap items-center gap-2">
+          <p className="font-display text-xl font-semibold text-forest-950 truncate">{k.name}</p>
+          {badge}
+        </div>
+        <p className="mt-1 text-sm text-forest-600 truncate">{subtitle}</p>
+      </div>
+      <span className="relative z-0 hidden shrink-0 items-center whitespace-nowrap rounded-xl bg-brass-400 px-4 py-2.5 text-sm font-medium text-forest-950 shadow-sm sm:inline-flex">Beheer dossier →</span>
+    </div>
+  );
+}
+
+function CatGroup({ title, hint, count, children }) {
+  return (
+    <section className="mb-10">
+      <div className="mb-4 flex items-baseline gap-3">
+        <h2 className="font-display text-xl text-forest-900">{title}</h2>
+        <span className="rounded-full bg-forest-900/5 px-2.5 py-0.5 text-xs font-semibold text-forest-600">{count}</span>
+        {hint && <span className="text-sm text-forest-500">{hint}</span>}
+      </div>
+      <div className="grid gap-4 grid-cols-1 xl:grid-cols-2">{children}</div>
+    </section>
+  );
+}
 
 export default function CatsAdmin() {
-  const { kittens } = useStore();
+  const { kittens, litters = [] } = useStore();
+
+  const breedingFemales = kittens.filter((k) => k.is_own_breeding_cat && isFemale(k.gender));
+  const breedingMales = kittens.filter((k) => k.is_own_breeding_cat && isMale(k.gender));
+  const breedingOther = kittens.filter((k) => k.is_own_breeding_cat && !isFemale(k.gender) && !isMale(k.gender));
+  const litterKittens = kittens.filter((k) => !k.is_own_breeding_cat);
+  const litterName = (id) => litters.find((l) => l.id === id)?.name;
+  const litterParents = (id) => {
+    const l = litters.find((x) => x.id === id);
+    return l ? `${l.sire_name || 'onbekend'} × ${l.dam_name || 'onbekend'}` : null;
+  };
 
   return (
     <>
@@ -59,38 +118,59 @@ export default function CatsAdmin() {
         </div>
       </div>
 
-      <h2 className="mb-4 font-display text-xl text-forest-900">Katten &amp; dossiers</h2>
-      <Card className="bg-transparent border-none p-0 shadow-none">
-        <div className="grid gap-6 grid-cols-1 md:grid-cols-2 2xl:grid-cols-3">
-          {kittens.map((k) => (
-            <div key={k.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-5 rounded-2xl border border-forest-900/15 bg-white p-6 shadow-soft transition hover:border-brass-400 hover:shadow-md">
-              <div className="flex min-w-0 items-center gap-4">
-                {k.cover_image ? (
-                  <img src={k.cover_image} alt={k.name} className="h-14 w-14 shrink-0 rounded-xl object-cover shadow-sm border border-forest-900/10" />
-                ) : (
-                  <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl border border-forest-900/10 bg-forest-50 text-forest-300">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="h-6 w-6"><rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="9" cy="9" r="2" /><path d="m21 15-5-5L5 21" /></svg>
-                  </div>
-                )}
-                <div className="min-w-0">
-                  <p className="font-display text-2xl font-semibold text-forest-950 truncate">{k.name}</p>
-                  <p className="text-xs font-bold uppercase tracking-widest text-forest-500 mt-1 truncate">{k.sex}</p>
-                </div>
-              </div>
-              <Link href={`/admin/cats/${k.id}`} className="shrink-0 w-full sm:w-auto">
-                <Btn variant="brass" className="w-full sm:w-auto whitespace-nowrap px-5 py-3 text-sm shadow-sm">
-                  Beheer Dossier →
-                </Btn>
-              </Link>
-            </div>
-          ))}
+      <div className="mb-2 flex items-baseline gap-2">
+        <h2 className="font-display text-2xl text-forest-900">Katten &amp; dossiers</h2>
+      </div>
+      <p className="mb-6 text-sm text-forest-600">Overzichtelijk gesorteerd: eerst je fokdieren (de moeders en vaders), daarna de kittens per nestje. Klik op een kaart om het volledige dossier te openen.</p>
+
+      {kittens.length === 0 ? (
+        <div className="rounded-2xl border border-forest-900/10 bg-white py-12 text-center text-forest-600">
+          Geen katten gevonden in de database.
         </div>
-        {kittens.length === 0 && (
-          <div className="rounded-2xl border border-forest-900/10 bg-white py-12 text-center text-forest-600">
-            Geen katten gevonden in de database.
-          </div>
-        )}
-      </Card>
+      ) : (
+        <>
+          {breedingFemales.length > 0 && (
+            <CatGroup title="Fokpoezen" hint="de moeders" count={breedingFemales.length}>
+              {breedingFemales.map((k) => (
+                <CatCard key={k.id} k={k} badge={<Badge cls="bg-rose-100 text-rose-700">Fokpoes · moeder</Badge>} subtitle={`Poes · ${vachtLabel(k)}`} />
+              ))}
+            </CatGroup>
+          )}
+
+          {breedingMales.length > 0 && (
+            <CatGroup title="Fokkaters" hint="de vaders" count={breedingMales.length}>
+              {breedingMales.map((k) => (
+                <CatCard key={k.id} k={k} badge={<Badge cls="bg-sky-100 text-sky-700">Fokkater · vader</Badge>} subtitle={`Kater · ${vachtLabel(k)}`} />
+              ))}
+            </CatGroup>
+          )}
+
+          {breedingOther.length > 0 && (
+            <CatGroup title="Overige fokdieren" count={breedingOther.length}>
+              {breedingOther.map((k) => (
+                <CatCard key={k.id} k={k} badge={<Badge cls="bg-stone-100 text-stone-700">Fokdier</Badge>} subtitle={`${sexLabel(k.gender)} · ${vachtLabel(k)}`} />
+              ))}
+            </CatGroup>
+          )}
+
+          {litterKittens.length > 0 && (
+            <CatGroup title="Kittens" hint="horen bij een nestje" count={litterKittens.length}>
+              {litterKittens.map((k) => {
+                const nest = litterName(k.litter_id);
+                const parents = litterParents(k.litter_id);
+                return (
+                  <CatCard
+                    key={k.id}
+                    k={k}
+                    badge={<Badge cls="bg-emerald-100 text-emerald-700">Kitten · {sexLabel(k.gender)}</Badge>}
+                    subtitle={nest ? `Nestje: ${nest}${parents ? ` (${parents})` : ''}` : `${sexLabel(k.gender)} · nog geen nestje gekoppeld`}
+                  />
+                );
+              })}
+            </CatGroup>
+          )}
+        </>
+      )}
     </>
   );
 }
