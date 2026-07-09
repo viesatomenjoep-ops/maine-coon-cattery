@@ -105,6 +105,11 @@ export default function CustomerPortal({ params }) {
                     <h3 className="font-display text-xl text-forest-900">{k.name}</h3>
                     <p className="text-sm text-forest-600">{k.color} · {k.gender}</p>
                     <p className="text-sm text-forest-600 mt-2 font-medium">Status: {k.status}</p>
+                    {k.price != null && (
+                      <p className="mt-2 inline-flex items-center gap-2 rounded-full bg-brass-100 px-3 py-1 text-sm font-bold text-brass-800">
+                        Prijs: € {k.price}{k.nationality ? ` (${k.nationality})` : ''}
+                      </p>
+                    )}
 
                     {/* Weights Chart */}
                     {k.weights && k.weights.length > 0 && (
