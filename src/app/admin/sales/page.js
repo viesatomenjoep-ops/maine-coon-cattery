@@ -346,6 +346,8 @@ function LitterAdEditor({ litter, updateLitter }) {
 
       <Card>
         <h4 className="font-display text-lg text-forest-900">Nestje-gegevens</h4>
+        <label className="mt-4 block"><span className="text-xs font-medium uppercase tracking-wide text-forest-700">Naam van het nestje</span>
+          <Input defaultValue={litter.name || ''} onBlur={(e) => { if (e.target.value.trim() && e.target.value !== litter.name) updateLitter(litter.id, { name: e.target.value.trim() }); }} placeholder="Bijv. Verwacht nestje zomer 2026" className="mt-1" /></label>
         <div className="mt-4 grid gap-4 sm:grid-cols-3">
           <label className="block"><span className="text-xs font-medium uppercase tracking-wide text-forest-700">Verwacht op</span>
             <Input type="date" defaultValue={litter.date_of_birth || ''} onBlur={(e) => { if (e.target.value !== (litter.date_of_birth || '')) updateLitter(litter.id, { date_of_birth: e.target.value || null }); }} className="mt-1" /></label>
@@ -393,18 +395,27 @@ function LitterAdEditor({ litter, updateLitter }) {
 }
 
 export default function SalesPage() {
-  const { kittens, litters = [], updateKitten, updateLitter, customers = [], documents = [], media = [] } = useStore();
+  const { kittens, litters = [], updateKitten, updateLitter, addLitter, customers = [], documents = [], media = [] } = useStore();
 
   const saleKittens = kittens.filter((k) => !k.is_own_breeding_cat);
   const [mode, setMode] = useState('kitten');
   const [selectedId, setSelectedId] = useState('');
   const [litterId, setLitterId] = useState('');
+  const [creating, setCreating] = useState(false);
   const selected = saleKittens.find((k) => k.id === selectedId) || null;
   const selectedLitter = litters.find((l) => l.id === litterId) || null;
 
   const handleCopyLink = (token) => {
     navigator.clipboard.writeText(`${window.location.origin}/k/${token}`);
     alert('Klantenlink gekopieerd naar klembord!');
+  };
+
+  const createExpectedLitter = async () => {
+    setCreating(true);
+    const res = await addLitter({ name: 'Nieuw verwacht nestje', status: 'verwacht' });
+    setCreating(false);
+    if (res?.error) return alert('Aanmaken mislukt: ' + (res.error.message || ''));
+    if (res?.data) setLitterId(res.data.id);
   };
 
   return (
@@ -460,12 +471,15 @@ export default function SalesPage() {
       ) : (
         <>
           <Card className="mb-8">
-            <div className="flex items-center justify-between">
-              <h3 className="font-display text-lg text-forest-900">1. Selecteer een nestje</h3>
-              {selectedLitter && <button onClick={() => setLitterId('')} className="text-xs font-semibold text-brass-600 hover:underline">Ander nestje kiezen</button>}
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <h3 className="font-display text-lg text-forest-900">1. Kies of maak een verwacht nestje</h3>
+              <div className="flex items-center gap-3">
+                {selectedLitter && <button onClick={() => setLitterId('')} className="text-xs font-semibold text-brass-600 hover:underline">Ander nestje kiezen</button>}
+                <Btn variant="brass" onClick={createExpectedLitter} disabled={creating} className="!px-4 !py-2 !text-sm">{creating ? 'Bezig…' : '+ Nieuw verwacht nestje'}</Btn>
+              </div>
             </div>
             {litters.length === 0 ? (
-              <p className="mt-4 text-sm italic text-forest-600">Er zijn nog geen nestjes. Maak er een aan bij <Link href="/admin/litters" className="font-semibold text-brass-600 hover:underline">Nestjes &amp; Kittens</Link>.</p>
+              <p className="mt-4 text-sm italic text-forest-600">Nog geen nestjes. Klik op <b>+ Nieuw verwacht nestje</b> om er direct een aan te maken en te bewerken.</p>
             ) : (
               <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 {litters.map((l) => {
