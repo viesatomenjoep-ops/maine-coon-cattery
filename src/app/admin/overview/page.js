@@ -4,6 +4,7 @@ import { useStore } from '@/context/StoreContext';
 import { PageHead, Card } from '@/components/admin';
 import { StatusPill } from '@/components/ui';
 import { collectUpcoming, urgency, treatmentIcon, formatDate } from '@/lib/treatments';
+import PushSetup from '@/components/admin/PushSetup';
 
 export default function AdminDashboard() {
   const { kittens, litters, news, interests = [], updateInterest, deleteInterest, updateKitten } = useStore();
@@ -33,6 +34,8 @@ export default function AdminDashboard() {
   return (
     <>
       <PageHead label="Overzicht" title="Welkom terug" />
+
+      <PushSetup />
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {stats.map((s) => (

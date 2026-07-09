@@ -154,6 +154,16 @@ CREATE TABLE IF NOT EXISTS public.cat_weights (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+-- 3.8b WEB PUSH ABONNEMENTEN (PUSH_SUBSCRIPTIONS)
+CREATE TABLE IF NOT EXISTS public.push_subscriptions (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    endpoint TEXT NOT NULL UNIQUE,
+    p256dh TEXT NOT NULL,
+    auth TEXT NOT NULL,
+    label TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
 -- 3.9 SITE CONTENT (HOMEPAGE TEXTS)
 CREATE TABLE IF NOT EXISTS public.site_content (
   key text PRIMARY KEY,
