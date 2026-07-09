@@ -42,6 +42,8 @@ export default function FilePicker({
   className = '',
   uploadClassName = btnTile,
   cameraClassName = btnTile,
+  skipRotate = false,
+  maxFiles = 0,
   children,
 }) {
   const fileRef = useRef(null);
@@ -60,7 +62,8 @@ export default function FilePicker({
   const processQueue = async () => {
     if (modal || queueRef.current.length === 0) return;
     const next = queueRef.current.shift();
-    if (isImageFile(next)) {
+    // Bij bulk-upload (skipRotate) slaan we het draai-venster over en uploaden direct.
+    if (isImageFile(next) && !skipRotate) {
       setModal({ file: next, previewUrl: URL.createObjectURL(next), rotation: 0 });
       return;
     }
@@ -69,9 +72,14 @@ export default function FilePicker({
   };
 
   const enqueueFiles = (fileList) => {
-    const files = Array.from(fileList || []);
+    let files = Array.from(fileList || []);
     if (!files.length) return;
-    queueRef.current.push(...(multiple ? files : [files[0]]));
+    if (!multiple) files = [files[0]];
+    else if (maxFiles && files.length > maxFiles) {
+      alert(`Je kunt maximaal ${maxFiles} bestanden tegelijk uploaden. De eerste ${maxFiles} worden geüpload.`);
+      files = files.slice(0, maxFiles);
+    }
+    queueRef.current.push(...files);
     processQueue();
   };
 
@@ -196,7 +204,7 @@ export function AdminUpload({ children, onSuccess, options }) {
   }
 
   return (
-    <FilePicker accept={accept} multiple={options?.multiple} onFileReady={uploadOne}>
+    <FilePicker accept={accept} multiple={options?.multiple} skipRotate={options?.skipRotate} maxFiles={options?.maxFiles} onFileReady={uploadOne}>
       {({ openFile, openCamera, canCamera, dropProps, dragOver }) => children({ open: openFile, openCamera, canCamera, dropProps, dragOver })}
     </FilePicker>
   );

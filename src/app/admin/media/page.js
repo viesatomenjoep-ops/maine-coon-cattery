@@ -283,16 +283,18 @@ export default function MediaDocumentenPage() {
             </div>
           </div>
           
-          <NativeUploadWidget 
-            options={{ folder: 'cattery_gallery', accept: 'image/*,video/*', multiple: true }}
+          <NativeUploadWidget
+            options={{ folder: 'cattery_gallery', accept: 'image/*,video/*', multiple: true, skipRotate: true, maxFiles: 10 }}
             onSuccess={(res) => handleUploadSuccess('Galerij', null, res)}
           >
-            {({ open, openCamera }) => (
+            {({ open, openCamera, dropProps, dragOver }) => (
               <div className="flex flex-col gap-3 sm:flex-row">
-                <button type="button" onClick={(e) => { e.preventDefault(); open(); }} className="flex-1 flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-brass-300 bg-brass-50/50 p-6 transition hover:bg-brass-50">
-                  <span className="rounded-full bg-brass-200 px-4 py-2 text-sm font-semibold text-brass-800 shadow-sm">📁 Kies bestand(en)</span>
-                  <span className="text-xs text-brass-700/70">Foto&apos;s en video&apos;s (auto-save)</span>
-                </button>
+                <div {...dropProps} className={`flex-1 rounded-xl transition ${dragOver ? 'ring-2 ring-brass-400 ring-offset-2' : ''}`}>
+                  <button type="button" onClick={(e) => { e.preventDefault(); open(); }} className={`w-full flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed p-6 transition ${dragOver ? 'border-brass-500 bg-brass-100' : 'border-brass-300 bg-brass-50/50 hover:bg-brass-50'}`}>
+                    <span className="rounded-full bg-brass-200 px-4 py-2 text-sm font-semibold text-brass-800 shadow-sm">📁 Kies bestand(en) — tot 10 tegelijk</span>
+                    <span className="text-xs text-brass-700/70">Sleep hier je foto's/video's naartoe, of klik om te kiezen — wordt direct opgeslagen</span>
+                  </button>
+                </div>
                 <button type="button" onClick={(e) => { e.preventDefault(); openCamera(); }} className="sm:w-48 rounded-xl border border-brass-300 bg-white px-4 py-6 text-sm font-semibold text-brass-800 transition hover:bg-brass-50">
                   📷 Open camera
                 </button>
