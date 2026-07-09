@@ -90,8 +90,8 @@ export default function MedicalPage() {
             { i: '💊', t: 'Ontworming', d: 'Vanaf 4 weken — kittens én de moeder' },
             { i: '💉', t: 'Vaccinatie 9 weken', d: 'Eerste enting rond 9 weken' },
             { i: '💉', t: 'Vaccinatie 12 weken', d: 'Tweede enting rond 12 weken' },
-            { i: '📍', t: 'Transponderchip', d: 'Chip plaatsen + registreren' },
-            { i: '🩺', t: 'Gezondheidscheck', d: 'Controle door de dierenarts' },
+            { i: '📍', t: 'Transponderchip', d: 'Rond 9 weken — chip plaatsen + registreren' },
+            { i: '🩺', t: 'Gezondheidscheck', d: 'Rond 9 weken — controle door de dierenarts' },
           ].map((x) => (
             <div key={x.t} className="rounded-xl border border-forest-900/10 bg-cream-50 p-3">
               <p className="text-sm font-semibold text-forest-900">{x.i} {x.t}</p>

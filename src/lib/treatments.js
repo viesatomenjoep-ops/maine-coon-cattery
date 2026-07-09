@@ -14,6 +14,8 @@ export const TREATMENT_SCHEDULE = {
   'Ontworming': 4,
   'Vaccinatie 9 weken': 9,
   'Vaccinatie 12 weken': 12,
+  'Transponderchip': 9,
+  'Gezondheidscheck': 9,
 };
 
 export const treatmentIcon = (type) => {
