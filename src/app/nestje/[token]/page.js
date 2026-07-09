@@ -1,8 +1,26 @@
 'use client';
-import { useState, useEffect, use } from 'react';
+import { useState, useEffect, useRef, use } from 'react';
 import { PawMark } from '@/components/ui';
 import { treatmentIcon, urgency, formatDate } from '@/lib/treatments';
 import Lightbox from '@/components/Lightbox';
+
+// Onthult content zachtjes wanneer die in beeld scrollt.
+function Reveal({ children, className = '', delay = 0 }) {
+  const ref = useRef(null);
+  const [shown, setShown] = useState(false);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(([e]) => { if (e.isIntersecting) { setShown(true); obs.disconnect(); } }, { threshold: 0.12 });
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
+  return (
+    <div ref={ref} style={{ transitionDelay: `${delay}ms` }} className={`transition-all duration-700 ease-out ${shown ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'} ${className}`}>
+      {children}
+    </div>
+  );
+}
 
 const norm = (s) => (s || '').toLowerCase();
 const isAvailable = (s) => norm(s) === 'beschikbaar';
@@ -19,6 +37,15 @@ const STATUS_META = {
   houden: { label: 'Niet te koop', cls: 'bg-stone-500/90 text-white' },
 };
 
+// Verzamel alle sfeerfoto's voor de hero-slideshow.
+function buildHeroImages(data) {
+  if (!data) return [];
+  const g = Array.isArray(data.litter?.ad_gallery) ? data.litter.ad_gallery : [];
+  const covers = (data.kittens || []).map((k) => k.cover_image).filter(Boolean);
+  const parents = [data.litter?.sire_image_url, data.litter?.dam_image_url].filter(Boolean);
+  return [...new Set([...g, ...covers, ...parents])];
+}
+
 export default function LitterAdPage({ params }) {
   const { token } = use(params);
   const [data, setData] = useState(null);
@@ -29,6 +56,7 @@ export default function LitterAdPage({ params }) {
   const [submitting, setSubmitting] = useState(false);
   const [sentFor, setSentFor] = useState([]);
   const [zoom, setZoom] = useState(null);
+  const [heroIdx, setHeroIdx] = useState(0);
 
   useEffect(() => {
     async function load() {
@@ -41,6 +69,14 @@ export default function LitterAdPage({ params }) {
     }
     load();
   }, [token]);
+
+  // Hero-slideshow: wissel automatisch van sfeerfoto.
+  useEffect(() => {
+    const imgs = buildHeroImages(data);
+    if (imgs.length <= 1) return;
+    const t = setInterval(() => setHeroIdx((i) => (i + 1) % imgs.length), 5000);
+    return () => clearInterval(t);
+  }, [data]);
 
   const submitInterest = async () => {
     if (!form.name.trim()) return alert('Vul je naam in.');
@@ -79,7 +115,9 @@ export default function LitterAdPage({ params }) {
   const available = kittens.filter((k) => isAvailable(k.status));
   const isExpected = norm(litter.status) === 'verwacht' || kittens.length === 0;
   const gallery = Array.isArray(litter.ad_gallery) ? litter.ad_gallery : [];
-  const heroImg = kittens.find((k) => k.cover_image)?.cover_image || litter.sire_image_url || litter.dam_image_url || null;
+  const heroImages = buildHeroImages(data);
+  const heroActive = heroImages.length ? heroIdx % heroImages.length : 0;
+  const hasHero = heroImages.length > 0;
 
   return (
     <div className="min-h-screen bg-cream-50 text-ink">
@@ -93,19 +131,21 @@ export default function LitterAdPage({ params }) {
         </div>
       </div>
 
-      {/* HERO */}
+      {/* HERO met slideshow */}
       <section className="relative overflow-hidden">
-        {heroImg && (
-          <>
-            <img src={heroImg} alt="" className="absolute inset-0 h-full w-full object-cover" />
-            <div className="absolute inset-0 bg-gradient-to-b from-ink/70 via-ink/60 to-ink/85" />
-          </>
+        {hasHero && (
+          <div className="absolute inset-0">
+            {heroImages.map((src, i) => (
+              <img key={i} src={src} alt="" className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-[1400ms] ease-in-out ${i === heroActive ? 'opacity-100 animate-kenburns' : 'opacity-0'}`} />
+            ))}
+            <div className="absolute inset-0 bg-gradient-to-b from-ink/65 via-ink/55 to-ink/85" />
+          </div>
         )}
-        <div className={`relative mx-auto max-w-4xl px-6 py-24 text-center md:py-32 ${heroImg ? 'text-cream-50' : 'text-forest-950'}`}>
-          <PawMark className={`mx-auto mb-6 h-10 w-10 ${heroImg ? 'text-brass-300' : 'text-brass-400'}`} />
-          <p className={`text-[11px] font-semibold uppercase tracking-[0.35em] ${heroImg ? 'text-brass-200' : 'text-brass-600'}`}>{isExpected ? 'Verwacht nestje' : 'Exclusieve nestje-advertentie'}</p>
+        <div className={`relative mx-auto max-w-4xl px-6 py-28 text-center animate-fade-up md:py-36 ${hasHero ? 'text-cream-50' : 'text-forest-950'}`}>
+          <PawMark className={`mx-auto mb-6 h-10 w-10 ${hasHero ? 'text-brass-300' : 'text-brass-400'}`} />
+          <p className={`text-[11px] font-semibold uppercase tracking-[0.35em] ${hasHero ? 'text-brass-200' : 'text-brass-600'}`}>{isExpected ? 'Verwacht nestje' : 'Exclusieve nestje-advertentie'}</p>
           <h1 className="mt-4 font-display text-5xl font-light leading-tight md:text-7xl">{litter.name}</h1>
-          <p className={`mt-5 text-base md:text-lg ${heroImg ? 'text-cream-100/85' : 'text-forest-700'}`}>
+          <p className={`mt-5 text-base md:text-lg ${hasHero ? 'text-cream-100/85' : 'text-forest-700'}`}>
             {litter.sire_name || 'Onbekende vader'} <span className="mx-1 opacity-60">×</span> {litter.dam_name || 'Onbekende moeder'}
             {litter.date_of_birth && <> · {isExpected ? 'verwacht' : 'geboren'} {new Date(litter.date_of_birth).toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' })}</>}
           </p>
@@ -119,17 +159,28 @@ export default function LitterAdPage({ params }) {
               </button>
             )}
           </div>
+
+          {heroImages.length > 1 && (
+            <div className="mt-10 flex items-center justify-center gap-2.5">
+              {heroImages.map((_, i) => (
+                <button key={i} onClick={() => setHeroIdx(i)} aria-label={`Foto ${i + 1}`}
+                  className={`h-2 rounded-full transition-all duration-300 ${i === heroActive ? 'w-8 bg-brass-300' : 'w-2.5 bg-white/50 hover:bg-white/80'}`} />
+              ))}
+            </div>
+          )}
         </div>
       </section>
 
       <main className="mx-auto max-w-6xl px-6">
         {/* Verhaal / advertentietekst */}
         {litter.ad_text && (
-          <section className="relative mx-auto -mt-2 max-w-3xl py-16 text-center md:py-20">
-            <span className="font-display text-6xl leading-none text-brass-300">“</span>
-            <p className="mt-2 whitespace-pre-line font-display text-xl font-light leading-relaxed text-forest-900 md:text-2xl">{litter.ad_text}</p>
-            <div className="mx-auto mt-8 h-px w-24 bg-brass-300/60" />
-          </section>
+          <Reveal>
+            <section className="relative mx-auto -mt-2 max-w-3xl py-16 text-center md:py-20">
+              <span className="font-display text-6xl leading-none text-brass-300">“</span>
+              <p className="mt-2 whitespace-pre-line font-display text-xl font-light leading-relaxed text-black md:text-2xl">{litter.ad_text}</p>
+              <div className="mx-auto mt-8 h-px w-24 bg-brass-300/60" />
+            </section>
+          </Reveal>
         )}
 
         {/* Sfeergalerij van (het verwachte) nestje */}
@@ -178,12 +229,13 @@ export default function LitterAdPage({ params }) {
             </div>
           ) : (
             <div className="grid gap-8 lg:grid-cols-2">
-              {kittens.map((k) => {
+              {kittens.map((k, idx) => {
                 const meta = STATUS_META[norm(k.status)] || STATUS_META.beschikbaar;
                 const canReserve = isAvailable(k.status);
                 const alreadySent = sentFor.includes(k.id);
                 return (
-                  <article key={k.id} className="group overflow-hidden rounded-[2rem] border border-ink/5 bg-white shadow-lux transition duration-500 hover:-translate-y-1">
+                  <Reveal key={k.id} delay={(idx % 2) * 120}>
+                  <article className="group h-full overflow-hidden rounded-[2rem] border border-ink/5 bg-white shadow-lux transition duration-500 hover:-translate-y-1.5 hover:shadow-2xl">
                     {/* Foto met overlay */}
                     <div className="relative aspect-[4/3] overflow-hidden">
                       {k.cover_image
@@ -248,30 +300,34 @@ export default function LitterAdPage({ params }) {
                       </div>
                     </div>
                   </article>
+                  </Reveal>
                 );
               })}
             </div>
           )}
         </section>
 
-        {/* Kwaliteitsbelofte */}
-        <section className="mb-16 rounded-[2rem] bg-forest-950 px-8 py-12 text-cream-50 shadow-lux md:px-12">
-          <h2 className="text-center font-display text-3xl font-light">Onze belofte aan jou</h2>
-          <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        {/* Kwaliteitsbelofte — licht, met pikzwarte tekst */}
+        <Reveal>
+        <section className="mb-16 rounded-[2rem] border border-ink/10 bg-white px-8 py-12 shadow-lux md:px-12">
+          <p className="text-center text-[11px] font-semibold uppercase tracking-[0.3em] text-brass-600">Waarom deze cattery</p>
+          <h2 className="mt-2 text-center font-display text-3xl font-light text-black">Onze belofte aan jou</h2>
+          <div className="mt-10 grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
             {[
               { i: '🧬', t: 'Gezonde bloedlijnen', d: 'Ouders getest op o.a. HCM & PKD' },
               { i: '📜', t: 'Stamboom & paspoort', d: 'Officieel geregistreerd' },
-              { i: '❤️', t: 'Liefdevol gesocialiseerd', d: 'Opgegroeid in huiselijke sfeer' },
+              { i: '❤️', t: 'Liefdevol grootgebracht', d: 'Opgegroeid in huiselijke sfeer' },
               { i: '🤝', t: 'Levenslange begeleiding', d: 'Ook na de adoptie' },
             ].map((x) => (
               <div key={x.t} className="text-center">
-                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-white/10 text-2xl">{x.i}</div>
-                <p className="mt-3 font-semibold">{x.t}</p>
-                <p className="mt-1 text-sm text-cream-100/70">{x.d}</p>
+                <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-cream-100 text-3xl shadow-sm ring-1 ring-ink/5">{x.i}</div>
+                <p className="mt-4 font-display text-lg font-semibold text-black">{x.t}</p>
+                <p className="mt-1 text-sm font-medium text-ink/80">{x.d}</p>
               </div>
             ))}
           </div>
         </section>
+        </Reveal>
 
         <p className="pb-16 text-center text-xs text-forest-900/40">
           🐾 {tenant.name} · Maine Coon Cattery — deze advertentie wordt automatisch bijgewerkt zodra er iets verandert.

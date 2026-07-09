@@ -168,10 +168,10 @@ export default function CatShowcasePage({ params }) {
           </section>
         )}
 
-        {/* Kwaliteitsbelofte */}
-        <section className="mt-12 rounded-[2rem] bg-forest-950 px-8 py-11 text-cream-50 shadow-lux md:px-12">
-          <h2 className="text-center font-display text-2xl font-light">Onze belofte</h2>
-          <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        {/* Kwaliteitsbelofte — licht, met pikzwarte tekst */}
+        <section className="mt-12 rounded-[2rem] border border-ink/10 bg-white px-8 py-11 shadow-lux md:px-12">
+          <h2 className="text-center font-display text-2xl font-light text-black">Onze belofte</h2>
+          <div className="mt-8 grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
             {[
               { i: '🧬', t: 'Gezonde bloedlijnen', d: 'Getest op o.a. HCM & PKD' },
               { i: '📜', t: 'Stamboom & paspoort', d: 'Officieel geregistreerd' },
@@ -179,9 +179,9 @@ export default function CatShowcasePage({ params }) {
               { i: '🤝', t: 'Levenslange begeleiding', d: 'Ook na de adoptie' },
             ].map((x) => (
               <div key={x.t} className="text-center">
-                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-white/10 text-2xl">{x.i}</div>
-                <p className="mt-3 font-semibold">{x.t}</p>
-                <p className="mt-1 text-sm text-cream-100/70">{x.d}</p>
+                <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-cream-100 text-3xl shadow-sm ring-1 ring-ink/5">{x.i}</div>
+                <p className="mt-4 font-display text-lg font-semibold text-black">{x.t}</p>
+                <p className="mt-1 text-sm font-medium text-ink/80">{x.d}</p>
               </div>
             ))}
           </div>

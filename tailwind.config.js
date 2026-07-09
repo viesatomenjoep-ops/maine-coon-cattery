@@ -53,11 +53,13 @@ module.exports = {
         'fade-up': { '0%': { opacity: '0', transform: 'translateY(24px)' }, '100%': { opacity: '1', transform: 'translateY(0)' } },
         'fade-in': { '0%': { opacity: '0' }, '100%': { opacity: '1' } },
         'fade-slow': { '0%': { opacity: '0' }, '100%': { opacity: '1' } },
+        'kenburns': { '0%': { transform: 'scale(1.02)' }, '100%': { transform: 'scale(1.12)' } },
       },
       animation: {
         'fade-up': 'fade-up 0.8s cubic-bezier(0.16,1,0.3,1) both',
         'fade-in': 'fade-in 1s ease both',
         'fade-slow': 'fade-slow 2.5s ease both',
+        'kenburns': 'kenburns 12s ease-in-out infinite alternate',
       },
     },
   },
