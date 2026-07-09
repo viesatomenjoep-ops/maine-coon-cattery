@@ -29,13 +29,20 @@ async function enrichKittens(db, kittensData) {
     // Alleen gepubliceerde foto's en documenten.
     const mediaVisible = (allMedia || []).filter((m) => (m.cat_id === k.id || m.media_url?.includes(k.id)) && m.is_public !== false);
     const documents = (allDocs || []).filter((d) => d.cat_id === k.id && d.is_private === false);
-    const treatments = (allVaccs || [])
-      .filter((v) => v.cat_id === k.id && v.next_due_date)
+    const catVaccs = (allVaccs || []).filter((v) => v.cat_id === k.id);
+    // Aankomende zorg: geplande datum, nog niet afgevinkt.
+    const treatments = catVaccs
+      .filter((v) => v.next_due_date && !v.completed)
       .map((v) => ({ type: v.vaccine_name, due: v.next_due_date, note: v.veterinarian_info }))
       .sort((a, b) => new Date(a.due) - new Date(b.due));
+    // Gedane zorg: afgevinkt of met een uitvoerdatum.
+    const careDone = catVaccs
+      .filter((v) => v.completed || v.vaccination_date)
+      .map((v) => ({ type: v.vaccine_name, date: v.vaccination_date || v.next_due_date, note: v.veterinarian_info }))
+      .sort((a, b) => new Date(b.date) - new Date(a.date));
     const lit = littersById[k.litter_id] || {};
     return {
-      ...k, weights, media: mediaVisible, documents, treatments,
+      ...k, weights, media: mediaVisible, documents, treatments, careDone,
       sire_name: lit.sire_name || null, dam_name: lit.dam_name || null,
       sire_image_url: lit.sire_image_url || null, dam_image_url: lit.dam_image_url || null,
     };

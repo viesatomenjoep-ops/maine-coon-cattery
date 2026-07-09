@@ -217,6 +217,27 @@ export default function CustomerPortal({ params }) {
                       </div>
                     )}
 
+                    {/* Gedane zorg (afgevinkt / uitgevoerd) */}
+                    {k.careDone && k.careDone.length > 0 && (
+                      <div className="mt-6 pt-6 border-t border-forest-900/10">
+                        <h4 className="text-sm font-bold uppercase tracking-wider text-forest-800 mb-4">Gedane zorg</h4>
+                        <div className="space-y-2">
+                          {k.careDone.map((t, i) => (
+                            <div key={i} className="flex items-center justify-between gap-3 rounded-xl bg-emerald-50 p-3 border border-emerald-200">
+                              <div className="flex items-center gap-3 min-w-0">
+                                <span className="text-xl">{treatmentIcon(t.type)}</span>
+                                <div className="min-w-0">
+                                  <p className="text-sm font-semibold text-forest-900 truncate">{t.type}{t.note ? ` · ${t.note}` : ''}</p>
+                                  {t.date && <p className="text-xs text-forest-600">{formatDate(t.date)}</p>}
+                                </div>
+                              </div>
+                              <span className="shrink-0 rounded-full bg-emerald-600 px-2.5 py-0.5 text-[10px] font-semibold text-white">✓ Gedaan</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
                     {/* Documents */}
                     <div className="mt-6 pt-6 border-t border-forest-900/10">
                       <div className="mb-4">
