@@ -2,9 +2,17 @@
 import Link from 'next/link';
 import { useStore } from '@/context/StoreContext';
 import { PageHead, Card } from '@/components/admin';
-import { StatusPill } from '@/components/ui';
+import { StatusPill, PawMark } from '@/components/ui';
 import { collectUpcoming, urgency, treatmentIcon, formatDate } from '@/lib/treatments';
 import PushSetup from '@/components/admin/PushSetup';
+
+// Toon het geslacht altijd in het Nederlands.
+const sexLabel = (g) => {
+  const v = (g || '').toLowerCase();
+  if (/kater|mann|\bmale\b|\bm\b/.test(v)) return 'Kater';
+  if (/poes|vrouw|female|\bf\b/.test(v)) return 'Poes';
+  return g || 'Onbekend';
+};
 
 export default function AdminDashboard() {
   const { kittens, litters, news, interests = [], updateInterest, deleteInterest, updateKitten } = useStore();
@@ -118,15 +126,26 @@ export default function AdminDashboard() {
             <Link href="/admin/cats" className="text-sm text-brass-600 hover:underline">Beheren →</Link>
           </div>
           <div className="space-y-2">
-            {kittens.map((k) => (
-              <div key={k.id} className="flex items-center justify-between rounded-xl border border-forest-900/8 px-4 py-3">
-                <div>
-                  <p className="font-medium text-forest-900">{k.name}</p>
-                  <p className="text-xs text-forest-600/70">{[k.gender, k.color].filter(Boolean).join(' · ') || '—'}</p>
+            {kittens.map((k) => {
+              const lit = litters.find((l) => l.id === k.litter_id);
+              return (
+                <div key={k.id} className="flex items-center gap-3 rounded-xl border border-forest-900/8 px-3 py-2.5">
+                  {k.cover_image ? (
+                    <img src={k.cover_image} alt={k.name} className="h-11 w-11 shrink-0 rounded-lg object-cover" />
+                  ) : (
+                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-forest-100 bg-forest-50 text-forest-300"><PawMark className="h-5 w-5" /></div>
+                  )}
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate font-medium text-forest-900">{k.name}</p>
+                    <p className="truncate text-xs text-forest-600/70">
+                      {[sexLabel(k.gender), k.color].filter(Boolean).join(' · ')}
+                      {lit ? ` · Nestje: ${lit.name}` : ''}
+                    </p>
+                  </div>
+                  <StatusPill status={k.status} />
                 </div>
-                <StatusPill status={k.status} />
-              </div>
-            ))}
+              );
+            })}
           </div>
         </Card>
 

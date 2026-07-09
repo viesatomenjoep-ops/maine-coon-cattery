@@ -133,7 +133,10 @@ export default function LitterAdPage({ params }) {
               const canReserve = isAvailable(k.status);
               const alreadySent = sentFor.includes(k.id);
               return (
-                <div key={k.id} className="overflow-hidden rounded-2xl border border-forest-900/10 bg-white shadow-soft">
+                <div key={k.id} className="relative overflow-hidden rounded-2xl border border-forest-900/10 bg-white shadow-soft">
+                  <div className="pointer-events-none absolute left-3 top-3 z-10 inline-flex items-center gap-1.5 rounded-full bg-white/85 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-forest-800 shadow-sm backdrop-blur-sm">
+                    🐾 {tenant.name} · Maine Coon Cattery
+                  </div>
                   {k.cover_image ? (
                     <img src={k.cover_image} alt={k.name} onClick={() => setZoom(k.cover_image)} className="h-56 w-full cursor-zoom-in object-cover transition hover:opacity-95" />
                   ) : (
