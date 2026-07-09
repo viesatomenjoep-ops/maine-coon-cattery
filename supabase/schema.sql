@@ -173,6 +173,27 @@ CREATE POLICY "Admins can insert cat weights" ON public.cat_weights FOR INSERT W
 CREATE POLICY "Admins can update cat weights" ON public.cat_weights FOR UPDATE USING (true);
 CREATE POLICY "Admins can delete cat weights" ON public.cat_weights FOR DELETE USING (true);
 
+-- Publieke lees/schrijf-policies voor de kern-tabellen (app schrijft via de anon key).
+-- Let op: dit maakt de tabellen publiek schrijfbaar. Bescherming zit in de /admin-routeguard.
+-- Wil je strenger: vervang using/with check door (auth.role() = 'authenticated') voor de
+-- INSERT/UPDATE/DELETE-policies.
+DO $$
+DECLARE t text;
+BEGIN
+  FOREACH t IN ARRAY ARRAY['litters','cats','documents','vaccinations','timeline_updates','media']
+  LOOP
+    EXECUTE format('ALTER TABLE public.%I ENABLE ROW LEVEL SECURITY', t);
+    EXECUTE format('DROP POLICY IF EXISTS "public_select" ON public.%I', t);
+    EXECUTE format('DROP POLICY IF EXISTS "public_insert" ON public.%I', t);
+    EXECUTE format('DROP POLICY IF EXISTS "public_update" ON public.%I', t);
+    EXECUTE format('DROP POLICY IF EXISTS "public_delete" ON public.%I', t);
+    EXECUTE format('CREATE POLICY "public_select" ON public.%I FOR SELECT USING (true)', t);
+    EXECUTE format('CREATE POLICY "public_insert" ON public.%I FOR INSERT WITH CHECK (true)', t);
+    EXECUTE format('CREATE POLICY "public_update" ON public.%I FOR UPDATE USING (true) WITH CHECK (true)', t);
+    EXECUTE format('CREATE POLICY "public_delete" ON public.%I FOR DELETE USING (true)', t);
+  END LOOP;
+END $$;
+
 -- ==============================================================================
 -- 5. LITTERS ↔ CATS KOPPELING (Sire/Dam)
 -- Wordt hier toegevoegd omdat cats pas na litters bestaat (circulaire referentie).

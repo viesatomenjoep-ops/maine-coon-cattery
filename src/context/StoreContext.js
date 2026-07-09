@@ -194,6 +194,11 @@ export function StoreProvider({ children }) {
     if (patch.published !== undefined) dbPatch.published = patch.published;
     if (patch.dateOfBirth !== undefined) dbPatch.date_of_birth = patch.dateOfBirth === '' ? null : patch.dateOfBirth;
     if (patch.chipNumber !== undefined) dbPatch.chip_number = patch.chipNumber;
+    if (patch.chip_no !== undefined) dbPatch.chip_number = patch.chip_no;
+    if (patch.ems_code !== undefined) dbPatch.ems_code = patch.ems_code;
+    if (patch.registration_no !== undefined) dbPatch.registration_no = patch.registration_no;
+    if (patch.birth_weight_g !== undefined) dbPatch.birth_weight_g = (patch.birth_weight_g === '' || patch.birth_weight_g == null) ? null : Number(patch.birth_weight_g);
+    if (patch.reserved_by !== undefined) dbPatch.reserved_by = patch.reserved_by;
     if (patch.customer_id !== undefined) dbPatch.customer_id = patch.customer_id === '' ? null : patch.customer_id;
     if (patch.litter_id !== undefined) dbPatch.litter_id = patch.litter_id;
     
@@ -216,8 +221,8 @@ export function StoreProvider({ children }) {
       console.error("Error updating cat:", error);
       return { error };
     } else {
-      // Pas lokaal aan als succesvol
-      setKittens(s => s.map(k => (k.id === id ? { ...k, ...patch } : k)));
+      // Pas lokaal aan als succesvol (zowel formulier-props als db-kolommen mergen)
+      setKittens(s => s.map(k => (k.id === id ? { ...k, ...patch, ...dbPatch } : k)));
       return { success: true };
     }
   };
