@@ -100,17 +100,17 @@ export default function AdminDashboard() {
           {agenda.length === 0 ? (
             <p className="text-sm text-forest-600/70">Geen geplande behandelingen. Plan een ontworming of inenting in het medisch dashboard.</p>
           ) : (
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="space-y-2.5">
               {agenda.map((a, i) => {
                 const u = urgency(a.due);
                 return (
-                  <Link key={a.medId || i} href={`/admin/cats/${a.catId}`} className={`flex items-center gap-3 rounded-xl border bg-white p-3 transition hover:shadow-md ${u?.key === 'overdue' || u?.key === 'today' ? 'border-red-200' : 'border-forest-900/10'}`}>
-                    <span className="text-xl">{treatmentIcon(a.type)}</span>
+                  <Link key={a.medId || i} href="/admin/medical" className={`flex items-center gap-4 rounded-xl border bg-white p-4 transition hover:shadow-md ${u?.key === 'overdue' || u?.key === 'today' ? 'border-red-200' : 'border-forest-900/10'}`}>
+                    <span className="text-2xl">{treatmentIcon(a.type)}</span>
                     <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-semibold text-forest-900">{a.catName}</p>
-                      <p className="truncate text-[11px] text-forest-600">{a.type} · {formatDate(a.due)}</p>
+                      <p className="font-semibold text-forest-900">{a.catName}</p>
+                      <p className="text-sm text-forest-700">{a.type} · {formatDate(a.due)}{a.note ? ` · ${a.note}` : ''}</p>
                     </div>
-                    {u && <span className={`shrink-0 rounded-full border px-2 py-0.5 text-[9px] font-semibold ${u.cls}`}>{u.label}</span>}
+                    {u && <span className={`shrink-0 rounded-full border px-3 py-1 text-xs font-semibold ${u.cls}`}>{u.label}</span>}
                   </Link>
                 );
               })}

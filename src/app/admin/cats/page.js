@@ -10,7 +10,7 @@ const vachtLabel = (k) => [k.color, k.pattern].filter(Boolean).join(' ') || 'Mai
 
 function Badge({ children, cls }) {
   return (
-    <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold uppercase tracking-wide ${cls}`}>
+    <span className={`inline-flex items-center gap-1 whitespace-nowrap rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${cls}`}>
       <span className="h-1.5 w-1.5 rounded-full bg-current opacity-70" />
       {children}
     </span>
@@ -59,7 +59,7 @@ function CatGroup({ title, hint, count, children }) {
         <span className="rounded-full bg-forest-900/5 px-2.5 py-0.5 text-xs font-semibold text-forest-600">{count}</span>
         {hint && <span className="text-sm text-forest-500">{hint}</span>}
       </div>
-      <div className="grid gap-4 grid-cols-1 xl:grid-cols-2">{children}</div>
+      <div className="space-y-3">{children}</div>
     </section>
   );
 }

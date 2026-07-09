@@ -124,8 +124,9 @@ export default function LitterAdPage({ params }) {
       {/* Topbar */}
       <div className="sticky top-0 z-40 border-b border-ink/5 bg-cream-50/80 backdrop-blur-md">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-          <span className="flex items-center gap-2 font-display text-lg text-forest-950">
-            <PawMark className="h-5 w-5 text-brass-500" /> {tenant.name}
+          <span className="flex items-center gap-2.5">
+            <img src="/logo.png" alt="" className="h-8 w-auto object-contain" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+            <span className="font-display text-lg text-forest-950">{tenant.name}</span>
           </span>
           <span className="hidden text-[11px] font-semibold uppercase tracking-[0.25em] text-forest-600/70 sm:block">Maine Coon Cattery</span>
         </div>

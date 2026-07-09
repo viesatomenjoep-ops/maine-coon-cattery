@@ -288,7 +288,11 @@ export default function LittersPage() {
 
               <div className="p-0">
                 {nestKittens.length === 0 ? (
-                  <p className="p-5 text-sm italic text-forest-600">Nog geen kittens in dit nestje.</p>
+                  <div className="p-5">
+                    <div className="rounded-xl border border-dashed border-forest-900/15 bg-forest-50/40 p-5 text-center text-sm text-forest-600">
+                      🍼 Nog geen kittens in dit nestje — voeg ze toe met “+ Kitten toevoegen”, of beheer de advertentie bij Verkoop.
+                    </div>
+                  </div>
                 ) : (
                   <div className="divide-y divide-forest-900/10 bg-white">
                     {nestKittens.map((k) => (

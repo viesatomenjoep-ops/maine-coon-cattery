@@ -324,7 +324,7 @@ function ModeCard({ active, onClick, icon, title, desc }) {
   );
 }
 
-function LitterAdEditor({ litter, updateLitter }) {
+function LitterAdEditor({ litter, updateLitter, deleteLitter, onDeleted }) {
   const gallery = Array.isArray(litter.ad_gallery) ? litter.ad_gallery : [];
   const addPhoto = (url) => updateLitter(litter.id, { ad_gallery: [...gallery, url] });
   const removePhoto = (url) => updateLitter(litter.id, { ad_gallery: gallery.filter((g) => g !== url) });
@@ -388,14 +388,19 @@ function LitterAdEditor({ litter, updateLitter }) {
         <h4 className="font-display text-lg text-forest-900">Advertentietekst</h4>
         <textarea defaultValue={litter.ad_text || ''} onBlur={(e) => { if (e.target.value !== (litter.ad_text || '')) updateLitter(litter.id, { ad_text: e.target.value }); }} rows={7}
           placeholder="Vertel het verhaal van je cattery en dit verwachte nestje…" className="mt-3 w-full rounded-xl border border-forest-900/15 bg-white px-4 py-3 text-sm leading-relaxed outline-none focus:border-brass-400 focus:ring-2 focus:ring-brass-200" />
-        <p className="mt-1 text-xs text-forest-500">Verschijnt bovenaan de advertentie. Sla op door buiten het veld te klikken.</p>
+        <p className="mt-1 text-xs text-forest-500">Verschijnt bovenaan de advertentie. Wordt automatisch opgeslagen.</p>
       </Card>
+
+      <div className="flex flex-col gap-3 sm:flex-row sm:justify-between">
+        <Btn variant="ghost" onClick={() => { if (confirm(`Weet je zeker dat je het nestje "${litter.name}" definitief wilt verwijderen?`)) { deleteLitter(litter.id); onDeleted && onDeleted(); } }} className="!text-red-600 hover:!bg-red-50">Verwijderen</Btn>
+        <Btn variant="brass" onClick={() => alert('Alle wijzigingen zijn opgeslagen ✓')}>Opslaan</Btn>
+      </div>
     </div>
   );
 }
 
 export default function SalesPage() {
-  const { kittens, litters = [], updateKitten, updateLitter, addLitter, customers = [], documents = [], media = [] } = useStore();
+  const { kittens, litters = [], updateKitten, updateLitter, addLitter, deleteLitter, customers = [], documents = [], media = [] } = useStore();
 
   const saleKittens = kittens.filter((k) => !k.is_own_breeding_cat);
   const [mode, setMode] = useState('kitten');
@@ -501,7 +506,7 @@ export default function SalesPage() {
           {selectedLitter ? (
             <>
               <h3 className="mb-4 font-display text-lg text-forest-900">2. Beheer de advertentie van {selectedLitter.name}</h3>
-              <LitterAdEditor key={selectedLitter.id} litter={selectedLitter} updateLitter={updateLitter} />
+              <LitterAdEditor key={selectedLitter.id} litter={selectedLitter} updateLitter={updateLitter} deleteLitter={deleteLitter} onDeleted={() => setLitterId('')} />
             </>
           ) : (
             litters.length > 0 && <div className="rounded-2xl border border-dashed border-forest-900/20 bg-white/60 py-12 text-center text-forest-600">Selecteer hierboven een nestje om de advertentie te beheren.</div>
