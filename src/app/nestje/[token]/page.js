@@ -310,8 +310,7 @@ export default function LitterAdPage({ params }) {
         {/* Kwaliteitsbelofte — licht, met pikzwarte tekst */}
         <Reveal>
         <section className="mb-16 rounded-[2rem] border border-ink/10 bg-white px-8 py-12 shadow-lux md:px-12">
-          <p className="text-center text-[11px] font-semibold uppercase tracking-[0.3em] text-brass-600">Waarom deze cattery</p>
-          <h2 className="mt-2 text-center font-display text-3xl font-light text-black">Onze belofte aan jou</h2>
+          <h2 className="text-center font-display text-3xl text-forest-950">Onze belofte aan jou</h2>
           <div className="mt-10 grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
             {[
               { i: '🧬', t: 'Gezonde bloedlijnen', d: 'Ouders getest op o.a. HCM & PKD' },
@@ -321,8 +320,8 @@ export default function LitterAdPage({ params }) {
             ].map((x) => (
               <div key={x.t} className="text-center">
                 <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-cream-100 text-3xl shadow-sm ring-1 ring-ink/5">{x.i}</div>
-                <p className="mt-4 font-display text-lg font-semibold text-black">{x.t}</p>
-                <p className="mt-1 text-sm font-medium text-ink/80">{x.d}</p>
+                <p className="mt-4 font-display text-lg text-forest-900">{x.t}</p>
+                <p className="mt-2 text-[11px] font-bold uppercase tracking-[0.15em] text-brass-600">{x.d}</p>
               </div>
             ))}
           </div>
