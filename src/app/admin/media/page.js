@@ -95,6 +95,9 @@ export default function MediaDocumentenPage() {
   // Alleen de bestanden van de geselecteerde kat (kitten/kater/poes).
   const catUploads = allUploads.filter((u) => u.cat_id === archiveCat);
 
+  // De cattery-galerij = media zonder kat-koppeling (vrij te beheren).
+  const galleryMedia = media.filter((m) => !m.cat_id);
+
   const [selectedItems, setSelectedItems] = useState([]);
 
   const toggleSelect = (id) => {
@@ -306,6 +309,36 @@ export default function MediaDocumentenPage() {
               </div>
             </div>
           )}
+
+          {/* Overzicht van de galerij — vrij verwijderen, geen kat nodig */}
+          <div className="mt-6 border-t border-forest-900/10 pt-4">
+            <p className="mb-3 text-xs font-bold uppercase tracking-wide text-forest-700">Bestanden in de galerij ({galleryMedia.length})</p>
+            {galleryMedia.length === 0 ? (
+              <p className="text-sm italic text-forest-600">Nog niets in de galerij. Upload hierboven foto's of video's.</p>
+            ) : (
+              <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 lg:grid-cols-6">
+                {galleryMedia.map((m) => {
+                  const url = m.media_url;
+                  const isVideo = (m.media_type || '').includes('video') || /\.(mp4|webm|mov|m4v)$/i.test(url || '');
+                  return (
+                    <div key={m.id} className="group relative aspect-square overflow-hidden rounded-xl border border-forest-900/10 bg-forest-50">
+                      {isVideo ? (
+                        <video src={url} className="h-full w-full object-cover" muted playsInline />
+                      ) : (
+                        <img src={url} alt="" className="h-full w-full object-cover" />
+                      )}
+                      <a href={url} target="_blank" rel="noreferrer" className="absolute inset-0" aria-label="Bekijk" />
+                      <button
+                        onClick={() => { if (confirm('Dit bestand uit de galerij verwijderen?')) deleteMedia(m.id); }}
+                        className="absolute right-1 top-1 z-10 rounded-md bg-red-500/90 px-1.5 py-0.5 text-[10px] font-semibold text-white opacity-0 transition group-hover:opacity-100"
+                      >Wis</button>
+                      {isVideo && <span className="pointer-events-none absolute bottom-1 left-1 rounded bg-ink/70 px-1.5 py-0.5 text-[9px] font-semibold text-white">▶ video</span>}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
         </Card>
       </div>
 
