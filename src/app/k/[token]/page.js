@@ -3,37 +3,6 @@ import { useState, useEffect, use } from 'react';
 import { Logo, PawMark } from '@/components/ui';
 import { supabase } from '@/lib/supabase';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { useRef } from 'react';
-
-const CustomerUploadWidget = ({ children, onSuccess, folder }) => {
-  const ref = useRef(null);
-  const [uploading, setUploading] = useState(false);
-  
-  const handleFile = async (e) => {
-    const files = Array.from(e.target.files);
-    setUploading(true);
-    for (const file of files) {
-      const formData = new FormData();
-      formData.append('file', file);
-      if (folder) formData.append('folder', folder);
-      try {
-        const res = await fetch('/api/upload', { method: 'POST', body: formData });
-        const data = await res.json();
-        if (data.url && onSuccess) onSuccess({ secure_url: data.url, name: file.name });
-      } catch (err) {
-        console.error("Upload failed", err);
-      }
-    }
-    setUploading(false);
-    e.target.value = '';
-  };
-  return (
-    <>
-      <input type="file" ref={ref} className="hidden" accept="image/*,video/*,application/pdf" onChange={handleFile} />
-      {children({ open: () => ref.current?.click(), uploading })}
-    </>
-  );
-};
 
 // Helper component for updates
 function TimelineUpdate({ update }) {
@@ -256,35 +225,10 @@ export default function CustomerPortal({ params }) {
 
                     {/* Documents */}
                     <div className="mt-6 pt-6 border-t border-forest-900/10">
-                      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-4">
+                      <div className="mb-4">
                         <h4 className="text-sm font-bold uppercase tracking-wider text-forest-800">Documenten (Medisch & Paspoort)</h4>
-                        
-                        <CustomerUploadWidget 
-                          folder={`customer_uploads/${customer.id}`}
-                          onSuccess={async (res) => {
-                            const { error } = await supabase.from('documents').insert({
-                              cat_id: k.id,
-                              file_url: res.secure_url,
-                              notes: `Geüpload door klant: ${res.name}`,
-                              document_type: 'Klant Upload',
-                              category: 'Klant'
-                            });
-                            if (!error) {
-                              alert('Bestand succesvol geüpload!');
-                              window.location.reload();
-                            } else {
-                              alert('Er ging iets mis bij het opslaan.');
-                            }
-                          }}
-                        >
-                          {({ open, uploading }) => (
-                            <button onClick={open} disabled={uploading} className="rounded-xl border border-brass-200 bg-brass-50 px-4 py-2 text-xs font-bold uppercase tracking-wider text-brass-700 transition hover:bg-brass-100 shadow-sm disabled:opacity-50">
-                              {uploading ? 'Aan het uploaden...' : '+ Bestand Uploaden'}
-                            </button>
-                          )}
-                        </CustomerUploadWidget>
                       </div>
-                      
+
                       {k.documents && k.documents.length > 0 ? (
                         <div className="grid gap-3 sm:grid-cols-2">
                           {k.documents.map(d => {
