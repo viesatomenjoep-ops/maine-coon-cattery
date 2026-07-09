@@ -15,18 +15,23 @@ export async function POST(request) {
   let body;
   try { body = await request.json(); } catch { return NextResponse.json({ error: 'Ongeldige body.' }, { status: 400 }); }
   const { token, cat_id, name, contact, message } = body || {};
-  if (!token || !cat_id || !name?.trim()) {
+  if (!token || !name?.trim()) {
     return NextResponse.json({ error: 'Onvolledige aanvraag.' }, { status: 400 });
   }
 
-  // Valideer dat het nestje bij de token hoort en de kitten in dat nestje zit.
+  // Valideer dat het nestje bij de token hoort.
   const { data: litter } = await db.from('litters').select('id, tenant_id').eq('share_token', token).single();
   if (!litter) return NextResponse.json({ error: 'Ongeldige link.' }, { status: 404 });
-  const { data: cat } = await db.from('cats').select('id, litter_id').eq('id', cat_id).single();
-  if (!cat || cat.litter_id !== litter.id) return NextResponse.json({ error: 'Onbekende kitten.' }, { status: 400 });
+
+  // Kitten-interesse: controleer dat de kitten in dit nestje zit.
+  // Zonder cat_id = algemene interesse in het (verwachte) nestje ("blijf op de hoogte").
+  if (cat_id) {
+    const { data: cat } = await db.from('cats').select('id, litter_id').eq('id', cat_id).single();
+    if (!cat || cat.litter_id !== litter.id) return NextResponse.json({ error: 'Onbekende kitten.' }, { status: 400 });
+  }
 
   const { error } = await db.from('kitten_interests').insert([{
-    cat_id,
+    cat_id: cat_id || null,
     litter_id: litter.id,
     tenant_id: litter.tenant_id || null,
     name: name.trim(),

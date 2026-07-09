@@ -77,6 +77,8 @@ export default function LitterAdPage({ params }) {
   const { litter, kittens } = data;
   const tenant = data.tenant || { name: 'Cattery' };
   const available = kittens.filter((k) => isAvailable(k.status));
+  const isExpected = norm(litter.status) === 'verwacht' || kittens.length === 0;
+  const gallery = Array.isArray(litter.ad_gallery) ? litter.ad_gallery : [];
   const heroImg = kittens.find((k) => k.cover_image)?.cover_image || litter.sire_image_url || litter.dam_image_url || null;
 
   return (
@@ -101,14 +103,21 @@ export default function LitterAdPage({ params }) {
         )}
         <div className={`relative mx-auto max-w-4xl px-6 py-24 text-center md:py-32 ${heroImg ? 'text-cream-50' : 'text-forest-950'}`}>
           <PawMark className={`mx-auto mb-6 h-10 w-10 ${heroImg ? 'text-brass-300' : 'text-brass-400'}`} />
-          <p className={`text-[11px] font-semibold uppercase tracking-[0.35em] ${heroImg ? 'text-brass-200' : 'text-brass-600'}`}>Exclusieve nestje-advertentie</p>
+          <p className={`text-[11px] font-semibold uppercase tracking-[0.35em] ${heroImg ? 'text-brass-200' : 'text-brass-600'}`}>{isExpected ? 'Verwacht nestje' : 'Exclusieve nestje-advertentie'}</p>
           <h1 className="mt-4 font-display text-5xl font-light leading-tight md:text-7xl">{litter.name}</h1>
           <p className={`mt-5 text-base md:text-lg ${heroImg ? 'text-cream-100/85' : 'text-forest-700'}`}>
             {litter.sire_name || 'Onbekende vader'} <span className="mx-1 opacity-60">×</span> {litter.dam_name || 'Onbekende moeder'}
-            {litter.date_of_birth && <> · geboren {new Date(litter.date_of_birth).toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' })}</>}
+            {litter.date_of_birth && <> · {isExpected ? 'verwacht' : 'geboren'} {new Date(litter.date_of_birth).toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' })}</>}
           </p>
-          <div className="mt-8 inline-flex items-center gap-2 rounded-full bg-emerald-500 px-6 py-2.5 text-sm font-semibold text-white shadow-lg">
-            🐾 {available.length} {available.length === 1 ? 'kitten' : 'kittens'} beschikbaar
+          <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+            <span className={`inline-flex items-center gap-2 rounded-full px-6 py-2.5 text-sm font-semibold text-white shadow-lg ${isExpected ? 'bg-brass-500' : 'bg-emerald-500'}`}>
+              {isExpected ? '🍼 Binnenkort verwacht' : `🐾 ${available.length} ${available.length === 1 ? 'kitten' : 'kittens'} beschikbaar`}
+            </span>
+            {isExpected && (
+              <button onClick={() => setInterestFor({ id: null, name: litter.name })} className="inline-flex items-center gap-2 rounded-full bg-white/90 px-6 py-2.5 text-sm font-semibold text-forest-900 shadow-lg transition hover:bg-white">
+                Blijf op de hoogte →
+              </button>
+            )}
           </div>
         </div>
       </section>
@@ -120,6 +129,19 @@ export default function LitterAdPage({ params }) {
             <span className="font-display text-6xl leading-none text-brass-300">“</span>
             <p className="mt-2 whitespace-pre-line font-display text-xl font-light leading-relaxed text-forest-900 md:text-2xl">{litter.ad_text}</p>
             <div className="mx-auto mt-8 h-px w-24 bg-brass-300/60" />
+          </section>
+        )}
+
+        {/* Sfeergalerij van (het verwachte) nestje */}
+        {gallery.length > 0 && (
+          <section className="pb-6">
+            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
+              {gallery.map((src, i) => (
+                <div key={i} className="group aspect-square overflow-hidden rounded-2xl border border-ink/5 shadow-soft">
+                  <img src={src} alt="" onClick={() => setZoom(src)} className="h-full w-full cursor-zoom-in object-cover transition duration-500 group-hover:scale-105" />
+                </div>
+              ))}
+            </div>
           </section>
         )}
 
@@ -145,11 +167,15 @@ export default function LitterAdPage({ params }) {
 
         {/* Kittens */}
         <section className="py-14">
-          <h2 className="mb-2 text-center font-display text-4xl text-forest-950">Onze kittens</h2>
-          <p className="mb-12 text-center text-forest-600">Elk kitten met liefde grootgebracht — bekijk de details en toon je interesse.</p>
+          <h2 className="mb-2 text-center font-display text-4xl text-forest-950">{kittens.length === 0 ? 'De kittens komen eraan' : 'Onze kittens'}</h2>
+          <p className="mb-12 text-center text-forest-600">{kittens.length === 0 ? 'Dit nestje wordt binnenkort verwacht. Laat je gegevens achter en je hoort als eerste wanneer de kittens er zijn.' : 'Elk kitten met liefde grootgebracht — bekijk de details en toon je interesse.'}</p>
 
           {kittens.length === 0 ? (
-            <p className="text-center text-forest-600">Er zijn nog geen kittens gepubliceerd in dit nestje.</p>
+            <div className="mx-auto max-w-md rounded-[2rem] border border-brass-200 bg-white p-8 text-center shadow-lux">
+              <div className="text-4xl">🍼</div>
+              {litter.date_of_birth && <p className="mt-3 text-sm text-forest-600">Verwacht rond <b className="text-forest-900">{new Date(litter.date_of_birth).toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' })}</b></p>}
+              <button onClick={() => setInterestFor({ id: null, name: litter.name })} className="mt-5 w-full rounded-2xl bg-gradient-to-r from-brass-500 to-brass-600 px-5 py-4 text-sm font-bold uppercase tracking-wide text-white shadow-lg transition hover:from-brass-600 hover:to-brass-700">Blijf op de hoogte →</button>
+            </div>
           ) : (
             <div className="grid gap-8 lg:grid-cols-2">
               {kittens.map((k) => {

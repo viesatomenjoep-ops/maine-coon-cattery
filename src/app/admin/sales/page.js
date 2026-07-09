@@ -312,13 +312,95 @@ function FileRow({ thumb, name, type, checked, onToggle }) {
   );
 }
 
-export default function SalesPage() {
-  const { kittens, updateKitten, customers = [], documents = [], media = [] } = useStore();
+function ModeCard({ active, onClick, icon, title, desc }) {
+  return (
+    <button onClick={onClick} className={`flex items-start gap-4 rounded-2xl border p-5 text-left transition ${active ? 'border-brass-400 bg-brass-50 ring-2 ring-brass-300' : 'border-forest-900/15 bg-white hover:border-brass-300 hover:bg-forest-50/50'}`}>
+      <span className="text-3xl">{icon}</span>
+      <span>
+        <span className="block font-display text-lg text-forest-900">{title}</span>
+        <span className="mt-0.5 block text-sm text-forest-600">{desc}</span>
+      </span>
+    </button>
+  );
+}
 
-  // Alleen kittens in de advertentie/sales — nooit fokdieren (vader/moeder).
+function LitterAdEditor({ litter, updateLitter }) {
+  const gallery = Array.isArray(litter.ad_gallery) ? litter.ad_gallery : [];
+  const addPhoto = (url) => updateLitter(litter.id, { ad_gallery: [...gallery, url] });
+  const removePhoto = (url) => updateLitter(litter.id, { ad_gallery: gallery.filter((g) => g !== url) });
+  const copyLink = () => {
+    if (!litter.share_token) return alert('Deel-link nog niet beschikbaar (database-update nodig).');
+    navigator.clipboard.writeText(`${window.location.origin}/nestje/${litter.share_token}`);
+    alert('Advertentielink van dit nestje gekopieerd!');
+  };
+  return (
+    <div className="space-y-6">
+      <Card>
+        <h4 className="font-display text-lg text-forest-900">Deelbare advertentielink</h4>
+        <p className="mt-1 text-sm text-forest-600">Stuur deze naar (potentiële) klanten — ze zien de aankondiging van dit verwachte nestje.</p>
+        <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+          <input readOnly value={typeof window !== 'undefined' ? `${window.location.origin}/nestje/${litter.share_token || ''}` : ''} className="min-w-0 flex-1 truncate rounded-lg border border-forest-900/10 bg-white p-2.5 font-mono text-xs text-brass-700 outline-none" />
+          <Btn variant="brass" onClick={copyLink} className="shrink-0 justify-center py-2 text-xs">Kopieer link</Btn>
+        </div>
+      </Card>
+
+      <Card>
+        <h4 className="font-display text-lg text-forest-900">Nestje-gegevens</h4>
+        <div className="mt-4 grid gap-4 sm:grid-cols-3">
+          <label className="block"><span className="text-xs font-medium uppercase tracking-wide text-forest-700">Verwacht op</span>
+            <Input type="date" defaultValue={litter.date_of_birth || ''} onBlur={(e) => { if (e.target.value !== (litter.date_of_birth || '')) updateLitter(litter.id, { date_of_birth: e.target.value || null }); }} className="mt-1" /></label>
+          <label className="block"><span className="text-xs font-medium uppercase tracking-wide text-forest-700">Vader (naam)</span>
+            <Input defaultValue={litter.sire_name || ''} onBlur={(e) => { if (e.target.value !== (litter.sire_name || '')) updateLitter(litter.id, { sire_name: e.target.value }); }} className="mt-1" /></label>
+          <label className="block"><span className="text-xs font-medium uppercase tracking-wide text-forest-700">Moeder (naam)</span>
+            <Input defaultValue={litter.dam_name || ''} onBlur={(e) => { if (e.target.value !== (litter.dam_name || '')) updateLitter(litter.id, { dam_name: e.target.value }); }} className="mt-1" /></label>
+        </div>
+      </Card>
+
+      <Card>
+        <h4 className="font-display text-lg text-forest-900">Ouderfoto's — vader &amp; moeder</h4>
+        <div className="mt-4 grid grid-cols-2 gap-4 sm:max-w-md">
+          <ParentPhoto label={`Vader${litter.sire_name ? ` · ${litter.sire_name}` : ''}`} src={litter.sire_image_url} folder={`cattery_parents/${litter.id}/sire`} onSet={(url) => updateLitter(litter.id, { sire_image_url: url })} />
+          <ParentPhoto label={`Moeder${litter.dam_name ? ` · ${litter.dam_name}` : ''}`} src={litter.dam_image_url} folder={`cattery_parents/${litter.id}/dam`} onSet={(url) => updateLitter(litter.id, { dam_image_url: url })} />
+        </div>
+      </Card>
+
+      <Card>
+        <h4 className="font-display text-lg text-forest-900">Foto's van de verwachting</h4>
+        <p className="mt-1 text-sm text-forest-600">Bijvoorbeeld foto's van eerdere nestjes of de ouders — voor de sfeer.</p>
+        <div className="mt-4 grid grid-cols-3 gap-3 sm:grid-cols-4">
+          {gallery.map((src, i) => (
+            <div key={i} className="group relative aspect-square overflow-hidden rounded-xl border border-forest-900/10">
+              <img src={src} alt="" className="h-full w-full object-cover" />
+              <button onClick={() => removePhoto(src)} className="absolute right-1 top-1 rounded-md bg-red-500/90 px-1.5 py-0.5 text-[10px] font-semibold text-white opacity-0 transition group-hover:opacity-100">Wis</button>
+            </div>
+          ))}
+          <AdminUpload onSuccess={(res) => { if (res.event === 'success') addPhoto(res.info.secure_url); }} options={{ folder: `cattery_litter_ad/${litter.id}`, clientAllowedFormats: ['images'] }}>
+            {({ open }) => (
+              <button type="button" onClick={(e) => { e.preventDefault(); open(); }} className="flex aspect-square items-center justify-center rounded-xl border-2 border-dashed border-forest-900/20 text-3xl text-forest-400 transition hover:border-brass-400 hover:text-brass-500">+</button>
+            )}
+          </AdminUpload>
+        </div>
+      </Card>
+
+      <Card>
+        <h4 className="font-display text-lg text-forest-900">Advertentietekst</h4>
+        <textarea defaultValue={litter.ad_text || ''} onBlur={(e) => { if (e.target.value !== (litter.ad_text || '')) updateLitter(litter.id, { ad_text: e.target.value }); }} rows={7}
+          placeholder="Vertel het verhaal van je cattery en dit verwachte nestje…" className="mt-3 w-full rounded-xl border border-forest-900/15 bg-white px-4 py-3 text-sm leading-relaxed outline-none focus:border-brass-400 focus:ring-2 focus:ring-brass-200" />
+        <p className="mt-1 text-xs text-forest-500">Verschijnt bovenaan de advertentie. Sla op door buiten het veld te klikken.</p>
+      </Card>
+    </div>
+  );
+}
+
+export default function SalesPage() {
+  const { kittens, litters = [], updateKitten, updateLitter, customers = [], documents = [], media = [] } = useStore();
+
   const saleKittens = kittens.filter((k) => !k.is_own_breeding_cat);
+  const [mode, setMode] = useState('kitten');
   const [selectedId, setSelectedId] = useState('');
+  const [litterId, setLitterId] = useState('');
   const selected = saleKittens.find((k) => k.id === selectedId) || null;
+  const selectedLitter = litters.find((l) => l.id === litterId) || null;
 
   const handleCopyLink = (token) => {
     navigator.clipboard.writeText(`${window.location.origin}/k/${token}`);
@@ -328,68 +410,89 @@ export default function SalesPage() {
   return (
     <>
       <PageHead label="Verkoop" title="Advertentie & Sales Beheer" />
-      <p className="-mt-4 mb-8 max-w-2xl text-sm text-forest-700/70">
-        Kies eerst een kitten. Daarna beheer je de advertentie: foto, prijs (NL/BE) en status,
-        koppel je een klant en kopieer je de persoonlijke link. Alle gegevens synchroniseren met het dossier.
+      <p className="-mt-4 mb-6 max-w-2xl text-sm text-forest-700/70">
+        Maak twee soorten advertenties: voor een <b>bestaande kitten</b> (met alle details en prijs),
+        of voor een <b>verwacht nestje</b> (aankondiging met ouders, foto's en jouw verhaal).
       </p>
 
-      {/* ---- STAP 1: kitten selecteren ---- */}
-      <Card className="mb-8">
-        <div className="flex items-center justify-between">
-          <h3 className="font-display text-lg text-forest-900">1. Selecteer een kitten</h3>
-          {selected && (
-            <button onClick={() => setSelectedId('')} className="text-xs font-semibold text-brass-600 hover:underline">Andere kitten kiezen</button>
-          )}
-        </div>
+      {/* Modus-keuze */}
+      <div className="mb-8 grid gap-3 sm:grid-cols-2">
+        <ModeCard active={mode === 'kitten'} onClick={() => setMode('kitten')} icon="🐱" title="Bestaande kitten" desc="Volledige advertentie met foto, prijs, status en klantlink." />
+        <ModeCard active={mode === 'litter'} onClick={() => setMode('litter')} icon="🍼" title="Verwacht nestje" desc="Aankondiging met ouders, sfeerfoto's en jouw verhaal." />
+      </div>
 
-        {saleKittens.length === 0 ? (
-          <p className="mt-4 text-sm italic text-forest-600">Er zijn nog geen kittens. Maak eerst een nestje met kittens aan bij <Link href="/admin/litters" className="font-semibold text-brass-600 hover:underline">Nestjes &amp; Kittens</Link>.</p>
-        ) : (
-          <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-            {saleKittens.map((k) => {
-              const active = k.id === selectedId;
-              return (
-                <button
-                  key={k.id}
-                  onClick={() => setSelectedId(k.id)}
-                  className={`flex items-center gap-3 rounded-2xl border p-3 text-left transition ${active ? 'border-brass-400 bg-brass-50 ring-2 ring-brass-300' : 'border-forest-900/15 bg-white hover:border-brass-300 hover:bg-forest-50/50'}`}
-                >
-                  {k.cover_image ? (
-                    <img src={k.cover_image} alt={k.name} className="h-12 w-12 shrink-0 rounded-lg object-cover" />
-                  ) : (
-                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border border-forest-100 bg-forest-50 text-[9px] text-forest-400">Geen foto</div>
-                  )}
-                  <div className="min-w-0">
-                    <p className="truncate font-semibold text-forest-900">{k.name}</p>
-                    <p className="truncate text-xs text-forest-600">{sexLabel(k.gender || k.sex)} · {matchStatus(k.status)}</p>
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-        )}
-      </Card>
-
-      {/* ---- STAP 2: advertentie beheren ---- */}
-      {selected ? (
+      {mode === 'kitten' ? (
         <>
-          <h3 className="mb-4 font-display text-lg text-forest-900">2. Beheer de advertentie van {selected.name}</h3>
-          <AdEditor
-            key={selected.id}
-            k={selected}
-            customers={customers}
-            documents={documents}
-            media={media}
-            updateKitten={updateKitten}
-            onCopyLink={handleCopyLink}
-          />
+          <Card className="mb-8">
+            <div className="flex items-center justify-between">
+              <h3 className="font-display text-lg text-forest-900">1. Selecteer een kitten</h3>
+              {selected && <button onClick={() => setSelectedId('')} className="text-xs font-semibold text-brass-600 hover:underline">Andere kitten kiezen</button>}
+            </div>
+            {saleKittens.length === 0 ? (
+              <p className="mt-4 text-sm italic text-forest-600">Er zijn nog geen kittens. Maak eerst een nestje met kittens aan bij <Link href="/admin/litters" className="font-semibold text-brass-600 hover:underline">Nestjes &amp; Kittens</Link>.</p>
+            ) : (
+              <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+                {saleKittens.map((k) => {
+                  const active = k.id === selectedId;
+                  return (
+                    <button key={k.id} onClick={() => setSelectedId(k.id)} className={`flex items-center gap-3 rounded-2xl border p-3 text-left transition ${active ? 'border-brass-400 bg-brass-50 ring-2 ring-brass-300' : 'border-forest-900/15 bg-white hover:border-brass-300 hover:bg-forest-50/50'}`}>
+                      {k.cover_image ? <img src={k.cover_image} alt={k.name} className="h-12 w-12 shrink-0 rounded-lg object-cover" /> : <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border border-forest-100 bg-forest-50 text-[9px] text-forest-400">Geen foto</div>}
+                      <div className="min-w-0">
+                        <p className="truncate font-semibold text-forest-900">{k.name}</p>
+                        <p className="truncate text-xs text-forest-600">{sexLabel(k.gender || k.sex)} · {matchStatus(k.status)}</p>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </Card>
+
+          {selected ? (
+            <>
+              <h3 className="mb-4 font-display text-lg text-forest-900">2. Beheer de advertentie van {selected.name}</h3>
+              <AdEditor key={selected.id} k={selected} customers={customers} documents={documents} media={media} updateKitten={updateKitten} onCopyLink={handleCopyLink} />
+            </>
+          ) : (
+            saleKittens.length > 0 && <div className="rounded-2xl border border-dashed border-forest-900/20 bg-white/60 py-12 text-center text-forest-600">Selecteer hierboven een kitten om de advertentie te beheren.</div>
+          )}
         </>
       ) : (
-        saleKittens.length > 0 && (
-          <div className="rounded-2xl border border-dashed border-forest-900/20 bg-white/60 py-12 text-center text-forest-600">
-            Selecteer hierboven een kitten om de advertentie te beheren.
-          </div>
-        )
+        <>
+          <Card className="mb-8">
+            <div className="flex items-center justify-between">
+              <h3 className="font-display text-lg text-forest-900">1. Selecteer een nestje</h3>
+              {selectedLitter && <button onClick={() => setLitterId('')} className="text-xs font-semibold text-brass-600 hover:underline">Ander nestje kiezen</button>}
+            </div>
+            {litters.length === 0 ? (
+              <p className="mt-4 text-sm italic text-forest-600">Er zijn nog geen nestjes. Maak er een aan bij <Link href="/admin/litters" className="font-semibold text-brass-600 hover:underline">Nestjes &amp; Kittens</Link>.</p>
+            ) : (
+              <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {litters.map((l) => {
+                  const active = l.id === litterId;
+                  return (
+                    <button key={l.id} onClick={() => setLitterId(l.id)} className={`flex items-center gap-3 rounded-2xl border p-3 text-left transition ${active ? 'border-brass-400 bg-brass-50 ring-2 ring-brass-300' : 'border-forest-900/15 bg-white hover:border-brass-300 hover:bg-forest-50/50'}`}>
+                      {l.cover_image_url ? <img src={l.cover_image_url} alt={l.name} className="h-12 w-12 shrink-0 rounded-lg object-cover" /> : <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border border-forest-100 bg-forest-50 text-lg">🍼</div>}
+                      <div className="min-w-0">
+                        <p className="truncate font-semibold text-forest-900">{l.name}</p>
+                        <p className="truncate text-xs text-forest-600">{l.sire_name || '?'} × {l.dam_name || '?'}</p>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </Card>
+
+          {selectedLitter ? (
+            <>
+              <h3 className="mb-4 font-display text-lg text-forest-900">2. Beheer de advertentie van {selectedLitter.name}</h3>
+              <LitterAdEditor key={selectedLitter.id} litter={selectedLitter} updateLitter={updateLitter} />
+            </>
+          ) : (
+            litters.length > 0 && <div className="rounded-2xl border border-dashed border-forest-900/20 bg-white/60 py-12 text-center text-forest-600">Selecteer hierboven een nestje om de advertentie te beheren.</div>
+          )}
+        </>
       )}
     </>
   );
