@@ -114,7 +114,7 @@ export default function AdminDashboard() {
       <div className="mt-8 grid gap-6 lg:grid-cols-[1.4fr_1fr]">
         <Card>
           <div className="mb-4 flex items-center justify-between">
-            <h2 className="font-display text-xl text-forest-900">Kittens</h2>
+            <h2 className="font-display text-xl text-forest-900">Alle katten</h2>
             <Link href="/admin/cats" className="text-sm text-brass-600 hover:underline">Beheren →</Link>
           </div>
           <div className="space-y-2">
