@@ -6,3 +6,6 @@ out/
 
 # Supabase CLI lokale/tijdelijke bestanden (kunnen credentials bevatten)
 supabase/.temp/
+
+# Claude Code local settings
+.claude/settings.local.json
