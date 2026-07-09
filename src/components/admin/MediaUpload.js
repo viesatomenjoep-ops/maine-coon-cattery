@@ -1,61 +1,43 @@
 'use client';
-import { useRef } from 'react';
 import { Btn } from '@/components/admin';
+import FilePicker from '@/components/admin/FilePicker';
 
 export default function MediaUpload({ catId, onUploadSuccess }) {
-  const fileInputRef = useRef(null);
-
-  const handleFileChange = async (e) => {
-    const files = Array.from(e.target.files);
-    if (!files.length) return;
-    
-    for (const file of files) {
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('folder', `cattery_media/${catId || 'general'}`);
-      
-      const res = await fetch('/api/upload', { method: 'POST', body: formData });
-      const data = await res.json();
-      if (data.url && onUploadSuccess) {
-        onUploadSuccess(data.url);
-      }
-    }
-    
-    e.target.value = ''; // Reset
+  const uploadOne = async (file) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('folder', `cattery_media/${catId || 'general'}`);
+    const res = await fetch('/api/upload', { method: 'POST', body: formData });
+    const data = await res.json();
+    if (data.url && onUploadSuccess) onUploadSuccess(data.url);
   };
 
   return (
     <div className="rounded-xl border border-dashed border-forest-900/20 bg-forest-900/5 p-8 text-center">
-      <button 
-        type="button" 
-        onClick={() => fileInputRef.current?.click()}
-        className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-white shadow-sm outline-none hover:bg-forest-50 focus:ring-2 focus:ring-brass-500 transition"
-      >
+      <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-white shadow-sm">
         <svg className="h-6 w-6 text-brass-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
         </svg>
-      </button>
-      
-      <h3 className="font-display text-lg text-forest-900">Media Uploaden</h3>
-      <p className="mt-1 text-sm text-forest-600">Voeg foto's of video's toe vanaf je apparaat (max 5)</p>
-      
-      <div className="mt-6 flex justify-center gap-3">
-        <input 
-          type="file" 
-          ref={fileInputRef}
-          onChange={handleFileChange}
-          multiple
-          accept="image/*,video/*"
-          className="hidden" 
-        />
-        <Btn type="button" onClick={() => fileInputRef.current?.click()} variant="solid">
-          Kies Bestand(en)
-        </Btn>
       </div>
 
-      <div className="mt-4 text-xs text-forest-500">
-        <p>Tip: Klik op de knop of het icoon erboven om direct je camera of galerij te openen.</p>
+      <h3 className="font-display text-lg text-forest-900">Media Uploaden</h3>
+      <p className="mt-1 text-sm text-forest-600">Voeg foto&apos;s of video&apos;s toe vanaf je apparaat</p>
+
+      <div className="mt-6 flex flex-wrap justify-center gap-3">
+        <FilePicker
+          accept="image/*,video/*"
+          multiple
+          onFileReady={uploadOne}
+          uploadLabel="Kies bestand(en)"
+          cameraLabel="Open camera"
+          uploadClassName="inline-flex items-center justify-center rounded-xl bg-forest-800 px-5 py-2.5 text-sm font-medium text-cream-100 transition hover:bg-forest-900"
+          cameraClassName="inline-flex items-center justify-center rounded-xl border border-forest-900/15 bg-white px-5 py-2.5 text-sm font-medium text-forest-800 transition hover:bg-forest-50"
+        />
       </div>
+
+      <p className="mt-4 text-xs text-forest-500">
+        Tip: bij foto&apos;s kun je ze eerst rechtzetten voordat ze worden opgeslagen.
+      </p>
     </div>
   );
 }

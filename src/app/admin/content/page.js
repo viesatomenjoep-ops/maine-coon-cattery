@@ -1,8 +1,9 @@
 'use client';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useStore } from '@/context/StoreContext';
 import { translations } from '@/data/translations';
 import { PageHead, Btn } from '@/components/admin';
+import { AdminUpload } from '@/components/admin/FilePicker';
 import { PawMark, SectionLabel } from '@/components/ui';
 
 const defaultNL = translations.nl;
@@ -18,27 +19,7 @@ const growthImages = [
   '/images/junior_window.png', '/images/adult_regal.png', '/images/adult_fluffy.png', '/images/adult_smoke.png'
 ];
 
-const CldUploadWidget = ({ children, onSuccess, options }) => {
-  const ref = useRef(null);
-  const handleFile = async (e) => {
-    const files = Array.from(e.target.files);
-    for (const file of files) {
-      const formData = new FormData();
-      formData.append('file', file);
-      if (options?.folder) formData.append('folder', options.folder);
-      const res = await fetch('/api/upload', { method: 'POST', body: formData });
-      const data = await res.json();
-      if (data.url && onSuccess) onSuccess({ event: 'success', info: { secure_url: data.url } });
-    }
-    e.target.value = '';
-  };
-  return (
-    <>
-      <input type="file" ref={ref} className="hidden" multiple={options?.multiple} accept="image/*,video/*" onChange={handleFile} />
-      {children({ open: () => ref.current?.click() })}
-    </>
-  );
-};
+const CldUploadWidget = AdminUpload;
 
 function VisualInput({ value, onChange, className, type = "text" }) {
   if (type === 'textarea') {
@@ -63,10 +44,15 @@ function ImageUploadBox({ src, onChange, className }) {
       )}
       <div className="absolute inset-0 bg-ink/50 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center transition gap-2 z-20 p-2">
         <CldUploadWidget onSuccess={(res) => { if(res.event === 'success') onChange(res.info.secure_url) }} options={{ folder: 'cattery_cms' }}>
-          {({ open }) => (
-            <button onClick={open} className="bg-white text-forest-900 px-4 py-2 rounded-xl text-sm font-semibold shadow">
-              {hasImage ? '📷 Andere foto' : '📷 Foto uploaden'}
-            </button>
+          {({ open, openCamera }) => (
+            <>
+              <button onClick={open} className="bg-white text-forest-900 px-4 py-2 rounded-xl text-sm font-semibold shadow">
+                {hasImage ? '📷 Andere foto' : '📷 Foto uploaden'}
+              </button>
+              <button onClick={openCamera} className="bg-white text-forest-900 px-4 py-2 rounded-xl text-sm font-semibold shadow">
+                📸 Open camera
+              </button>
+            </>
           )}
         </CldUploadWidget>
         {hasImage && (

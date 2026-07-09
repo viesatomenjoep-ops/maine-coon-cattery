@@ -5,6 +5,7 @@ import { useStore } from '@/context/StoreContext';
 import { PageHead, Card, Field, Input, Select, Combobox, Btn } from '@/components/admin';
 import DocumentUploader, { DocumentList } from '@/components/admin/DocumentUploader';
 import LitterEditor from '@/components/admin/LitterEditor';
+import FilePicker from '@/components/admin/FilePicker';
 
 const SEXES = ['Kater', 'Poes'];
 const PATTERNS = [
@@ -65,8 +66,7 @@ export default function LittersPage() {
   };
   const closeForm = () => { setMode(null); setEditingLitterId(null); };
 
-  const handleUpload = async (e) => {
-    const file = e.target.files[0];
+  const handleUpload = async (file) => {
     if (!file) return;
     setUploading(true);
     const fd = new FormData();
@@ -183,8 +183,14 @@ export default function LittersPage() {
                 <Field label="Prijs BE (€)"><Input type="number" value={kit.priceBE} onChange={(e) => setKit({ ...kit, priceBE: Number(e.target.value) })} /></Field>
               </div>
               <Field label="Cover Afbeelding (Optioneel)">
-                <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center">
-                  <input type="file" accept="image/*" onChange={handleUpload} className="w-full text-sm file:mb-2 file:mr-4 file:w-full file:rounded-xl file:border-0 file:bg-forest-50 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-forest-700 hover:file:bg-forest-100 sm:file:mb-0 sm:file:w-auto" />
+                <div className="flex flex-col items-start gap-3">
+                  <FilePicker
+                    accept="image/*"
+                    disabled={uploading}
+                    onFileReady={handleUpload}
+                    uploadLabel="Cover uploaden"
+                    cameraLabel="Open camera"
+                  />
                   {uploading && <span className="text-xs text-forest-500">Uploaden...</span>}
                   {kit.cover_image && <img src={kit.cover_image} alt="Preview" className="h-10 w-10 rounded object-cover shadow" />}
                 </div>

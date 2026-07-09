@@ -3,29 +3,9 @@ import { useRef, useState } from 'react';
 import { useStore } from '@/context/StoreContext';
 import { PageHead, Card, Field, Input, Select, Btn } from '@/components/admin';
 import { ImageSlot } from '@/components/ui';
-// import { CldUploadWidget } from 'next-cloudinary';
+import { AdminUpload } from '@/components/admin/FilePicker';
 
-const CldUploadWidget = ({ children, onSuccess, options }) => {
-  const ref = useRef(null);
-  const handleFile = async (e) => {
-    const files = Array.from(e.target.files);
-    for (const file of files) {
-      const formData = new FormData();
-      formData.append('file', file);
-      if (options?.folder) formData.append('folder', options.folder);
-      const res = await fetch('/api/upload', { method: 'POST', body: formData });
-      const data = await res.json();
-      if (data.url && onSuccess) onSuccess({ event: 'success', info: { secure_url: data.url } });
-    }
-    e.target.value = '';
-  };
-  return (
-    <>
-      <input type="file" ref={ref} className="hidden" multiple={options?.multiple} accept={options?.clientAllowedFormats?.join(',') || "image/*,video/*"} onChange={handleFile} />
-      {children({ open: () => ref.current?.click() })}
-    </>
-  );
-};
+const CldUploadWidget = AdminUpload;
 
 const TAGS = ['Aankondiging', 'Update', 'Medisch', 'Show'];
 
@@ -128,23 +108,16 @@ export default function NewsEditor() {
               )}
               
               <CldUploadWidget 
-                signatureEndpoint="/api/sign-cloudinary-params"
                 onSuccess={(result) => {
-                  if (result.event === 'success') {
-                    setImageUrl(result.info.secure_url);
-                  }
+                  if (result.event === 'success') setImageUrl(result.info.secure_url);
                 }}
-                options={{
-                  sources: ['local', 'url', 'camera'],
-                  multiple: false,
-                  folder: `cattery_media/news`,
-                  clientAllowedFormats: ['images']
-                }}
+                options={{ folder: 'cattery_media/news', clientAllowedFormats: ['images'] }}
               >
-                {({ open }) => (
-                  <Btn variant="ghost" type="button" onClick={() => open()}>
-                    Selecteer bestand
-                  </Btn>
+                {({ open, openCamera }) => (
+                  <div className="flex flex-wrap gap-2">
+                    <Btn variant="ghost" type="button" onClick={() => open()}>Selecteer bestand</Btn>
+                    <Btn variant="ghost" type="button" onClick={() => openCamera()}>Open camera</Btn>
+                  </div>
                 )}
               </CldUploadWidget>
               {imageUrl && (

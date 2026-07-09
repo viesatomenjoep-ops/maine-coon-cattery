@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useStore } from '@/context/StoreContext';
 import { Card, Field, Input, Select, Textarea, Combobox, Btn } from '@/components/admin';
 import DocumentUploader, { DocumentList } from '@/components/admin/DocumentUploader';
+import FilePicker from '@/components/admin/FilePicker';
 
 const LITTER_STATUSES = [
   { value: 'verwacht', label: 'Verwacht' },
@@ -304,8 +305,7 @@ export default function LitterEditor({ initialLitterId = null, onClose }) {
   const sireDocs = sireCat ? documents.filter((d) => d.cat_id === sireCat.id) : [];
   const damDocs = damCat ? documents.filter((d) => d.cat_id === damCat.id) : [];
 
-  const handleCover = async (e) => {
-    const file = e.target.files?.[0];
+  const handleCover = async (file) => {
     if (!file) return;
     setCoverUploading(true);
     try {
@@ -313,7 +313,6 @@ export default function LitterEditor({ initialLitterId = null, onClose }) {
       setLitter((l) => ({ ...l, cover_image_url: data.url }));
     } catch (err) { alert('Uploaden mislukt: ' + err.message); }
     setCoverUploading(false);
-    e.target.value = '';
   };
 
   const saveCover = async () => {
@@ -330,8 +329,7 @@ export default function LitterEditor({ initialLitterId = null, onClose }) {
     if (litterId) await updateLitter(litterId, { cover_image_url: null });
   };
 
-  const handleKitCover = async (e) => {
-    const file = e.target.files?.[0];
+  const handleKitCover = async (file) => {
     if (!file) return;
     setKitCoverUploading(true);
     try {
@@ -339,7 +337,6 @@ export default function LitterEditor({ initialLitterId = null, onClose }) {
       setKit((k) => ({ ...k, cover_image: data.url }));
     } catch (err) { alert('Uploaden mislukt: ' + err.message); }
     setKitCoverUploading(false);
-    e.target.value = '';
   };
 
   const saveLitter = async () => {
@@ -401,10 +398,13 @@ export default function LitterEditor({ initialLitterId = null, onClose }) {
             </div>
           )}
           <div className="flex flex-1 flex-col gap-3">
-            <label className={`inline-flex w-fit cursor-pointer items-center justify-center rounded-xl border border-forest-900/15 bg-white px-5 py-2.5 text-sm font-medium text-forest-800 transition hover:bg-forest-100 ${coverUploading ? 'opacity-60' : ''}`}>
-              {coverUploading ? 'Uploaden…' : (litter.cover_image_url ? 'Foto vervangen' : 'Foto uploaden')}
-              <input type="file" accept="image/*" onChange={handleCover} className="hidden" disabled={coverUploading} />
-            </label>
+            <FilePicker
+              accept="image/*"
+              disabled={coverUploading}
+              onFileReady={handleCover}
+              uploadLabel={coverUploading ? 'Uploaden…' : (litter.cover_image_url ? 'Foto vervangen' : 'Foto uploaden')}
+              cameraLabel="Open camera"
+            />
             <div className="flex flex-wrap gap-3">
               <Btn variant="brass" onClick={saveCover} disabled={savingCover || coverUploading}>{savingCover ? 'Opslaan…' : 'Foto opslaan'}</Btn>
               {litter.cover_image_url && <Btn variant="danger" onClick={removeCover} disabled={savingCover}>Verwijderen</Btn>}
@@ -485,8 +485,14 @@ export default function LitterEditor({ initialLitterId = null, onClose }) {
                   <Field label="Prijs BE (€)"><Input type="number" value={kit.priceBE} onChange={(e) => setKit({ ...kit, priceBE: e.target.value })} /></Field>
                 </div>
                 <Field label="Cover-afbeelding (optioneel)">
-                  <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center">
-                    <input type="file" accept="image/*" onChange={handleKitCover} className="w-full text-sm file:mb-2 file:mr-4 file:w-full file:rounded-xl file:border-0 file:bg-forest-50 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-forest-700 hover:file:bg-forest-100 sm:file:mb-0 sm:file:w-auto" />
+                  <div className="flex flex-col items-start gap-3">
+                    <FilePicker
+                      accept="image/*"
+                      disabled={kitCoverUploading}
+                      onFileReady={handleKitCover}
+                      uploadLabel="Cover uploaden"
+                      cameraLabel="Open camera"
+                    />
                     {kitCoverUploading && <span className="text-xs text-forest-500">Uploaden…</span>}
                     {kit.cover_image && <img src={kit.cover_image} alt="Preview" className="h-10 w-10 rounded object-cover shadow" />}
                   </div>

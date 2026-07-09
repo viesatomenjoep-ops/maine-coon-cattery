@@ -1,36 +1,12 @@
 'use client';
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 import { useStore } from '@/context/StoreContext';
 import { PageHead, Card, Select, Btn } from '@/components/admin';
 import { ImageSlot } from '@/components/ui';
+import { AdminUpload } from '@/components/admin/FilePicker';
 import jsPDF from 'jspdf';
 
-// Onze native filepicker integratie met Cloudinary API
-const NativeUploadWidget = ({ children, onSuccess, folder, accept }) => {
-  const ref = useRef(null);
-  const handleFile = async (e) => {
-    const files = Array.from(e.target.files);
-    for (const file of files) {
-      const formData = new FormData();
-      formData.append('file', file);
-      if (folder) formData.append('folder', folder);
-      try {
-        const res = await fetch('/api/upload', { method: 'POST', body: formData });
-        const data = await res.json();
-        if (data.url && onSuccess) onSuccess({ event: 'success', info: { secure_url: data.url, name: file.name } });
-      } catch (err) {
-        console.error("Upload failed", err);
-      }
-    }
-    e.target.value = '';
-  };
-  return (
-    <>
-      <input type="file" ref={ref} className="hidden" accept={accept || "image/*,video/*,application/pdf"} onChange={handleFile} />
-      {children({ open: () => ref.current?.click() })}
-    </>
-  );
-};
+const NativeUploadWidget = AdminUpload;
 
 export default function MediaDocumentenPage() {
   const { kittens, documents, media, addDocument, deleteDocument, addMedia, deleteMedia } = useStore();
@@ -170,15 +146,19 @@ export default function MediaDocumentenPage() {
             </label>
 
             <NativeUploadWidget 
-              folder={`cattery_medical/${targetMedical || 'general'}`}
+              options={{ folder: `cattery_medical/${targetMedical || 'general'}`, accept: 'image/*,application/pdf' }}
               onSuccess={(res) => handleUploadSuccess('Medisch', targetMedical, res)}
-              accept="image/*,application/pdf"
             >
-              {({ open }) => (
-                <button type="button" onClick={(e) => { e.preventDefault(); open(); }} className="w-full flex flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed border-blue-200 bg-blue-50/50 p-8 transition hover:bg-blue-50">
-                  <span className="rounded-full bg-blue-100 px-4 py-2 text-sm font-semibold text-blue-700 shadow-sm">Bladeren / Open Camera</span>
-                  <span className="text-xs text-blue-600/70">Upload PDF of Foto (Auto-Save)</span>
-                </button>
+              {({ open, openCamera }) => (
+                <div className="flex flex-col gap-3">
+                  <button type="button" onClick={(e) => { e.preventDefault(); open(); }} className="w-full flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-blue-200 bg-blue-50/50 p-6 transition hover:bg-blue-50">
+                    <span className="rounded-full bg-blue-100 px-4 py-2 text-sm font-semibold text-blue-700 shadow-sm">📁 Kies bestand</span>
+                    <span className="text-xs text-blue-600/70">PDF of foto (auto-save)</span>
+                  </button>
+                  <button type="button" onClick={(e) => { e.preventDefault(); openCamera(); }} className="w-full rounded-xl border border-blue-200 bg-white px-4 py-3 text-sm font-semibold text-blue-700 transition hover:bg-blue-50">
+                    📷 Open camera
+                  </button>
+                </div>
               )}
             </NativeUploadWidget>
             
@@ -214,15 +194,19 @@ export default function MediaDocumentenPage() {
             </label>
 
             <NativeUploadWidget 
-              folder={`cattery_contracts/${targetContract || 'general'}`}
+              options={{ folder: `cattery_contracts/${targetContract || 'general'}`, accept: 'application/pdf,image/*' }}
               onSuccess={(res) => handleUploadSuccess('Contract', targetContract, res)}
-              accept="application/pdf,image/*"
             >
-              {({ open }) => (
-                <button type="button" onClick={(e) => { e.preventDefault(); open(); }} className="w-full flex flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed border-terracotta-200 bg-terracotta-50/50 p-8 transition hover:bg-terracotta-50">
-                  <span className="rounded-full bg-terracotta-100 px-4 py-2 text-sm font-semibold text-terracotta-700 shadow-sm">Bladeren / Open Camera</span>
-                  <span className="text-xs text-terracotta-600/70">Upload Ondertekend Contract (Auto-Save)</span>
-                </button>
+              {({ open, openCamera }) => (
+                <div className="flex flex-col gap-3">
+                  <button type="button" onClick={(e) => { e.preventDefault(); open(); }} className="w-full flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-terracotta-200 bg-terracotta-50/50 p-6 transition hover:bg-terracotta-50">
+                    <span className="rounded-full bg-terracotta-100 px-4 py-2 text-sm font-semibold text-terracotta-700 shadow-sm">📁 Kies bestand</span>
+                    <span className="text-xs text-terracotta-600/70">Contract PDF of foto (auto-save)</span>
+                  </button>
+                  <button type="button" onClick={(e) => { e.preventDefault(); openCamera(); }} className="w-full rounded-xl border border-terracotta-200 bg-white px-4 py-3 text-sm font-semibold text-terracotta-700 transition hover:bg-terracotta-50">
+                    📷 Open camera
+                  </button>
+                </div>
               )}
             </NativeUploadWidget>
 
@@ -249,15 +233,19 @@ export default function MediaDocumentenPage() {
           </div>
           
           <NativeUploadWidget 
-            folder="cattery_gallery"
+            options={{ folder: 'cattery_gallery', accept: 'image/*,video/*', multiple: true }}
             onSuccess={(res) => handleUploadSuccess('Galerij', null, res)}
-            accept="image/*,video/*"
           >
-            {({ open }) => (
-              <button type="button" onClick={(e) => { e.preventDefault(); open(); }} className="w-full flex flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed border-brass-300 bg-brass-50/50 p-8 transition hover:bg-brass-50">
-                <span className="rounded-full bg-brass-200 px-4 py-2 text-sm font-semibold text-brass-800 shadow-sm">Meerdere Bestanden Selecteren</span>
-                <span className="text-xs text-brass-700/70">Upload hoge resolutie foto's en video's (Auto-Save)</span>
-              </button>
+            {({ open, openCamera }) => (
+              <div className="flex flex-col gap-3 sm:flex-row">
+                <button type="button" onClick={(e) => { e.preventDefault(); open(); }} className="flex-1 flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-brass-300 bg-brass-50/50 p-6 transition hover:bg-brass-50">
+                  <span className="rounded-full bg-brass-200 px-4 py-2 text-sm font-semibold text-brass-800 shadow-sm">📁 Kies bestand(en)</span>
+                  <span className="text-xs text-brass-700/70">Foto&apos;s en video&apos;s (auto-save)</span>
+                </button>
+                <button type="button" onClick={(e) => { e.preventDefault(); openCamera(); }} className="sm:w-48 rounded-xl border border-brass-300 bg-white px-4 py-6 text-sm font-semibold text-brass-800 transition hover:bg-brass-50">
+                  📷 Open camera
+                </button>
+              </div>
             )}
           </NativeUploadWidget>
 

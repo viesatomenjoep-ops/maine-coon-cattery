@@ -6,31 +6,9 @@ import MediaUpload from '@/components/admin/MediaUpload';
 import DocumentUploader, { DocumentList } from '@/components/admin/DocumentUploader';
 import MediaGallery from '@/components/admin/MediaGallery';
 import { useStore } from '@/context/StoreContext';
-// import { CldUploadWidget } from 'next-cloudinary';
+import { AdminUpload } from '@/components/admin/FilePicker';
 
-import { useRef } from 'react';
-
-const CldUploadWidget = ({ children, onSuccess, options }) => {
-  const ref = useRef(null);
-  const handleFile = async (e) => {
-    const files = Array.from(e.target.files);
-    for (const file of files) {
-      const formData = new FormData();
-      formData.append('file', file);
-      if (options?.folder) formData.append('folder', options.folder);
-      const res = await fetch('/api/upload', { method: 'POST', body: formData });
-      const data = await res.json();
-      if (data.url && onSuccess) onSuccess({ event: 'success', info: { secure_url: data.url } });
-    }
-    e.target.value = '';
-  };
-  return (
-    <>
-      <input type="file" ref={ref} className="hidden" multiple={options?.multiple} accept={options?.clientAllowedFormats?.join(',') || "image/*,video/*,application/pdf"} onChange={handleFile} />
-      {children({ open: () => ref.current?.click() })}
-    </>
-  );
-};
+const CldUploadWidget = AdminUpload;
 
 const MALE_TOKENS = ['m', 'male', 'kater', 'mannelijk'];
 const genderToSex = (g) => (MALE_TOKENS.includes((g || '').toString().trim().toLowerCase()) ? 'Kater' : 'Poes');
@@ -251,10 +229,13 @@ export default function CatDossier() {
                           onSuccess={(res) => { if (res.event === 'success') setFormData(prev => ({ ...prev, cover_image: res.info.secure_url })); }}
                           options={{ folder: `cattery_covers/${id}` }}
                         >
-                          {({ open }) => (
-                            <Btn type="button" variant="ghost" onClick={(e) => { e.preventDefault(); open(); }} className="w-fit bg-white">
-                              {formData.cover_image ? 'Profielfoto Vervangen' : 'Profielfoto Uploaden'}
-                            </Btn>
+                          {({ open, openCamera }) => (
+                            <div className="flex flex-wrap gap-2">
+                              <Btn type="button" variant="ghost" onClick={(e) => { e.preventDefault(); open(); }} className="w-fit bg-white">
+                                {formData.cover_image ? 'Profielfoto Vervangen' : 'Profielfoto Uploaden'}
+                              </Btn>
+                              <Btn type="button" variant="ghost" onClick={(e) => { e.preventDefault(); openCamera(); }} className="w-fit bg-white">Open camera</Btn>
+                            </div>
                           )}
                         </CldUploadWidget>
                         {formData.cover_image && (
@@ -289,10 +270,13 @@ export default function CatDossier() {
                       }}
                       options={{ folder: `cattery_paspoort/${id}` }}
                     >
-                      {({ open }) => (
-                        <Btn type="button" variant="ghost" onClick={(e) => { e.preventDefault(); open(); }} className="bg-white border-brass-300 text-brass-800 hover:bg-brass-100">
-                          {formData.pedigree_data?.passport_url ? 'Paspoort Vervangen' : 'Paspoort Uploaden'}
-                        </Btn>
+                      {({ open, openCamera }) => (
+                        <div className="flex flex-wrap gap-2">
+                          <Btn type="button" variant="ghost" onClick={(e) => { e.preventDefault(); open(); }} className="bg-white border-brass-300 text-brass-800 hover:bg-brass-100">
+                            {formData.pedigree_data?.passport_url ? 'Paspoort Vervangen' : 'Paspoort Uploaden'}
+                          </Btn>
+                          <Btn type="button" variant="ghost" onClick={(e) => { e.preventDefault(); openCamera(); }} className="bg-white border-brass-300 text-brass-800 hover:bg-brass-100">Open camera</Btn>
+                        </div>
                       )}
                     </CldUploadWidget>
                     {formData.pedigree_data?.passport_url && (
@@ -408,7 +392,6 @@ export default function CatDossier() {
                   <div className="mt-4 rounded-xl border border-brass-200 bg-brass-50 p-4">
                     <p className="mb-2 text-sm font-semibold text-brass-900">Digitale Stamboom Uploaden</p>
                     <CldUploadWidget 
-                      signatureEndpoint="/api/sign-cloudinary-params"
                       onSuccess={(res) => { 
                         if(res.event === 'success') {
                           setFormData(prev => ({ ...prev, pedigree_data: { ...prev.pedigree_data, image_url: res.info.secure_url } }));
@@ -417,10 +400,13 @@ export default function CatDossier() {
                       }}
                       options={{ folder: `cattery_stamboom/${id}` }}
                     >
-                      {({ open }) => (
-                        <Btn type="button" variant="ghost" onClick={(e) => { e.preventDefault(); open(); }} className="bg-white border-brass-300 text-brass-800 hover:bg-brass-100 mb-4">
-                          Stamboom Uploaden
-                        </Btn>
+                      {({ open, openCamera }) => (
+                        <div className="flex flex-wrap gap-2 mb-4">
+                          <Btn type="button" variant="ghost" onClick={(e) => { e.preventDefault(); open(); }} className="bg-white border-brass-300 text-brass-800 hover:bg-brass-100">
+                            Stamboom Uploaden
+                          </Btn>
+                          <Btn type="button" variant="ghost" onClick={(e) => { e.preventDefault(); openCamera(); }} className="bg-white border-brass-300 text-brass-800 hover:bg-brass-100">Open camera</Btn>
+                        </div>
                       )}
                     </CldUploadWidget>
                     {formData.pedigree_data?.image_url && (

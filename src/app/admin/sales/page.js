@@ -2,31 +2,9 @@
 import { useStore } from '@/context/StoreContext';
 import { PageHead, Card, Input, Select, Btn } from '@/components/admin';
 import { StatusPill, ImageSlot } from '@/components/ui';
-// import { CldUploadWidget } from 'next-cloudinary';
+import { AdminUpload } from '@/components/admin/FilePicker';
 
-import { useRef } from 'react';
-
-const CldUploadWidget = ({ children, onSuccess, options }) => {
-  const ref = useRef(null);
-  const handleFile = async (e) => {
-    const files = Array.from(e.target.files);
-    for (const file of files) {
-      const formData = new FormData();
-      formData.append('file', file);
-      if (options?.folder) formData.append('folder', options.folder);
-      const res = await fetch('/api/upload', { method: 'POST', body: formData });
-      const data = await res.json();
-      if (data.url && onSuccess) onSuccess({ event: 'success', info: { secure_url: data.url } });
-    }
-    e.target.value = '';
-  };
-  return (
-    <>
-      <input type="file" ref={ref} className="hidden" multiple={options?.multiple} accept={options?.clientAllowedFormats?.join(',') || "image/*,video/*"} onChange={handleFile} />
-      {children({ open: () => ref.current?.click() })}
-    </>
-  );
-};
+const CldUploadWidget = AdminUpload;
 
 const STATUSES = ['Beschikbaar', 'Gereserveerd', 'Verkocht'];
 const eur = (n) => new Intl.NumberFormat('nl-NL', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(n || 0);
@@ -69,18 +47,20 @@ const KittenSalesCard = ({ k, updateKitten, handleCopyLink, customers }) => {
               <div className="absolute inset-0 bg-ink/40 opacity-0 transition group-hover:opacity-100 flex items-center justify-center gap-2">
                 {true ? (
                   <CldUploadWidget 
-                    signatureEndpoint="/api/sign-cloudinary-params"
                     onSuccess={(result) => {
-                      if (result.event === 'success') {
-                        updateKitten(k.id, { cover_image: result.info.secure_url });
-                      }
+                      if (result.event === 'success') updateKitten(k.id, { cover_image: result.info.secure_url });
                     }}
-                    options={{ sources: ['local', 'url', 'camera'], multiple: false, folder: `cattery_sales/${k.id}`, clientAllowedFormats: ['images'] }}
+                    options={{ folder: `cattery_sales/${k.id}`, clientAllowedFormats: ['images'] }}
                   >
-                    {({ open }) => (
-                      <button type="button" onClick={(e) => { e.preventDefault(); open(); }} className="rounded-lg bg-white/90 px-3 py-1.5 text-xs font-semibold text-forest-900 shadow hover:bg-white">
-                        Upload
-                      </button>
+                    {({ open, openCamera }) => (
+                      <>
+                        <button type="button" onClick={(e) => { e.preventDefault(); open(); }} className="rounded-lg bg-white/90 px-3 py-1.5 text-xs font-semibold text-forest-900 shadow hover:bg-white">
+                          Upload
+                        </button>
+                        <button type="button" onClick={(e) => { e.preventDefault(); openCamera(); }} className="rounded-lg bg-white/90 px-3 py-1.5 text-xs font-semibold text-forest-900 shadow hover:bg-white">
+                          Camera
+                        </button>
+                      </>
                     )}
                   </CldUploadWidget>
                 ) : (

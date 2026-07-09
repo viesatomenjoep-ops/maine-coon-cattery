@@ -52,12 +52,6 @@ export default function LoginPage() {
     }
   };
 
-  const fill = (em, pw) => {
-    setEmail(em);
-    setPassword(pw);
-    setError('');
-  };
-
   return (
     <div className="relative z-10 grid min-h-screen md:grid-cols-2">
       {/* visual side */}
@@ -166,24 +160,6 @@ export default function LoginPage() {
             <p className="text-center text-[11px] text-ink/50 leading-relaxed">
               Tip: sla je wachtwoord op in je telefoon. De volgende keer log je in met Face ID / Touch ID.
             </p>
-
-            {/* Snel invullen van bekende beheerdersaccounts */}
-            <div className="flex flex-col gap-2 pt-1">
-              <button
-                type="button"
-                onClick={() => fill('tomjo118735@gmail.com', '@Tb118739')}
-                className="w-full rounded-xl bg-cream-50 border border-terracotta-900/10 py-2.5 text-sm font-medium text-terracotta-800 transition hover:bg-terracotta-100"
-              >
-                Vul admin-gegevens (Tomjo) in
-              </button>
-              <button
-                type="button"
-                onClick={() => fill('mazzel37@icloud.com', 'Maincoonmazzel2211')}
-                className="w-full rounded-xl bg-cream-50 border border-terracotta-900/10 py-2.5 text-sm font-medium text-terracotta-800 transition hover:bg-terracotta-100"
-              >
-                Vul admin-gegevens (Mazzel) in
-              </button>
-            </div>
           </form>
         </div>
       </div>

@@ -15,6 +15,7 @@ export default function AdminDashboard() {
     { href: '/admin/customers', label: 'Klantenbestand', icon: '👥', desc: 'Beheer alle kopers' },
     { href: '/admin/content', label: 'Website Editor', icon: '🌍', desc: 'Pas teksten op de site aan' },
     { href: '/admin/media', label: 'Foto- & Videogalerij', icon: '📸', desc: 'Beheer alle media' },
+    { href: '/admin/backup', label: 'Back-up & Export', icon: '💾', desc: 'Download een kopie van al je gegevens' },
     { href: '/admin/settings', label: 'Instellingen', icon: '⚙️', desc: 'Systeemvoorkeuren' },
   ];
 

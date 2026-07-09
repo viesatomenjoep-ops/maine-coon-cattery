@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { useStore } from '@/context/StoreContext';
 import { Select, Input } from '@/components/admin';
+import FilePicker from '@/components/admin/FilePicker';
 
 export const DOC_TYPES = [
   { value: 'paspoort', label: 'Paspoort' },
@@ -97,8 +98,7 @@ export default function DocumentUploader({ catId, kittenId, litterId, folder = '
   const [uploading, setUploading] = useState(false);
   const targetCatId = catId || kittenId || null;
 
-  const handleFile = async (e) => {
-    const file = e.target.files?.[0];
+  const handleFile = async (file) => {
     if (!file) return;
     setUploading(true);
     try {
@@ -125,7 +125,6 @@ export default function DocumentUploader({ catId, kittenId, litterId, folder = '
       alert('Uploaden mislukt: ' + err.message);
     } finally {
       setUploading(false);
-      e.target.value = '';
     }
   };
 
@@ -145,10 +144,15 @@ export default function DocumentUploader({ catId, kittenId, litterId, folder = '
           <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Bijv. HCM echo 2026" />
         </div>
       </label>
-      <label className={`inline-flex cursor-pointer items-center justify-center whitespace-nowrap rounded-xl bg-brass-400 px-5 py-2.5 text-sm font-medium text-forest-950 transition hover:bg-brass-300 ${uploading ? 'opacity-60' : ''}`}>
-        {uploading ? 'Uploaden…' : '+ Document'}
-        <input type="file" className="hidden" accept="image/*,application/pdf" onChange={handleFile} disabled={uploading} />
-      </label>
+      <FilePicker
+        accept="image/*,application/pdf"
+        disabled={uploading}
+        onFileReady={handleFile}
+        uploadLabel={uploading ? 'Uploaden…' : '+ Document'}
+        cameraLabel="Open camera"
+        uploadClassName={`inline-flex cursor-pointer items-center justify-center whitespace-nowrap rounded-xl bg-brass-400 px-5 py-2.5 text-sm font-medium text-forest-950 transition hover:bg-brass-300 ${uploading ? 'opacity-60' : ''}`}
+        cameraClassName={`inline-flex items-center justify-center whitespace-nowrap rounded-xl border border-forest-900/15 bg-white px-5 py-2.5 text-sm font-medium text-forest-800 transition hover:bg-forest-50 ${uploading ? 'opacity-60' : ''}`}
+      />
     </div>
   );
 }
