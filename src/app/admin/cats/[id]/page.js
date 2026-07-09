@@ -4,6 +4,7 @@ import { useRouter, useParams } from 'next/navigation';
 import { PageHead, Card, Field, Input, Select, Textarea, Btn } from '@/components/admin';
 import MediaUpload from '@/components/admin/MediaUpload';
 import DocumentUploader, { DocumentList } from '@/components/admin/DocumentUploader';
+import MediaGallery from '@/components/admin/MediaGallery';
 import { useStore } from '@/context/StoreContext';
 // import { CldUploadWidget } from 'next-cloudinary';
 
@@ -39,7 +40,7 @@ const normStatus = (s) => STATUS_MAP[(s || '').toString().trim().toLowerCase()] 
 export default function CatDossier() {
   const router = useRouter();
   const { id } = useParams();
-  const { kittens, customers, deleteKitten, updateKitten, addKitten, addDocument, addMedia, documents, media, addWeight, deleteWeight, deleteDocument } = useStore();
+  const { kittens, customers, deleteKitten, updateKitten, addKitten, addDocument, addMedia, deleteMedia, documents, media, addWeight, deleteWeight, deleteDocument } = useStore();
   const isNew = id === 'new';
 
   const catDocs = documents.filter(d => d.cat_id === id);
@@ -178,8 +179,8 @@ export default function CatDossier() {
     { id: 'medisch', label: '3. Inentingen & Medisch' },
     { id: 'stamboom', label: '4. Stamboom & Afstamming' },
     { id: 'gewicht', label: '5. Groei & Weegcurves' },
-    { id: 'media', label: '6. Media & Galerij' },
-    { id: 'verkoop', label: '7. Portaal & Verkoop' }
+    { id: 'verkoop', label: '6. Portaal & Verkoop' },
+    { id: 'media', label: '7. Media & Galerij' }
   ];
 
   return (
@@ -244,6 +245,68 @@ export default function CatDossier() {
                   <Field label="Geboortedatum"><Input type="date" name="dateOfBirth" value={formData.dateOfBirth} onChange={handleChange} /></Field>
                   <Field label="Kleur"><Input name="color" value={formData.color} onChange={handleChange} placeholder="blue-silver-torbie" /></Field>
                   <Field label="Geboortegewicht (gram)"><Input type="number" min="0" name="birth_weight_g" value={formData.birth_weight_g} onChange={handleChange} placeholder="Bijv. 110" /></Field>
+
+                  {/* Paspoort van de kitten (enkele afbeelding) */}
+                  <div className="col-span-full mt-2 rounded-xl border border-brass-200 bg-brass-50 p-4">
+                    <p className="mb-1 text-sm font-semibold text-brass-900">Paspoort van de kitten</p>
+                    <p className="mb-3 text-xs text-forest-600">Upload hier één afbeelding of scan van het paspoort. Vergeet niet op "Dossier Opslaan" te drukken.</p>
+                    <CldUploadWidget
+                      onSuccess={(res) => {
+                        if (res.event === 'success') {
+                          setFormData(prev => ({ ...prev, pedigree_data: { ...prev.pedigree_data, passport_url: res.info.secure_url } }));
+                        }
+                      }}
+                      options={{ folder: `cattery_paspoort/${id}` }}
+                    >
+                      {({ open }) => (
+                        <Btn type="button" variant="ghost" onClick={(e) => { e.preventDefault(); open(); }} className="bg-white border-brass-300 text-brass-800 hover:bg-brass-100">
+                          {formData.pedigree_data?.passport_url ? 'Paspoort Vervangen' : 'Paspoort Uploaden'}
+                        </Btn>
+                      )}
+                    </CldUploadWidget>
+                    {formData.pedigree_data?.passport_url && (
+                      <div className="mt-3 relative inline-block">
+                        <img src={formData.pedigree_data.passport_url} alt="Paspoort" className="h-48 rounded shadow border border-brass-200" />
+                        <Btn type="button" variant="danger" className="absolute -top-2 -right-2 text-[10px] px-2 py-1" onClick={() => setFormData(prev => ({ ...prev, pedigree_data: { ...prev.pedigree_data, passport_url: null } }))}>X</Btn>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Foto's van de kitten zelf */}
+                  <div className="col-span-full mt-2 rounded-xl border border-forest-900/10 bg-cream-50 p-4">
+                    <p className="mb-1 text-sm font-semibold text-forest-900">Foto's van de kitten</p>
+                    <p className="mb-3 text-xs text-forest-600">Deze foto's verschijnen ook in het klantenportaal zodra een klant aan dit dossier is gekoppeld.</p>
+                    {isNew ? (
+                      <p className="text-xs italic text-forest-600">Sla het dossier eerst op voordat je foto's kunt uploaden.</p>
+                    ) : (
+                      <>
+                        <MediaUpload
+                          catId={id}
+                          onUploadSuccess={async (url) => {
+                            await addMedia({ url, cat_id: id, media_type: 'image' });
+                          }}
+                        />
+                        <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3">
+                          {catMedia.map(m => (
+                            <div key={m.id} className="relative group">
+                              <img src={m.media_url} alt="" className="aspect-square w-full rounded-xl object-cover shadow-sm border border-forest-900/10" />
+                              <button
+                                type="button"
+                                onClick={() => { if (confirm('Weet je zeker dat je deze foto definitief wilt verwijderen?')) deleteMedia(m.id); }}
+                                className="absolute top-2 right-2 flex h-6 w-6 items-center justify-center rounded-full bg-white/90 text-red-600 shadow-sm opacity-0 group-hover:opacity-100 transition hover:bg-red-50"
+                                title="Verwijder foto"
+                              >
+                                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      </>
+                    )}
+                  </div>
+
                   <div className="col-span-full"><ActionBar /></div>
                 </div>
               )}
@@ -256,6 +319,20 @@ export default function CatDossier() {
                   <Field label="Datum van implantatie"><Input type="date" name="chipImplantDate" value={formData.chipImplantDate} onChange={handleChange} /></Field>
                   <Field label="Plaats van implantatie"><Input name="chipLocation" value={formData.chipLocation} onChange={handleChange} placeholder="Left shoulder" /></Field>
                   <Field label="Naam Dierenarts"><Input name="vetName" value={formData.vetName} onChange={handleChange} placeholder="Dr. Antje Waldschmidt" /></Field>
+
+                  <div className="col-span-full mt-6 rounded-xl border border-brass-200 bg-brass-50 p-4">
+                    <p className="mb-3 text-sm font-semibold text-brass-900">Documenten (Chip- / Identificatiebewijs)</p>
+                    {isNew ? (
+                      <p className="text-xs italic text-forest-600">Sla het dossier eerst op voordat je documenten kunt uploaden.</p>
+                    ) : (
+                      <>
+                        <DocumentUploader kittenId={id} folder={`cattery_documents/${id}`} defaultType="chip" types={['chip', 'overig']} />
+                        <div className="mt-4">
+                          <DocumentList documents={catDocs.filter(d => d.document_type === 'chip')} onDelete={deleteDocument} />
+                        </div>
+                      </>
+                    )}
+                  </div>
                   <div className="col-span-full"><ActionBar /></div>
                 </div>
               )}
@@ -275,9 +352,9 @@ export default function CatDossier() {
                       <p className="text-xs italic text-forest-600">Sla het dossier eerst op voordat je documenten kunt uploaden.</p>
                     ) : (
                       <>
-                        <DocumentUploader kittenId={id} folder={`cattery_documents/${id}`} />
+                        <DocumentUploader kittenId={id} folder={`cattery_documents/${id}`} defaultType="dierenarts" types={['dierenarts', 'vaccinatie', 'hcm_echo', 'pkd', 'fiv_felv', 'overig']} />
                         <div className="mt-4">
-                          <DocumentList documents={catDocs} onDelete={deleteDocument} />
+                          <DocumentList documents={catDocs.filter(d => ['dierenarts', 'vaccinatie', 'hcm_echo', 'pkd', 'fiv_felv'].includes(d.document_type))} onDelete={deleteDocument} />
                         </div>
                       </>
                     )}
@@ -320,6 +397,20 @@ export default function CatDossier() {
                         <img src={formData.pedigree_data.image_url} alt="Stamboom" className="h-48 rounded shadow border border-brass-200" />
                         <Btn type="button" variant="danger" className="absolute -top-2 -right-2 text-[10px] px-2 py-1" onClick={() => setFormData(prev => ({ ...prev, pedigree_data: { ...prev.pedigree_data, image_url: null } }))}>X</Btn>
                       </div>
+                    )}
+                  </div>
+
+                  <div className="mt-4 rounded-xl border border-forest-900/10 bg-cream-50 p-4">
+                    <p className="mb-3 text-sm font-semibold text-forest-900">Overige documenten (stamboom & afstamming)</p>
+                    {isNew ? (
+                      <p className="text-xs italic text-forest-600">Sla het dossier eerst op voordat je documenten kunt uploaden.</p>
+                    ) : (
+                      <>
+                        <DocumentUploader kittenId={id} folder={`cattery_stamboom/${id}`} defaultType="stamboom_overig" types={['stamboom', 'stamboom_overig', 'overig']} />
+                        <div className="mt-4">
+                          <DocumentList documents={catDocs.filter(d => ['stamboom', 'stamboom_overig'].includes(d.document_type))} onDelete={deleteDocument} />
+                        </div>
+                      </>
                     )}
                   </div>
                   <ActionBar />
@@ -392,7 +483,7 @@ export default function CatDossier() {
                 </div>
               )}
 
-              {/* TAB 5: PORTAAL & VERKOOP */}
+              {/* TAB 6: PORTAAL & VERKOOP */}
               {activeTab === 'verkoop' && (
                 <div className="grid gap-4 grid-cols-1 lg:grid-cols-2">
                   <h2 className="col-span-full font-display text-xl text-forest-900">Verkoop & Klantenportaal</h2>
@@ -451,39 +542,24 @@ export default function CatDossier() {
                 </div>
               )}
 
-              {/* TAB 6: MEDIA */}
+              {/* TAB 7: MEDIA & GALERIJ */}
               {activeTab === 'media' && (
                 <div className="space-y-4">
-                  <h2 className="font-display text-xl text-forest-900">Media Galerij</h2>
-                  <MediaUpload 
-                    catId={id} 
-                    onUploadSuccess={async (url) => {
-                       await addMedia({ url, name: formData.name });
-                       alert('Media succesvol geüpload!');
-                    }} 
-                  />
-                  
-                  <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3">
-                    {media.filter(m => m.media_url?.includes(id) || m.cat_id === id).map(m => (
-                      <div key={m.id} className="relative group">
-                        <img src={m.media_url} alt="" className="aspect-square w-full rounded-xl object-cover shadow-sm border border-forest-900/10" />
-                        <button 
-                          type="button"
-                          onClick={() => {
-                            if(confirm('Weet je zeker dat je deze afbeelding definitief wilt verwijderen?')) {
-                              useStore.getState().deleteMedia(m.id);
-                            }
-                          }}
-                          className="absolute top-2 right-2 flex h-6 w-6 items-center justify-center rounded-full bg-white/90 text-red-600 shadow-sm opacity-0 group-hover:opacity-100 transition hover:bg-red-50"
-                          title="Verwijder foto"
-                        >
-                          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                          </svg>
-                        </button>
-                      </div>
-                    ))}
+                  <div>
+                    <h2 className="font-display text-xl text-forest-900">Media & Galerij</h2>
+                    <p className="mt-1 text-sm text-forest-600">Compleet overzicht van alle foto's en documenten van deze kitten, geordend per categorie. Uploaden doe je binnen de betreffende tabbladen.</p>
                   </div>
+                  {isNew ? (
+                    <p className="text-sm italic text-forest-600">Sla het dossier eerst op om de media-galerij te bekijken.</p>
+                  ) : (
+                    <MediaGallery
+                      media={catMedia}
+                      documents={catDocs}
+                      pedigreeData={formData.pedigree_data}
+                      onDeleteMedia={(mid) => { if (confirm('Weet je zeker dat je deze foto definitief wilt verwijderen?')) deleteMedia(mid); }}
+                      onDeleteDocument={(did) => { if (confirm('Weet je zeker dat je dit document definitief wilt verwijderen?')) deleteDocument(did); }}
+                    />
+                  )}
                   <ActionBar />
                 </div>
               )}

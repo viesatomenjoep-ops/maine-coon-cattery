@@ -339,9 +339,11 @@ export function StoreProvider({ children }) {
   // ---- media (gallery) ----
   const addMedia = async (med) => {
     const { data, error } = await supabase.from('media').insert([{
+      cat_id: med.cat_id || null,
+      litter_id: med.litter_id || null,
       media_url: med.url,
-      media_type: 'image',
-      is_public: true
+      media_type: med.media_type || 'image',
+      is_public: med.is_public ?? true
     }]).select();
     if (!error && data) setMedia(s => [data[0], ...s]);
     return data?.[0];

@@ -94,7 +94,7 @@ export default function CustomerPortal({ params }) {
       const { data: allDocs } = await supabase.from('documents').select('*').order('created_at', { ascending: false });
 
       const kittensWithEverything = kittensWithWeights.map(k => {
-        const catMedia = allMedia?.filter(m => m.media_url?.includes(k.id)) || [];
+        const catMedia = allMedia?.filter(m => m.cat_id === k.id || m.media_url?.includes(k.id)) || [];
         const catDocs = allDocs?.filter(d => d.cat_id === k.id) || [];
         return { ...k, media: catMedia, documents: catDocs };
       });

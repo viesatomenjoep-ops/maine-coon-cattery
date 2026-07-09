@@ -4,15 +4,49 @@ import { useStore } from '@/context/StoreContext';
 import { Select, Input } from '@/components/admin';
 
 export const DOC_TYPES = [
-  { value: 'stamboom', label: 'Stamboom' },
-  { value: 'hcm_echo', label: 'HCM Echo' },
+  { value: 'paspoort', label: 'Paspoort' },
+  { value: 'chip', label: 'Chip / Identificatie' },
   { value: 'dierenarts', label: 'Dierenarts' },
+  { value: 'vaccinatie', label: 'Vaccinatie' },
+  { value: 'hcm_echo', label: 'HCM Echo' },
   { value: 'pkd', label: 'PKD' },
   { value: 'fiv_felv', label: 'FIV/FeLV' },
-  { value: 'vaccinatie', label: 'Vaccinatie' },
-  { value: 'chip', label: 'Chip' },
+  { value: 'stamboom', label: 'Stamboom' },
+  { value: 'stamboom_overig', label: 'Stamboom - Overig' },
+  { value: 'groei', label: 'Groei / Weegcurve' },
+  { value: 'verkoop', label: 'Verkoop' },
+  { value: 'contract', label: 'Contract' },
   { value: 'overig', label: 'Overig' },
 ];
+
+// De zes vaste categorieën van het dossier (in weergavevolgorde).
+export const DOC_SECTIONS = [
+  { id: 'paspoort', label: 'Paspoort & Beschrijving' },
+  { id: 'chip', label: 'Identificatie & Chip' },
+  { id: 'medisch', label: 'Inentingen & Medisch' },
+  { id: 'stamboom', label: 'Stamboom & Afstamming' },
+  { id: 'gewicht', label: 'Groei & Weegcurves' },
+  { id: 'verkoop', label: 'Portaal & Verkoop' },
+];
+
+// Koppel elk documenttype aan één van de dossier-secties.
+export const DOC_TYPE_SECTION = {
+  paspoort: 'paspoort',
+  chip: 'chip',
+  dierenarts: 'medisch',
+  vaccinatie: 'medisch',
+  hcm_echo: 'medisch',
+  pkd: 'medisch',
+  fiv_felv: 'medisch',
+  stamboom: 'stamboom',
+  stamboom_overig: 'stamboom',
+  groei: 'gewicht',
+  verkoop: 'verkoop',
+  contract: 'verkoop',
+  overig: 'overig',
+};
+
+export const sectionForDocType = (type) => DOC_TYPE_SECTION[type] || 'overig';
 
 function isImage(doc) {
   if (doc.mime_type) return doc.mime_type.startsWith('image');
@@ -55,9 +89,10 @@ export function DocumentList({ documents = [], onDelete }) {
   );
 }
 
-export default function DocumentUploader({ catId, kittenId, litterId, folder = 'cattery_documents', onUploaded }) {
+export default function DocumentUploader({ catId, kittenId, litterId, folder = 'cattery_documents', defaultType = 'overig', types, onUploaded }) {
   const { addDocumentFull } = useStore();
-  const [docType, setDocType] = useState('overig');
+  const [docType, setDocType] = useState(defaultType);
+  const options = types && types.length ? DOC_TYPES.filter((t) => types.includes(t.value)) : DOC_TYPES;
   const [title, setTitle] = useState('');
   const [uploading, setUploading] = useState(false);
   const targetCatId = catId || kittenId || null;
@@ -100,7 +135,7 @@ export default function DocumentUploader({ catId, kittenId, litterId, folder = '
         <span className="text-xs font-medium uppercase tracking-wide text-forest-700">Type</span>
         <div className="mt-1.5">
           <Select value={docType} onChange={(e) => setDocType(e.target.value)}>
-            {DOC_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
+            {options.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
           </Select>
         </div>
       </label>
