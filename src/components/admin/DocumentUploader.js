@@ -54,6 +54,20 @@ function isImage(doc) {
   return /\.(jpe?g|png|gif|webp|avif)$/i.test(doc.file_url || '');
 }
 
+// Download een document (werkt ook voor Cloudinary-bestanden).
+async function downloadDoc(url, filename) {
+  try {
+    const res = await fetch(url);
+    const blob = await res.blob();
+    const a = document.createElement('a');
+    a.href = window.URL.createObjectURL(blob);
+    a.download = filename || `document-${Date.now()}`;
+    a.click();
+  } catch {
+    window.open(url, '_blank');
+  }
+}
+
 export function DocumentList({ documents = [], onDelete }) {
   if (!documents.length) {
     return <p className="text-sm text-forest-600 italic">Nog geen documenten geüpload.</p>;
@@ -76,9 +90,8 @@ export function DocumentList({ documents = [], onDelete }) {
               <p className="text-xs uppercase tracking-wide text-brass-600">{label}</p>
             </div>
             <div className="flex shrink-0 flex-col items-end gap-1">
-              {!isImage(d) && (
-                <a href={d.file_url} target="_blank" rel="noreferrer" className="text-xs font-semibold text-emerald-700 hover:text-emerald-900">Bekijk →</a>
-              )}
+              <a href={d.file_url} target="_blank" rel="noreferrer" className="text-xs font-semibold text-emerald-700 hover:text-emerald-900">Bekijk →</a>
+              <button onClick={() => downloadDoc(d.file_url, d.title || label)} className="text-xs font-semibold text-brass-600 hover:text-brass-800">⬇ Download</button>
               {onDelete && (
                 <button onClick={() => onDelete(d.id)} className="text-xs text-red-500 hover:text-red-700 underline">Verwijder</button>
               )}

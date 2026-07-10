@@ -1,8 +1,22 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useStore } from '@/context/StoreContext';
 import { PageHead, Card, Input, Select, Btn } from '@/components/admin';
+
+// Open in nieuw venster of forceer download (werkt ook voor Cloudinary-bestanden).
+async function downloadFile(url, filename) {
+  try {
+    const res = await fetch(url);
+    const blob = await res.blob();
+    const a = document.createElement('a');
+    a.href = window.URL.createObjectURL(blob);
+    a.download = filename || `bestand-${Date.now()}`;
+    a.click();
+  } catch {
+    window.open(url, '_blank');
+  }
+}
 import { StatusPill, ImageSlot } from '@/components/ui';
 import { AdminUpload } from '@/components/admin/FilePicker';
 import { nextTreatment, formatDate } from '@/lib/treatments';
@@ -322,8 +336,11 @@ function ModeCard({ active, onClick, icon, title, desc }) {
 
 function LitterAdEditor({ litter, updateLitter, deleteLitter, onDeleted }) {
   const gallery = Array.isArray(litter.ad_gallery) ? litter.ad_gallery : [];
-  const addPhoto = (url) => updateLitter(litter.id, { ad_gallery: [...gallery, url] });
-  const removePhoto = (url) => updateLitter(litter.id, { ad_gallery: gallery.filter((g) => g !== url) });
+  // Ref-accumulator zodat meerdere tegelijk gesleepte foto's niet elkaar overschrijven.
+  const galleryRef = useRef(gallery);
+  useEffect(() => { galleryRef.current = gallery; }, [gallery]);
+  const addPhoto = (url) => { const next = [...galleryRef.current, url]; galleryRef.current = next; updateLitter(litter.id, { ad_gallery: next }); };
+  const removePhoto = (url) => { const next = galleryRef.current.filter((g) => g !== url); galleryRef.current = next; updateLitter(litter.id, { ad_gallery: next }); };
   const copyLink = () => {
     if (!litter.share_token) return alert('Deel-link nog niet beschikbaar (database-update nodig).');
     navigator.clipboard.writeText(`${window.location.origin}/nestje/${litter.share_token}`);
@@ -365,14 +382,18 @@ function LitterAdEditor({ litter, updateLitter, deleteLitter, onDeleted }) {
       <Card>
         <h4 className="font-display text-lg text-forest-900">Foto's van de verwachting</h4>
         <p className="mt-1 text-sm text-forest-600">Bijvoorbeeld foto's van eerdere nestjes of de ouders — voor de sfeer.</p>
+        <p className="mt-1 text-xs text-forest-500">💡 Sleep meerdere foto's tegelijk (tot 10) op het +-vlak, of klik om te kiezen.</p>
         <div className="mt-4 grid grid-cols-3 gap-3 sm:grid-cols-4">
           {gallery.map((src, i) => (
             <div key={i} className="group relative aspect-square overflow-hidden rounded-xl border border-forest-900/10">
-              <img src={src} alt="" className="h-full w-full object-cover" />
-              <button onClick={() => removePhoto(src)} className="absolute right-1 top-1 rounded-md bg-red-500/90 px-1.5 py-0.5 text-[10px] font-semibold text-white opacity-0 transition group-hover:opacity-100">Wis</button>
+              <img src={src} alt="" onClick={() => window.open(src, '_blank')} className="h-full w-full cursor-zoom-in object-cover" />
+              <div className="absolute right-1 top-1 flex gap-1 opacity-0 transition group-hover:opacity-100">
+                <button onClick={() => downloadFile(src, `nestje-${litter.name}-${i + 1}.jpg`)} title="Download" className="rounded-md bg-white/90 px-1.5 py-0.5 text-[10px] font-semibold text-forest-800 shadow hover:bg-white">⬇</button>
+                <button onClick={() => { if (confirm('Deze foto verwijderen?')) removePhoto(src); }} className="rounded-md bg-red-500/90 px-1.5 py-0.5 text-[10px] font-semibold text-white shadow">Wis</button>
+              </div>
             </div>
           ))}
-          <AdminUpload onSuccess={(res) => { if (res.event === 'success') addPhoto(res.info.secure_url); }} options={{ folder: `cattery_litter_ad/${litter.id}`, multiple: true, clientAllowedFormats: ['images'] }}>
+          <AdminUpload onSuccess={(res) => { if (res.event === 'success') addPhoto(res.info.secure_url); }} options={{ folder: `cattery_litter_ad/${litter.id}`, multiple: true, skipRotate: true, maxFiles: 10, clientAllowedFormats: ['images'] }}>
             {({ open, dropProps, dragOver }) => (
               <button type="button" {...dropProps} onClick={(e) => { e.preventDefault(); open(); }} className={`flex aspect-square items-center justify-center rounded-xl border-2 border-dashed text-3xl transition ${dragOver ? 'border-brass-400 bg-brass-50 text-brass-500' : 'border-forest-900/20 text-forest-400 hover:border-brass-400 hover:text-brass-500'}`}>+</button>
             )}

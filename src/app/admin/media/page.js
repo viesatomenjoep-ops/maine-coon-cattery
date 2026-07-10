@@ -220,7 +220,10 @@ export default function MediaDocumentenPage() {
                 <span className="text-xl">✅</span>
                 <div className="flex-1 min-w-0">
                   <p className="text-xs font-semibold text-blue-900 truncate">Geüpload: {previewMedical.name}</p>
-                  <a href={previewMedical.url} target="_blank" className="text-xs text-blue-600 hover:underline">Bekijk preview</a>
+                  <div className="flex gap-3">
+                    <a href={previewMedical.url} target="_blank" className="text-xs text-blue-600 hover:underline">Bekijk preview</a>
+                    <button onClick={() => forceDownload(previewMedical.url, previewMedical.name || 'medisch-bestand')} className="text-xs font-semibold text-blue-700 hover:underline">⬇ Download</button>
+                  </div>
                 </div>
               </div>
             )}
@@ -266,7 +269,10 @@ export default function MediaDocumentenPage() {
                 <span className="text-xl">✅</span>
                 <div className="flex-1 min-w-0">
                   <p className="text-xs font-semibold text-terracotta-900 truncate">Geüpload: {previewContract.name}</p>
-                  <a href={previewContract.url} target="_blank" className="text-xs text-terracotta-600 hover:underline">Bekijk preview</a>
+                  <div className="flex gap-3">
+                    <a href={previewContract.url} target="_blank" className="text-xs text-terracotta-600 hover:underline">Bekijk preview</a>
+                    <button onClick={() => forceDownload(previewContract.url, previewContract.name || 'contract')} className="text-xs font-semibold text-terracotta-700 hover:underline">⬇ Download</button>
+                  </div>
                 </div>
               </div>
             )}
@@ -330,11 +336,11 @@ export default function MediaDocumentenPage() {
                         ) : (
                           <img src={url} alt={m.name || ''} className="h-full w-full object-cover" />
                         )}
-                        <a href={url} target="_blank" rel="noreferrer" className="absolute inset-0" aria-label="Bekijk" />
-                        <button
-                          onClick={() => { if (confirm('Dit bestand uit de galerij verwijderen?')) deleteMedia(m.id); }}
-                          className="absolute right-1 top-1 z-10 rounded-md bg-red-500/90 px-1.5 py-0.5 text-[10px] font-semibold text-white opacity-0 transition group-hover:opacity-100"
-                        >Wis</button>
+                        <a href={url} target="_blank" rel="noreferrer" className="absolute inset-0" aria-label="Open in nieuw venster" />
+                        <div className="absolute right-1 top-1 z-10 flex gap-1 opacity-0 transition group-hover:opacity-100">
+                          <button onClick={() => forceDownload(url, m.name || 'galerij-bestand')} title="Download" className="rounded-md bg-white/90 px-1.5 py-0.5 text-[10px] font-semibold text-forest-800 shadow hover:bg-white">⬇</button>
+                          <button onClick={() => { if (confirm('Dit bestand uit de galerij verwijderen?')) deleteMedia(m.id); }} className="rounded-md bg-red-500/90 px-1.5 py-0.5 text-[10px] font-semibold text-white shadow">Wis</button>
+                        </div>
                         {isVideo && <span className="pointer-events-none absolute bottom-1 left-1 rounded bg-ink/70 px-1.5 py-0.5 text-[9px] font-semibold text-white">▶ video</span>}
                       </div>
                       <div className="p-2">
