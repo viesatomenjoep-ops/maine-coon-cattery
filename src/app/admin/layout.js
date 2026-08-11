@@ -77,7 +77,7 @@ export default function AdminLayout({ children }) {
               const active = pathname === item.href;
               return (
                 <Link key={item.href} href={item.href} onClick={() => setOpen(false)}
-                  className={`flex items-center gap-4 rounded-xl px-4 py-4 lg:py-3 text-base lg:text-sm transition ${active ? 'bg-brass-400 text-forest-950 font-medium' : 'text-forest-900 hover:bg-forest-50 hover:text-forest-950'}`}>
+                  className={`flex items-center gap-4 rounded-lg px-4 py-4 lg:py-3 text-base lg:text-sm font-medium transition ${active ? 'bg-forest-700 text-white shadow-sm' : 'text-forest-800 hover:bg-forest-50 hover:text-forest-950'}`}>
                   <Icon name={item.icon} className="h-6 w-6 lg:h-5 lg:w-5" />
                   {item.label}
                 </Link>

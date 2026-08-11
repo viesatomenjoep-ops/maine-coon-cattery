@@ -32,10 +32,10 @@ export default function AdminDashboard() {
       <div className="grid gap-3 sm:gap-4 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 max-w-6xl">
         {tiles.map((t) => (
           <Link key={t.label} href={t.href} className="block group">
-            <Card className="h-full flex flex-col items-center justify-center text-center p-4 sm:p-5 transition-all duration-300 hover:scale-[1.02] hover:border-brass-400 hover:shadow-xl hover:bg-white bg-cream-50/50 cursor-pointer">
-              <span className="mb-2 text-3xl sm:text-4xl transition-transform group-hover:scale-110 duration-300 drop-shadow-sm">{t.icon}</span>
-              <h2 className="font-display font-bold leading-tight text-forest-950 transition-colors group-hover:text-brass-600 text-[1rem] sm:text-lg">{t.label}</h2>
-              <p className="mt-1.5 text-forest-600/80 font-medium text-[10px] sm:text-xs">{t.desc}</p>
+            <Card className="h-full flex flex-col items-center justify-center text-center p-5 transition-all duration-200 hover:-translate-y-0.5 hover:border-brass-400 hover:shadow-md cursor-pointer">
+              <span className="mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-forest-50 text-3xl transition group-hover:bg-brass-100">{t.icon}</span>
+              <h2 className="font-display leading-tight text-forest-900 transition-colors group-hover:text-brass-700 text-xl">{t.label}</h2>
+              <p className="mt-1.5 text-forest-600 text-xs">{t.desc}</p>
             </Card>
           </Link>
         ))}

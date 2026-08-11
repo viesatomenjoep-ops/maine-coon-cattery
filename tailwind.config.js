@@ -24,6 +24,17 @@ module.exports = {
           50: '#fdfdfb', 100: '#faf9f5', 200: '#f5f2ea', 300: '#ece6d8',
         },
         ink: '#1c140f',
+        // Warme cattery-identiteit: bosgroen (forest) + brons/goud (brass).
+        forest: {
+          50: '#f2f7f3', 100: '#e0ece3', 200: '#c2d8c8', 300: '#97bba1',
+          400: '#679a75', 500: '#457c55', 600: '#346343', 700: '#2a4f37',
+          800: '#24402e', 900: '#1f3527', 950: '#0f1d15',
+        },
+        brass: {
+          50: '#faf6ec', 100: '#f3e9cf', 200: '#e8d29e', 300: '#dcb96b',
+          400: '#d1a047', 500: '#c4893a', 600: '#a96d2f', 700: '#875229',
+          800: '#6f4326', 900: '#5d3922', 950: '#351d10',
+        },
       },
       fontSize: {
         xs: ['0.95rem', { lineHeight: '1.4' }],
