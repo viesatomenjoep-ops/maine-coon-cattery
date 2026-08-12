@@ -269,20 +269,15 @@ export default function LittersPage() {
                   </div>
                 </div>
                 <div className="flex flex-wrap gap-2.5">
-                  <Link href={`/admin/litters/${lit.id}`} className="inline-flex items-center rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-emerald-700">Open nestje</Link>
-                  <button
-                    onClick={() => {
-                      if (!lit.share_token) return alert('De deel-link wordt actief zodra de database-update (share_token) is toegepast.');
-                      navigator.clipboard.writeText(`${window.location.origin}/nestje/${lit.share_token}`);
-                      alert('Advertentielink van dit nestje gekopieerd! Deel hem gerust via WhatsApp.');
-                    }}
-                    className="inline-flex items-center rounded-xl bg-forest-800 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-forest-900"
-                  >
-                    Deel-advertentie
-                  </button>
-                  <Btn variant="solid" onClick={() => openLitter(lit.id)} className="!px-4 !py-2.5 !text-sm">Nestje bewerken</Btn>
-                  <Btn variant="brass" onClick={() => openNewKitten(lit.id)} className="!px-4 !py-2.5 !text-sm">+ Kitten toevoegen</Btn>
-                  <Btn variant="ghost" onClick={() => { if (confirm('Weet je zeker dat je dit nestje wilt verwijderen?')) deleteLitter(lit.id); }} className="!px-4 !py-2.5 !text-sm !text-red-600 hover:!bg-red-50">Verwijderen</Btn>
+                  <Link href={`/admin/litters/${lit.id}`} className="inline-flex items-center rounded-lg bg-brass-500 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-brass-600">Open nestje</Link>
+                  <Btn variant="ghost" onClick={() => {
+                    if (!lit.share_token) return alert('De deel-link wordt actief zodra de database-update (share_token) is toegepast.');
+                    navigator.clipboard.writeText(`${window.location.origin}/nestje/${lit.share_token}`);
+                    alert('Advertentielink van dit nestje gekopieerd! Deel hem gerust via WhatsApp.');
+                  }}>Deel-advertentie</Btn>
+                  <Btn variant="ghost" onClick={() => openLitter(lit.id)}>Nestje bewerken</Btn>
+                  <Btn variant="ghost" onClick={() => openNewKitten(lit.id)}>+ Kitten toevoegen</Btn>
+                  <Btn variant="danger" onClick={() => { if (confirm('Weet je zeker dat je dit nestje wilt verwijderen?')) deleteLitter(lit.id); }}>Verwijderen</Btn>
                 </div>
               </div>
 
@@ -324,8 +319,8 @@ export default function LittersPage() {
 
                         {/* Acties */}
                         <div className="relative z-20 flex shrink-0 flex-col gap-2 sm:flex-row sm:items-center">
-                          <Link href={`/admin/cats/${k.id}`} className="inline-flex items-center justify-center rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-emerald-700">Open dossier</Link>
-                          <button onClick={() => { if (confirm('Weet je zeker dat je dit kitten wilt verwijderen?')) deleteKitten(k.id); }} className="inline-flex items-center justify-center rounded-xl border border-red-200 px-4 py-2.5 text-sm font-medium text-red-600 transition hover:bg-red-50">Verwijderen</button>
+                          <Link href={`/admin/cats/${k.id}`} className="inline-flex items-center justify-center rounded-lg border border-forest-900/15 bg-white px-5 py-3 text-sm font-semibold text-forest-800 transition hover:bg-forest-50">Open dossier</Link>
+                          <button onClick={() => { if (confirm('Weet je zeker dat je dit kitten wilt verwijderen?')) deleteKitten(k.id); }} className="inline-flex items-center justify-center rounded-lg border border-red-300 px-5 py-3 text-sm font-semibold text-red-700 transition hover:bg-red-50">Verwijderen</button>
                         </div>
                       </div>
                     ))}

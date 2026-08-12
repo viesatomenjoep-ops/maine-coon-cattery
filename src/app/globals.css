@@ -66,10 +66,10 @@ body::before {
   @apply inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold tracking-wider uppercase;
 }
 .pill-available {
-  @apply bg-sand-100 text-sand-800;
+  @apply bg-emerald-50 text-emerald-700;
 }
 .pill-reserved {
-  @apply bg-terracotta-100 text-terracotta-800;
+  @apply bg-amber-50 text-amber-700;
 }
 .pill-sold {
   @apply bg-stone-100 text-stone-500;
