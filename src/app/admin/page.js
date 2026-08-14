@@ -1,20 +1,18 @@
 'use client';
 import Link from 'next/link';
 import { useStore } from '@/context/StoreContext';
-import { PageHead, Card } from '@/components/admin';
-import { StatusPill } from '@/components/ui';
+import { PageHead, Card, Icon } from '@/components/admin';
 
 export default function AdminDashboard() {
   const { user } = useStore();
 
-  const tiles = [
-    { href: '/admin/cats', label: 'Katten & Dossiers', icon: '🐈', desc: 'Start hier: dossier per kat, met alles erop en eraan' },
-    { href: '/admin/news', label: 'Nieuws & Updates', icon: '📝', desc: 'Plaats nieuwe berichten' },
-    { href: '/admin/medical', label: 'Medisch Dashboard', icon: '🩺', desc: 'Overzicht & agenda voor de hele cattery' },
-    { href: '/admin/sales', label: 'Verkoop & Portaal', icon: '💰', desc: 'Overzicht van alle advertenties tegelijk' },
-    { href: '/admin/customers', label: 'Klantenbestand', icon: '👥', desc: 'Beheer alle kopers' },
-    { href: '/admin/media', label: 'Foto- & Videogalerij', icon: '📸', desc: 'Beheer alle media' },
-    { href: '/admin/settings', label: 'Instellingen', icon: '⚙️', desc: 'Website-editor, back-up & voorkeuren' },
+  const tools = [
+    { href: '/admin/news', label: 'Nieuws & Updates', icon: 'edit', desc: 'Plaats nieuwe berichten' },
+    { href: '/admin/medical', label: 'Medisch Dashboard', icon: 'health', desc: 'Overzicht & agenda voor de hele cattery' },
+    { href: '/admin/sales', label: 'Verkoop & Portaal', icon: 'tag', desc: 'Overzicht van alle advertenties tegelijk' },
+    { href: '/admin/customers', label: 'Klantenbestand', icon: 'customer', desc: 'Beheer alle kopers' },
+    { href: '/admin/media', label: 'Foto- & Videogalerij', icon: 'image', desc: 'Beheer alle media' },
+    { href: '/admin/settings', label: 'Instellingen', icon: 'settings', desc: 'Website-editor, back-up & voorkeuren' },
   ];
 
   return (
@@ -22,21 +20,32 @@ export default function AdminDashboard() {
       <PageHead label="Welkom terug" title="Startscherm">
         <a href="/" target="_blank" rel="noreferrer" title="Opent apart, je blijft in het beheer"
           className="inline-flex items-center gap-2 rounded-xl border border-forest-900/15 bg-white px-4 py-2.5 text-sm font-semibold text-forest-800 shadow-sm transition hover:border-brass-400 hover:bg-forest-50">
-          <span className="text-lg leading-none">🌍</span> Ga naar website
+          <Icon name="layout" className="h-4 w-4" /> Ga naar website
         </a>
       </PageHead>
-      <p className="mb-8 text-forest-700 text-lg">
-        Kies een van de onderstaande categorieën om direct naar het juiste onderdeel te gaan.
-      </p>
 
-      <div className="grid gap-3 sm:gap-4 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 max-w-6xl">
-        {tiles.map((t) => (
-          <Link key={t.label} href={t.href} className="block group">
-            <Card className="h-full flex flex-col items-center justify-center text-center p-5 transition-all duration-200 hover:-translate-y-0.5 hover:border-brass-400 hover:shadow-md cursor-pointer">
-              <span className="mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-forest-50 text-3xl transition group-hover:bg-brass-100">{t.icon}</span>
-              <h2 className="font-display leading-tight text-forest-900 transition-colors group-hover:text-brass-700 text-xl">{t.label}</h2>
-              <p className="mt-1.5 text-forest-600 text-xs">{t.desc}</p>
-            </Card>
+      <Link href="/admin/cats" className="group mb-8 flex max-w-3xl items-center gap-5 rounded-2xl border border-brass-300 bg-brass-50/60 p-6 shadow-sm transition hover:border-brass-400 hover:shadow-md">
+        <span className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-white text-brass-700 shadow-sm">
+          <Icon name="cat" className="h-8 w-8" />
+        </span>
+        <div className="min-w-0 flex-1">
+          <h2 className="font-display text-2xl text-forest-900">Katten &amp; Dossiers</h2>
+          <p className="mt-1 text-sm text-forest-700">Start hier: dossier per kat, met alles erop en eraan — medisch, stamboom, verkoop en media in één.</p>
+        </div>
+        <Icon name="arrow" className="hidden h-5 w-5 shrink-0 text-brass-500 transition group-hover:translate-x-1 sm:block" />
+      </Link>
+
+      <p className="mb-4 text-sm font-semibold uppercase tracking-wide text-forest-500">Overzichten &amp; tools</p>
+      <div className="grid max-w-4xl grid-cols-2 gap-3 sm:grid-cols-3">
+        {tools.map((t) => (
+          <Link key={t.label} href={t.href} className="group flex flex-col gap-3 rounded-xl border border-forest-900/10 bg-white p-4 transition hover:border-forest-900/20 hover:shadow-sm">
+            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-forest-50 text-forest-600 transition group-hover:bg-forest-100 group-hover:text-forest-800">
+              <Icon name={t.icon} className="h-5 w-5" />
+            </span>
+            <div>
+              <h2 className="font-display text-base text-forest-900">{t.label}</h2>
+              <p className="mt-0.5 text-xs leading-snug text-forest-600">{t.desc}</p>
+            </div>
           </Link>
         ))}
       </div>
