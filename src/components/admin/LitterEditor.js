@@ -2,7 +2,7 @@
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useStore } from '@/context/StoreContext';
-import { Card, Field, Input, Select, Textarea, Combobox, Btn, Stepper } from '@/components/admin';
+import { Card, Field, Input, Select, Textarea, Combobox, Btn, Stepper, CollapsibleSection } from '@/components/admin';
 import DocumentUploader, { DocumentList } from '@/components/admin/DocumentUploader';
 import FilePicker from '@/components/admin/FilePicker';
 
@@ -416,22 +416,59 @@ export default function LitterEditor({ initialLitterId = null, onClose }) {
           )}
         </Stepper>
       ) : (
-        <>
-          {/* 0. Profielfoto van het nest */}
-          <section>
-            <SectionTitle hint="Een foto van alle kittens samen. Deze verschijnt als profielfoto in het nestjes-overzicht.">Profielfoto van het nest</SectionTitle>
+        <div className="flex flex-col gap-3">
+          <CollapsibleSection title="Nestgegevens" hint="De basisgegevens van dit nestje." defaultOpen>
+            <div className="grid gap-4">
+              <Field label="Naam nestje"><Input value={litter.name} onChange={(e) => setLitter({ ...litter, name: e.target.value })} placeholder="Bijv. Noorderlicht" /></Field>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                <Field label="Ras"><Input value={litter.breed} onChange={(e) => setLitter({ ...litter, breed: e.target.value })} /></Field>
+                <Field label="Status"><Select value={litter.status} onChange={(e) => setLitter({ ...litter, status: e.target.value })}>{LITTER_STATUSES.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}</Select></Field>
+                <Field label="Aantal kittens"><Input type="number" min="0" value={litter.expected_count} onChange={(e) => setLitter({ ...litter, expected_count: e.target.value })} placeholder="Optioneel" /></Field>
+              </div>
+              <Field label="Geboortedatum"><Input type="date" value={litter.date_of_birth} onChange={(e) => setLitter({ ...litter, date_of_birth: e.target.value })} /></Field>
+              <Field label="Beschrijving (wervende tekst)">
+                <Textarea value={litter.description} onChange={(e) => setLitter({ ...litter, description: e.target.value })} className="min-h-[90px]" placeholder="Vertel iets leuks over dit nestje…" />
+              </Field>
+              <div>
+                <Btn variant="brass" onClick={saveLitter} disabled={savingLitter} className="w-full sm:w-auto">
+                  {savingLitter ? 'Opslaan…' : 'Wijzigingen opslaan'}
+                </Btn>
+              </div>
+            </div>
+          </CollapsibleSection>
+
+          {litterId && (
+            <CollapsibleSection title="Kittens van dit nestje" count={nestKittens.length} defaultOpen>
+              <div className="mb-4">
+                <Link href={`/admin/litters/new-kitten?litter=${litterId}`} className="inline-flex items-center justify-center rounded-lg bg-forest-800 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-forest-900">
+                  + Kitten toevoegen
+                </Link>
+              </div>
+              {nestKittens.length === 0 ? (
+                <p className="text-sm italic text-forest-600">Nog geen kittens in dit nestje. Gebruik de knop hierboven om ze toe te voegen.</p>
+              ) : (
+                <div className="grid gap-3">
+                  {nestKittens.map((k) => (
+                    <KittenRow key={k.id} kitten={k} onSave={updateKitten} onDelete={deleteKitten} />
+                  ))}
+                </div>
+              )}
+            </CollapsibleSection>
+          )}
+
+          <CollapsibleSection title="Profielfoto van het nest" hint="Een foto van alle kittens samen — verschijnt in het nestjes-overzicht.">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
               {litter.cover_image_url ? (
                 <button
                   type="button"
                   onClick={() => setCoverZoomed(true)}
-                  className="h-48 w-full shrink-0 cursor-zoom-in overflow-hidden rounded-2xl border border-forest-900/10 shadow sm:w-72"
+                  className="h-40 w-full shrink-0 cursor-zoom-in overflow-hidden rounded-2xl border border-forest-900/10 shadow sm:w-64"
                   title="Klik om te vergroten"
                 >
                   <img src={litter.cover_image_url} alt="Profielfoto nest" className="h-full w-full object-cover" />
                 </button>
               ) : (
-                <div className="flex h-48 w-full items-center justify-center rounded-2xl border border-dashed border-forest-900/20 bg-forest-50 text-forest-300 sm:w-72">
+                <div className="flex h-40 w-full items-center justify-center rounded-2xl border border-dashed border-forest-900/20 bg-forest-50 text-forest-300 sm:w-64">
                   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" className="h-10 w-10"><rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="9" cy="9" r="2" /><path d="m21 15-5-5L5 21" /></svg>
                 </div>
               )}
@@ -449,74 +486,22 @@ export default function LitterEditor({ initialLitterId = null, onClose }) {
                 </div>
               </div>
             </div>
-          </section>
+          </CollapsibleSection>
 
-          {/* 1. Nestgegevens */}
-          <section>
-            <SectionTitle hint="De basisgegevens van dit nestje.">Nestgegevens</SectionTitle>
-            <div className="grid gap-4">
-              <Field label="Naam nestje"><Input value={litter.name} onChange={(e) => setLitter({ ...litter, name: e.target.value })} placeholder="Bijv. Noorderlicht" /></Field>
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                <Field label="Ras"><Input value={litter.breed} onChange={(e) => setLitter({ ...litter, breed: e.target.value })} /></Field>
-                <Field label="Status"><Select value={litter.status} onChange={(e) => setLitter({ ...litter, status: e.target.value })}>{LITTER_STATUSES.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}</Select></Field>
-                <Field label="Aantal kittens"><Input type="number" min="0" value={litter.expected_count} onChange={(e) => setLitter({ ...litter, expected_count: e.target.value })} placeholder="Optioneel" /></Field>
-              </div>
-              <Field label="Geboortedatum"><Input type="date" value={litter.date_of_birth} onChange={(e) => setLitter({ ...litter, date_of_birth: e.target.value })} /></Field>
-              <Field label="Beschrijving (wervende tekst)">
-                <Textarea value={litter.description} onChange={(e) => setLitter({ ...litter, description: e.target.value })} className="min-h-[90px]" placeholder="Vertel iets leuks over dit nestje…" />
-              </Field>
-            </div>
-          </section>
-
-          {/* 2. Ouders */}
-          <section>
-            <SectionTitle hint="Kies bestaande fokdieren, voeg een nieuw fokdier toe met alle gegevens, of vul alleen een naam in.">Ouders</SectionTitle>
+          <CollapsibleSection title="Ouders" hint="Kies bestaande fokdieren, voeg een nieuw fokdier toe met alle gegevens, of vul alleen een naam in.">
             <div className="grid gap-4 lg:grid-cols-2">
               <ParentSection role="sire" litter={litter} setLitter={setLitter} options={sireOptions} parentCat={sireCat} parentDocs={sireDocs} deleteDocument={deleteDocument} />
               <ParentSection role="dam" litter={litter} setLitter={setLitter} options={damOptions} parentCat={damCat} parentDocs={damDocs} deleteDocument={deleteDocument} />
             </div>
-          </section>
+          </CollapsibleSection>
 
-          <div className="flex flex-wrap items-center gap-3">
-            <Btn variant="brass" onClick={saveLitter} disabled={savingLitter} className="w-full sm:w-auto">
-              {savingLitter ? 'Opslaan…' : 'Wijzigingen opslaan'}
-            </Btn>
-          </div>
-        </>
-      )}
-
-      {litterId && (
-        <>
-          {/* 3. Documenten van het nestje */}
-          <section>
-            <SectionTitle hint="Paspoort, dierenarts/vet clinic, HCM/PKD/FIV-checks, stamboom en overige papieren van het nestje.">Documenten & checks van het nestje</SectionTitle>
-            <DocumentUploader litterId={litterId} folder={`cattery_documents/litter_${litterId}`} />
-            <div className="mt-4"><DocumentList documents={litterDocs} onDelete={deleteDocument} /></div>
-          </section>
-
-          {/* 4. Kittens */}
-          <section>
-            <div className="mb-4 flex flex-wrap items-center justify-between gap-3 border-b border-forest-900/10 pb-2">
-              <div>
-                <h3 className="font-display text-lg text-forest-900">Kittens van dit nestje</h3>
-                <p className="mt-1 text-xs text-forest-600">{nestKittens.length} kitten(s) gekoppeld aan dit nestje.</p>
-              </div>
-              <Link href={`/admin/litters/new-kitten?litter=${litterId}`} className="inline-flex items-center justify-center rounded-lg bg-forest-800 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-forest-900">
-                + Kitten toevoegen
-              </Link>
-            </div>
-
-            {nestKittens.length === 0 ? (
-              <p className="text-sm italic text-forest-600">Nog geen kittens in dit nestje. Gebruik de knop hierboven om ze toe te voegen.</p>
-            ) : (
-              <div className="grid gap-3">
-                {nestKittens.map((k) => (
-                  <KittenRow key={k.id} kitten={k} onSave={updateKitten} onDelete={deleteKitten} />
-                ))}
-              </div>
-            )}
-          </section>
-        </>
+          {litterId && (
+            <CollapsibleSection title="Documenten & checks van het nestje" hint="Paspoort, dierenarts/vet clinic, HCM/PKD/FIV-checks, stamboom en overige papieren van het nestje.">
+              <DocumentUploader litterId={litterId} folder={`cattery_documents/litter_${litterId}`} />
+              <div className="mt-4"><DocumentList documents={litterDocs} onDelete={deleteDocument} /></div>
+            </CollapsibleSection>
+          )}
+        </div>
       )}
 
       {coverZoomed && litter.cover_image_url && (

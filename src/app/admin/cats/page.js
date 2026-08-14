@@ -94,9 +94,10 @@ export default function CatsAdmin() {
   const breedingFemales = kittens.filter((k) => k.is_own_breeding_cat && isFemale(k.gender) && !isDeparted(k) && match(k));
   const breedingMales = kittens.filter((k) => k.is_own_breeding_cat && isMale(k.gender) && !isDeparted(k) && match(k));
   const breedingOther = kittens.filter((k) => k.is_own_breeding_cat && !isFemale(k.gender) && !isMale(k.gender) && !isDeparted(k) && match(k));
-  const litterKittens = kittens.filter((k) => !k.is_own_breeding_cat && !isDeparted(k) && match(k));
+  const litterKittens = kittens.filter((k) => !k.is_own_breeding_cat && k.litter_id && !isDeparted(k) && match(k));
+  const looseCats = kittens.filter((k) => !k.is_own_breeding_cat && !k.litter_id && !isDeparted(k) && match(k));
   const departedCats = kittens.filter((k) => isDeparted(k) && match(k));
-  const totalMatches = breedingFemales.length + breedingMales.length + breedingOther.length + litterKittens.length + departedCats.length;
+  const totalMatches = breedingFemales.length + breedingMales.length + breedingOther.length + litterKittens.length + looseCats.length + departedCats.length;
 
   return (
     <>
@@ -178,6 +179,14 @@ export default function CatsAdmin() {
                   />
                 );
               })}
+            </CatGroup>
+          )}
+
+          {looseCats.length > 0 && (
+            <CatGroup title="Losse katten" hint="niet gekoppeld aan een nestje" count={looseCats.length} defaultOpen={Boolean(q.trim())}>
+              {looseCats.map((k) => (
+                <CatCard key={k.id} k={k} badge={<Badge cls="bg-sky-100 text-sky-700">Losse kat · {sexLabel(k.gender)}</Badge>} subtitle={`${sexLabel(k.gender)} · ${vachtLabel(k)}`} />
+              ))}
             </CatGroup>
           )}
 

@@ -11,7 +11,6 @@ import TreatmentReminders from '@/components/admin/TreatmentReminders';
 const NAV = [
   { href: '/admin', label: 'Startscherm', icon: 'grid' },
   { href: '/admin/cats', label: 'Katten & Dossiers', icon: 'cat' },
-  { href: '/admin/overview', label: 'Cattery Overzicht', icon: 'layout' },
   { href: '/admin/media', label: "Bestanden & Foto's", icon: 'image' },
   { href: '/admin/settings', label: 'Instellingen', icon: 'settings' },
 ];

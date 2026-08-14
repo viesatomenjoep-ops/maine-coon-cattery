@@ -1,5 +1,5 @@
 'use client';
-import { forwardRef } from 'react';
+import { forwardRef, useState } from 'react';
 
 const ICON_PATHS = {
   grid: <><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></>,
@@ -98,5 +98,27 @@ export function Stepper({ steps, current, onBack, onNext, onFinish, canNext = tr
         )}
       </div>
     </div>
+  );
+}
+
+// Inklapbare sectie voor lange beheerformulieren — compact, app-achtig; klik de kop om te openen/sluiten.
+export function CollapsibleSection({ title, hint, count, defaultOpen = false, children }) {
+  const [open, setOpen] = useState(defaultOpen);
+  return (
+    <section className="rounded-2xl border border-forest-900/10 bg-white">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="flex w-full items-center gap-3 rounded-2xl px-5 py-4 text-left transition hover:bg-forest-50/60"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`shrink-0 text-forest-400 transition-transform ${open ? 'rotate-90' : ''}`}><path d="m9 18 6-6-6-6" /></svg>
+        <div className="min-w-0 flex-1">
+          <span className="font-display text-lg text-forest-900">{title}</span>
+          {count != null && <span className="ml-2 rounded-full bg-forest-900/5 px-2 py-0.5 text-xs font-semibold text-forest-600">{count}</span>}
+          {hint && <p className="mt-0.5 text-xs text-forest-600">{hint}</p>}
+        </div>
+      </button>
+      {open && <div className="border-t border-forest-900/10 px-5 py-5">{children}</div>}
+    </section>
   );
 }
