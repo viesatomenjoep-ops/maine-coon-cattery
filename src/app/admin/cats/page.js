@@ -8,6 +8,7 @@ const isMale = (g) => /kater|mann|\bmale\b|\bm\b/i.test(g || '');
 const isFemale = (g) => /poes|vrouw|female|\bf\b/i.test(g || '');
 const sexLabel = (g) => (isMale(g) ? 'Kater' : isFemale(g) ? 'Poes' : (g || 'Onbekend'));
 const vachtLabel = (k) => [k.color, k.pattern].filter(Boolean).join(' ') || 'Maine Coon';
+const isDeparted = (k) => (k.status || '').trim().toLowerCase() === 'verkocht';
 
 function Badge({ children, cls }) {
   return (
@@ -82,11 +83,12 @@ export default function CatsAdmin() {
       .filter(Boolean).some((v) => String(v).toLowerCase().includes(s));
   };
 
-  const breedingFemales = kittens.filter((k) => k.is_own_breeding_cat && isFemale(k.gender) && match(k));
-  const breedingMales = kittens.filter((k) => k.is_own_breeding_cat && isMale(k.gender) && match(k));
-  const breedingOther = kittens.filter((k) => k.is_own_breeding_cat && !isFemale(k.gender) && !isMale(k.gender) && match(k));
-  const litterKittens = kittens.filter((k) => !k.is_own_breeding_cat && match(k));
-  const totalMatches = breedingFemales.length + breedingMales.length + breedingOther.length + litterKittens.length;
+  const breedingFemales = kittens.filter((k) => k.is_own_breeding_cat && isFemale(k.gender) && !isDeparted(k) && match(k));
+  const breedingMales = kittens.filter((k) => k.is_own_breeding_cat && isMale(k.gender) && !isDeparted(k) && match(k));
+  const breedingOther = kittens.filter((k) => k.is_own_breeding_cat && !isFemale(k.gender) && !isMale(k.gender) && !isDeparted(k) && match(k));
+  const litterKittens = kittens.filter((k) => !k.is_own_breeding_cat && !isDeparted(k) && match(k));
+  const departedCats = kittens.filter((k) => isDeparted(k) && match(k));
+  const totalMatches = breedingFemales.length + breedingMales.length + breedingOther.length + litterKittens.length + departedCats.length;
 
   return (
     <>
@@ -208,6 +210,23 @@ export default function CatsAdmin() {
               {breedingOther.map((k) => (
                 <CatCard key={k.id} k={k} badge={<Badge cls="bg-stone-100 text-stone-700">Fokdier</Badge>} subtitle={`${sexLabel(k.gender)} · ${vachtLabel(k)}`} />
               ))}
+            </CatGroup>
+          )}
+
+          {departedCats.length > 0 && (
+            <CatGroup title="Vertrokken / verkochte katten" hint="niet meer in de cattery — dossier, foto's en nestjegegevens blijven bewaard" count={departedCats.length}>
+              {departedCats.map((k) => {
+                const nest = litterName(k.litter_id);
+                const parents = litterParents(k.litter_id);
+                return (
+                  <CatCard
+                    key={k.id}
+                    k={k}
+                    badge={<Badge cls="bg-stone-200 text-stone-600">Verkocht · {sexLabel(k.gender)}</Badge>}
+                    subtitle={nest ? `Nestje: ${nest}${parents ? ` (${parents})` : ''}` : `${sexLabel(k.gender)} · ${vachtLabel(k)}`}
+                  />
+                );
+              })}
             </CatGroup>
           )}
         </>

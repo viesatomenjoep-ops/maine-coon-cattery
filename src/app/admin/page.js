@@ -8,10 +8,10 @@ export default function AdminDashboard() {
   const { user } = useStore();
 
   const tiles = [
-    { href: '/admin/cats', label: 'Katten & Dossiers', icon: '🐈', desc: 'Dossiers beheren + nieuw nestje / kitten aanmaken' },
+    { href: '/admin/cats', label: 'Katten & Dossiers', icon: '🐈', desc: 'Start hier: dossier per kat, met alles erop en eraan' },
     { href: '/admin/news', label: 'Nieuws & Updates', icon: '📝', desc: 'Plaats nieuwe berichten' },
-    { href: '/admin/medical', label: 'Medisch Dashboard', icon: '🩺', desc: 'Vaccinaties & gezondheid' },
-    { href: '/admin/sales', label: 'Verkoop & Portaal', icon: '💰', desc: 'Prijzen en beschikbaarheid' },
+    { href: '/admin/medical', label: 'Medisch Dashboard', icon: '🩺', desc: 'Overzicht & agenda voor de hele cattery' },
+    { href: '/admin/sales', label: 'Verkoop & Portaal', icon: '💰', desc: 'Overzicht van alle advertenties tegelijk' },
     { href: '/admin/customers', label: 'Klantenbestand', icon: '👥', desc: 'Beheer alle kopers' },
     { href: '/admin/media', label: 'Foto- & Videogalerij', icon: '📸', desc: 'Beheer alle media' },
     { href: '/admin/settings', label: 'Instellingen', icon: '⚙️', desc: 'Website-editor, back-up & voorkeuren' },

@@ -1,5 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { useRouter, useParams } from 'next/navigation';
 import { PageHead, Card, Field, Input, Select, Textarea, Btn } from '@/components/admin';
 import MediaUpload from '@/components/admin/MediaUpload';
@@ -7,8 +8,32 @@ import DocumentUploader, { DocumentList } from '@/components/admin/DocumentUploa
 import MediaGallery from '@/components/admin/MediaGallery';
 import { useStore } from '@/context/StoreContext';
 import { AdminUpload } from '@/components/admin/FilePicker';
+import { TREATMENT_TYPES, TREATMENT_SCHEDULE, treatmentIcon, formatDate } from '@/lib/treatments';
 
 const CldUploadWidget = AdminUpload;
+
+function ToggleRow({ label, checked, onToggle }) {
+  return (
+    <label className="flex cursor-pointer items-center justify-between gap-3 rounded-xl border border-forest-900/10 bg-white p-3">
+      <span className="text-sm text-forest-800">{label}</span>
+      <input type="checkbox" checked={checked} onChange={(e) => onToggle(e.target.checked)} className="h-5 w-5 accent-emerald-600" />
+    </label>
+  );
+}
+
+function FileRow({ thumb, name, type, checked, onToggle }) {
+  return (
+    <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-forest-900/10 bg-white p-2.5">
+      {thumb ? <img src={thumb} alt="" className="h-10 w-10 shrink-0 rounded-lg object-cover" /> : <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-forest-50 text-sm">📄</div>}
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-sm font-medium text-forest-900">{name}</p>
+        <p className="text-xs uppercase tracking-wide text-forest-500">{type}</p>
+      </div>
+      <span className={`text-xs font-semibold ${checked ? 'text-emerald-700' : 'text-forest-400'}`}>{checked ? 'Zichtbaar' : 'Verborgen'}</span>
+      <input type="checkbox" checked={checked} onChange={(e) => onToggle(e.target.checked)} className="h-5 w-5 accent-emerald-600" />
+    </label>
+  );
+}
 
 const MALE_TOKENS = ['m', 'male', 'kater', 'mannelijk'];
 const genderToSex = (g) => (MALE_TOKENS.includes((g || '').toString().trim().toLowerCase()) ? 'Kater' : 'Poes');
@@ -18,12 +43,16 @@ const normStatus = (s) => STATUS_MAP[(s || '').toString().trim().toLowerCase()] 
 export default function CatDossier() {
   const router = useRouter();
   const { id } = useParams();
-  const { kittens, customers, deleteKitten, updateKitten, addKitten, addDocument, addMedia, deleteMedia, documents, media, addWeight, deleteWeight, deleteDocument, addNote, deleteNote } = useStore();
+  const {
+    kittens, customers, litters = [], deleteKitten, updateKitten, addKitten, addDocument, addMedia, deleteMedia, documents, media,
+    addWeight, deleteWeight, deleteDocument, updateDocument, updateMedia, addNote, deleteNote, addMedical, updateMedical, deleteMedical,
+  } = useStore();
   const isNew = id === 'new';
 
   const catDocs = documents.filter(d => d.cat_id === id);
   const catMedia = media.filter(m => m.media_url?.includes(id) || m.cat_id === id); // Or general media
   const currentCat = kittens.find((k) => k.id === id) || {};
+  const currentLitter = litters.find((l) => l.id === currentCat.litter_id) || null;
 
 
   let hasCloudinary = false;
@@ -32,6 +61,17 @@ export default function CatDossier() {
   // States voor de verschillende tabbladen of secties
   const [activeTab, setActiveTab] = useState('paspoort');
   const [noteForm, setNoteForm] = useState({ date: new Date().toISOString().slice(0, 10), note: '' });
+  const [medForm, setMedForm] = useState({ type: TREATMENT_TYPES[0], date: '', due: '', note: '' });
+
+  // Stel automatisch de vervaldatum voor op basis van het standaardschema (4/9/12 weken na geboorte).
+  const suggestDue = (type) => {
+    const wk = TREATMENT_SCHEDULE[type];
+    const birth = currentCat.date_of_birth || currentLitter?.date_of_birth;
+    if (!wk || !birth) return '';
+    const d = new Date(birth);
+    d.setDate(d.getDate() + wk * 7);
+    return isNaN(d) ? '' : d.toISOString().slice(0, 10);
+  };
   
   // Voorbeeld data state (in de toekomst wordt dit Supabase)
   const [formData, setFormData] = useState({
@@ -363,8 +403,73 @@ export default function CatDossier() {
                   <Field label="Batchnummer"><Input name="vaccineBatch" value={formData.vaccineBatch} onChange={handleChange} placeholder="G64953" /></Field>
                   <Field label="Datum inenting"><Input type="date" name="vaccineDate" value={formData.vaccineDate} onChange={handleChange} /></Field>
                   <Field label="Geldig tot"><Input type="date" name="vaccineValidUntil" value={formData.vaccineValidUntil} onChange={handleChange} /></Field>
-                  
-                  <div className="col-span-full mt-6 rounded-xl border border-brass-200 bg-brass-50 p-4">
+
+                  <div className="col-span-full mt-6 rounded-xl border border-forest-900/10 bg-cream-50 p-4">
+                    <p className="mb-1 text-sm font-semibold text-forest-900">Behandelingen & vaccinaties</p>
+                    <p className="mb-3 text-xs text-forest-600">Voeg hier ontwormingen, entingen en controles toe. Vink af zodra iets gedaan is — de melding op het Medisch Dashboard stopt dan vanzelf.</p>
+                    {isNew ? (
+                      <p className="text-xs italic text-forest-600">Sla het dossier eerst op voordat je behandelingen kunt toevoegen.</p>
+                    ) : (
+                      <>
+                        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                          <Field label="Type">
+                            <Select value={medForm.type} onChange={(e) => { const type = e.target.value; setMedForm((f) => ({ ...f, type, due: suggestDue(type) || f.due })); }}>
+                              {TREATMENT_TYPES.map((t) => <option key={t}>{t}</option>)}
+                            </Select>
+                          </Field>
+                          <Field label="Uitgevoerd op"><Input type="date" value={medForm.date} onChange={(e) => setMedForm((f) => ({ ...f, date: e.target.value }))} /></Field>
+                        </div>
+                        <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                          <Field label="Volgende keer nodig op (herinnering)"><Input type="date" value={medForm.due} onChange={(e) => setMedForm((f) => ({ ...f, due: e.target.value }))} /></Field>
+                          <Field label="Notitie"><Input value={medForm.note} onChange={(e) => setMedForm((f) => ({ ...f, note: e.target.value }))} placeholder="Bijv. Tweede enting (Nobivac)" /></Field>
+                        </div>
+                        {TREATMENT_SCHEDULE[medForm.type] && (
+                          <p className="mt-2 text-xs text-forest-500">💡 Datum automatisch voorgesteld op <b>{TREATMENT_SCHEDULE[medForm.type]} weken</b> na de geboorte. Je mag hem aanpassen.</p>
+                        )}
+                        <Btn
+                          type="button"
+                          variant="brass"
+                          className="mt-3"
+                          onClick={async () => {
+                            if (!medForm.date && !medForm.due) return alert('Vul een uitvoerdatum of een vervolgdatum in.');
+                            const res = await addMedical(id, { ...medForm });
+                            if (res?.error) return alert('Opslaan mislukt: ' + (res.error.message || ''));
+                            setMedForm({ type: TREATMENT_TYPES[0], date: '', due: '', note: '' });
+                          }}
+                        >
+                          Behandeling toevoegen
+                        </Btn>
+
+                        {(currentCat.medical || []).length === 0 ? (
+                          <p className="mt-4 text-sm italic text-forest-600/70">Nog geen medische historie.</p>
+                        ) : (
+                          <div className="mt-4 flex flex-col gap-2">
+                            {currentCat.medical.map((m, i) => (
+                              <div key={m.id || i} className={`flex items-center justify-between gap-2 rounded-lg border px-3 py-2 text-xs ${m.completed ? 'border-emerald-200 bg-emerald-50 text-forest-500' : 'border-forest-900/10 bg-white text-forest-800'}`}>
+                                <div className="flex min-w-0 items-center gap-2">
+                                  {m.due && (
+                                    <input
+                                      type="checkbox"
+                                      checked={!!m.completed}
+                                      onChange={(e) => updateMedical(id, m.id, { completed: e.target.checked })}
+                                      title="Markeer als voltooid"
+                                      className="h-4 w-4 shrink-0 accent-emerald-600"
+                                    />
+                                  )}
+                                  <span>{treatmentIcon(m.type)}</span>
+                                  <span suppressHydrationWarning className="min-w-[64px] font-medium">{m.date ? new Date(m.date).toLocaleDateString('nl-NL', { day: 'numeric', month: 'short' }) : '—'}</span>
+                                  <span className={`truncate ${m.completed ? 'line-through' : ''}`}>{m.type}{m.note ? `: ${m.note}` : ''}{m.due ? ` · volgende: ${formatDate(m.due)}` : ''}</span>
+                                </div>
+                                <button onClick={() => { if (confirm('Deze behandeling verwijderen?')) deleteMedical(id, i); }} className="shrink-0 text-red-500 hover:text-red-700">Verwijder</button>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </>
+                    )}
+                  </div>
+
+                  <div className="col-span-full mt-2 rounded-xl border border-brass-200 bg-brass-50 p-4">
                     <p className="mb-3 text-sm font-semibold text-brass-900">Digitale Kluis (PDF / Scans van Dierenarts)</p>
                     {isNew ? (
                       <p className="text-xs italic text-forest-600">Sla het dossier eerst op voordat je documenten kunt uploaden.</p>
@@ -385,13 +490,37 @@ export default function CatDossier() {
               {activeTab === 'stamboom' && (
                 <div className="grid gap-4">
                   <h2 className="font-display text-xl text-forest-900">Stamboom & Afstamming</h2>
+
+                  <div className="rounded-xl border border-forest-900/10 bg-forest-50 p-4">
+                    <p className="mb-1 text-sm font-semibold text-forest-900">Afkomst (gesynchroniseerd met het nestje)</p>
+                    <p className="mb-3 text-xs text-forest-600">Koppel dit dossier aan een nestje — vader en moeder komen dan automatisch mee, ook als deze kat niet via het nestje is aangemaakt.</p>
+                    <Field label="Nestje">
+                      <Select name="litter_id" value={formData.litter_id || ''} onChange={handleChange}>
+                        <option value="">— Geen nestje gekoppeld —</option>
+                        {litters.map((l) => <option key={l.id} value={l.id}>{l.name}</option>)}
+                      </Select>
+                    </Field>
+                    {currentLitter ? (
+                      <>
+                        <p className="mt-3 text-sm text-forest-700">
+                          Vader: <span className="font-medium text-forest-900">{currentLitter.sire_name || 'onbekend'}</span>
+                          <span className="mx-2 opacity-40">|</span>
+                          Moeder: <span className="font-medium text-forest-900">{currentLitter.dam_name || 'onbekend'}</span>
+                        </p>
+                        <Link href={`/admin/litters?edit=${currentLitter.id}`} className="mt-2 inline-block text-xs font-semibold text-emerald-700 hover:text-emerald-900">Vader/moeder wijzigen bij het nestje →</Link>
+                      </>
+                    ) : (
+                      <p className="mt-3 text-xs italic text-forest-500">Nog geen nestje gekozen — kies er hierboven een, of vul hieronder handmatig aan en druk op "Dossier Opslaan".</p>
+                    )}
+                  </div>
+
                   <div className="grid gap-4 sm:grid-cols-2">
                     <Field label="Stamboomnummer (registratie)"><Input name="registration_no" value={formData.registration_no} onChange={handleChange} placeholder="Bijv. NHSB 1234567" /></Field>
                     <Field label="EMS-code"><Input name="ems_code" value={formData.ems_code} onChange={handleChange} placeholder="Bijv. MCO n 22" /></Field>
                   </div>
-                  <Field label="Vader (Sire)"><Input name="sire" value={formData.pedigree_data?.sire || ''} onChange={handleChange} placeholder="Naam van de vader" /></Field>
-                  <Field label="Moeder (Dam)"><Input name="dam" value={formData.pedigree_data?.dam || ''} onChange={handleChange} placeholder="Naam van de moeder" /></Field>
-                  
+                  <Field label="Vader (Sire) — handmatige aanvulling"><Input name="sire" value={formData.pedigree_data?.sire || ''} onChange={handleChange} placeholder={currentLitter?.sire_name || 'Naam van de vader'} /></Field>
+                  <Field label="Moeder (Dam) — handmatige aanvulling"><Input name="dam" value={formData.pedigree_data?.dam || ''} onChange={handleChange} placeholder={currentLitter?.dam_name || 'Naam van de moeder'} /></Field>
+
                   <div className="mt-4 rounded-xl border border-brass-200 bg-brass-50 p-4">
                     <p className="mb-2 text-sm font-semibold text-brass-900">Digitale Stamboom Uploaden</p>
                     <CldUploadWidget 
@@ -558,6 +687,57 @@ export default function CatDossier() {
                       </div>
                     </div>
                   </div>
+
+                  {!isNew && (
+                    <>
+                      <div className="col-span-full flex items-center justify-between gap-4 rounded-2xl border border-forest-900/10 bg-white p-5">
+                        <div>
+                          <p className="text-sm font-semibold text-forest-900">{currentCat.published ? '🟢 Live in klantenportaal' : '⚪️ Niet gepubliceerd'}</p>
+                          <p className="mt-0.5 text-xs text-forest-600">Bepaalt of {currentCat.name || 'dit kitten'} zichtbaar is op de openbare website.</p>
+                        </div>
+                        <Btn type="button" variant={currentCat.published ? 'ghost' : 'brass'} onClick={() => updateKitten(id, { published: !currentCat.published })}>
+                          {currentCat.published ? 'Offline halen' : 'Publiceren'}
+                        </Btn>
+                      </div>
+
+                      <div className="col-span-full rounded-2xl border border-forest-900/10 bg-white p-5">
+                        <h3 className="font-display text-lg text-forest-900">Advertentie-weergave</h3>
+                        <p className="mt-1 text-sm text-forest-600">Bepaal met vinkjes wat er op de advertentie zichtbaar is.</p>
+                        <div className="mt-4 grid gap-2 sm:grid-cols-2">
+                          {[
+                            { key: 'showPrice', label: 'Prijs weergeven' },
+                            { key: 'showParents', label: "Ouderfoto's weergeven" },
+                            { key: 'showCare', label: 'Zorg (ontworming/inenting) weergeven' },
+                            { key: 'showGrowth', label: 'Groeicurve weergeven' },
+                          ].map(({ key, label }) => (
+                            <ToggleRow
+                              key={key}
+                              label={label}
+                              checked={(currentCat.ad_settings || {})[key] !== false}
+                              onToggle={(v) => updateKitten(id, { ad_settings: { ...(currentCat.ad_settings || {}), [key]: v } })}
+                            />
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="col-span-full rounded-2xl border border-forest-900/10 bg-white p-5">
+                        <h3 className="font-display text-lg text-forest-900">Bestanden op de advertentie</h3>
+                        <p className="mt-1 text-sm text-forest-600">Vink aan welke foto's en documenten een geïnteresseerde te zien krijgt. Uitgevinkt = verborgen.</p>
+                        <div className="mt-4 space-y-2">
+                          {catMedia.length === 0 && catDocs.length === 0 && (
+                            <p className="text-sm text-forest-600">Nog geen bestanden geüpload.</p>
+                          )}
+                          {catMedia.map((m) => (
+                            <FileRow key={`m-${m.id}`} thumb={m.media_url} name={m.name || 'Foto'} type="Foto" checked={m.is_public !== false} onToggle={(v) => updateMedia(m.id, { is_public: v })} />
+                          ))}
+                          {catDocs.map((d) => (
+                            <FileRow key={`d-${d.id}`} thumb={/\.(jpe?g|png|gif|webp)$/i.test(d.file_url || '') ? d.file_url : null} name={d.title || d.document_type || 'Document'} type={d.document_type || 'Document'} checked={d.is_private === false} onToggle={(v) => updateDocument(d.id, { is_private: !v })} />
+                          ))}
+                        </div>
+                      </div>
+                    </>
+                  )}
+
                   <div className="col-span-full"><ActionBar /></div>
                 </div>
               )}

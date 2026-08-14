@@ -77,7 +77,7 @@ export function DocumentList({ documents = [], onDelete }) {
       {documents.map((d) => {
         const label = DOC_TYPES.find((t) => t.value === d.document_type)?.label || d.document_type || 'Document';
         return (
-          <li key={d.id} className="flex items-center gap-3 rounded-xl border border-forest-900/10 bg-white p-3">
+          <li key={d.id} className="group flex items-center gap-3.5 rounded-xl border border-forest-900/10 bg-white p-3 transition hover:border-forest-900/20 hover:shadow-sm">
             {isImage(d) ? (
               <a href={d.file_url} target="_blank" rel="noreferrer" className="shrink-0">
                 <img src={d.file_url} alt={d.title || label} className="h-14 w-14 rounded-lg object-cover border border-forest-900/10" />
@@ -87,13 +87,35 @@ export function DocumentList({ documents = [], onDelete }) {
             )}
             <div className="min-w-0 flex-1">
               <p className="truncate text-sm font-semibold text-forest-900">{d.title || label}</p>
-              <p className="text-xs uppercase tracking-wide text-brass-600">{label}</p>
+              <span className="mt-1 inline-flex items-center rounded-full bg-brass-100 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-brass-700">
+                {label}
+              </span>
             </div>
-            <div className="flex shrink-0 flex-col items-end gap-1">
-              <a href={d.file_url} target="_blank" rel="noreferrer" className="text-xs font-semibold text-emerald-700 hover:text-emerald-900">Bekijk →</a>
-              <button onClick={() => downloadDoc(d.file_url, d.title || label)} className="text-xs font-semibold text-brass-600 hover:text-brass-800">⬇ Download</button>
+            <div className="flex shrink-0 items-center gap-1">
+              <a
+                href={d.file_url}
+                target="_blank"
+                rel="noreferrer"
+                title="Bekijken"
+                className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-forest-500 transition hover:bg-forest-50 hover:text-forest-800"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8Z"/><circle cx="12" cy="12" r="3"/></svg>
+              </a>
+              <button
+                onClick={() => downloadDoc(d.file_url, d.title || label)}
+                title="Download"
+                className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-brass-600 transition hover:bg-brass-50 hover:text-brass-800"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M4 19h16"/></svg>
+              </button>
               {onDelete && (
-                <button onClick={() => onDelete(d.id)} className="text-xs text-red-500 hover:text-red-700 underline">Verwijder</button>
+                <button
+                  onClick={() => onDelete(d.id)}
+                  title="Verwijderen"
+                  className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-red-400 transition hover:bg-red-50 hover:text-red-600"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+                </button>
               )}
             </div>
           </li>
@@ -150,41 +172,43 @@ export default function DocumentUploader({ catId, kittenId, litterId, folder = '
   };
 
   return (
-    <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
-      <label className="block sm:w-48">
-        <span className="text-xs font-medium uppercase tracking-wide text-forest-700">Type / sectie</span>
-        <div className="mt-1.5">
-          <Select value={docType} onChange={(e) => setDocType(e.target.value)}>
-            {options.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
-            <option value="__new__">➕ Eigen sectie…</option>
-          </Select>
-        </div>
-        {isCustom && (
-          <div className="mt-2">
-            <Input
-              value={customType}
-              onChange={(e) => setCustomType(e.target.value)}
-              placeholder="Naam eigen sectie, bijv. Verzekering"
-              autoFocus
-            />
+    <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-3 sm:flex-row">
+        <label className="block sm:w-48">
+          <span className="text-xs font-medium uppercase tracking-wide text-forest-700">Type / sectie</span>
+          <div className="mt-1.5">
+            <Select value={docType} onChange={(e) => setDocType(e.target.value)}>
+              {options.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
+              <option value="__new__">➕ Eigen sectie…</option>
+            </Select>
           </div>
-        )}
-      </label>
-      <label className="block flex-1">
-        <span className="text-xs font-medium uppercase tracking-wide text-forest-700">Titel (optioneel)</span>
-        <div className="mt-1.5">
-          <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Bijv. HCM echo 2026" />
-        </div>
-      </label>
+          {isCustom && (
+            <div className="mt-2">
+              <Input
+                value={customType}
+                onChange={(e) => setCustomType(e.target.value)}
+                placeholder="Naam eigen sectie, bijv. Verzekering"
+                autoFocus
+              />
+            </div>
+          )}
+        </label>
+        <label className="block flex-1">
+          <span className="text-xs font-medium uppercase tracking-wide text-forest-700">Titel (optioneel)</span>
+          <div className="mt-1.5">
+            <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Bijv. HCM echo 2026" />
+          </div>
+        </label>
+      </div>
       <FilePicker
         accept="image/*,application/pdf"
         disabled={uploading}
         onFileReady={handleFile}
-        className="!gap-3 sm:!gap-4"
+        className="!gap-2.5"
         uploadLabel={uploading ? 'Uploaden…' : '+ Document'}
         cameraLabel="Open camera"
-        uploadClassName={`inline-flex cursor-pointer items-center justify-center whitespace-nowrap rounded-xl bg-brass-400 px-5 py-2.5 text-sm font-medium text-forest-950 transition hover:bg-brass-300 ${uploading ? 'opacity-60' : ''}`}
-        cameraClassName={`inline-flex items-center justify-center whitespace-nowrap rounded-xl border border-forest-900/15 bg-white px-5 py-2.5 text-sm font-medium text-forest-800 transition hover:bg-forest-50 ${uploading ? 'opacity-60' : ''}`}
+        uploadClassName={`inline-flex cursor-pointer items-center justify-center gap-2 whitespace-nowrap rounded-xl bg-brass-400 px-5 py-2.5 text-sm font-medium text-forest-950 transition hover:bg-brass-300 ${uploading ? 'opacity-60' : ''}`}
+        cameraClassName={`inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl border border-forest-900/15 bg-white px-5 py-2.5 text-sm font-medium text-forest-800 transition hover:bg-forest-50 ${uploading ? 'opacity-60' : ''}`}
       />
     </div>
   );
