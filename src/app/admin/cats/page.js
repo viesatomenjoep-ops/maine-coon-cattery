@@ -2,7 +2,15 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useStore } from '@/context/StoreContext';
-import { PageHead, Btn } from '@/components/admin';
+import { PageHead, Btn, Icon } from '@/components/admin';
+
+const TOOLS = [
+  { href: '/admin/news', label: 'Nieuws & Updates', icon: 'edit', desc: 'Plaats nieuwe berichten' },
+  { href: '/admin/medical', label: 'Medisch Dashboard', icon: 'health', desc: 'Overzicht & agenda voor de hele cattery' },
+  { href: '/admin/sales', label: 'Verkoop & Portaal', icon: 'tag', desc: 'Overzicht van alle advertenties tegelijk' },
+  { href: '/admin/customers', label: 'Klantenbestand', icon: 'customer', desc: 'Beheer alle kopers' },
+  { href: '/admin/media', label: 'Foto- & Videogalerij', icon: 'image', desc: 'Beheer alle media' },
+];
 
 const isMale = (g) => /kater|mann|\bmale\b|\bm\b/i.test(g || '');
 const isFemale = (g) => /poes|vrouw|female|\bf\b/i.test(g || '');
@@ -139,6 +147,23 @@ export default function CatsAdmin() {
               <p className="text-sm text-forest-600">Alle nestjes &amp; kittens beheren</p>
             </div>
           </Link>
+        </div>
+      </div>
+
+      <div className="mb-10">
+        <p className="mb-4 text-sm font-semibold uppercase tracking-wide text-forest-500">Overzichten &amp; tools</p>
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+          {TOOLS.map((t) => (
+            <Link key={t.label} href={t.href} className="group flex flex-col gap-3 rounded-xl border border-forest-900/10 bg-white p-4 transition hover:border-forest-900/20 hover:shadow-sm">
+              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-forest-50 text-forest-600 transition group-hover:bg-forest-100 group-hover:text-forest-800">
+                <Icon name={t.icon} className="h-5 w-5" />
+              </span>
+              <div>
+                <h2 className="font-display text-base text-forest-900">{t.label}</h2>
+                <p className="mt-0.5 text-xs leading-snug text-forest-600">{t.desc}</p>
+              </div>
+            </Link>
+          ))}
         </div>
       </div>
 
