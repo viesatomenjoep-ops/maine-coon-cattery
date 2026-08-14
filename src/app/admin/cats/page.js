@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useStore } from '@/context/StoreContext';
-import { PageHead, Btn, Icon } from '@/components/admin';
+import { PageHead, Icon } from '@/components/admin';
 
 const TOOLS = [
   { href: '/admin/news', label: 'Nieuws & Updates', icon: 'edit', desc: 'Plaats nieuwe berichten' },
@@ -100,13 +100,26 @@ export default function CatsAdmin() {
 
   return (
     <>
-      <PageHead label="Database" title="Kattenbeheer">
-        <Link href="/admin/cats/new">
-          <Btn variant="solid">+ Nieuwe Kat</Btn>
-        </Link>
-      </PageHead>
+      <PageHead label="Database" title="Kattenbeheer" />
 
-      <div className="mb-10">
+      {/* Zoeken */}
+      <div className="relative mb-2 max-w-md">
+        <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-forest-400">🔍</span>
+        <input
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+          placeholder="Zoek een kitten of kat… (naam, kleur, chip, nestje)"
+          className="w-full rounded-xl border border-forest-900/15 bg-white py-2.5 pl-10 pr-9 text-sm outline-none focus:border-brass-400 focus:ring-2 focus:ring-brass-200"
+        />
+        {q && (
+          <button onClick={() => setQ('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-forest-400 hover:text-forest-700" aria-label="Wissen">✕</button>
+        )}
+      </div>
+      {q.trim() && <p className="mb-10 text-sm text-forest-600">{totalMatches} resultaat{totalMatches === 1 ? '' : 'en'} voor “{q}”.</p>}
+
+      {!q.trim() && (
+      <>
+      <div className="mb-10 mt-8">
         <h2 className="mb-4 font-display text-xl text-forest-900">Nieuw nestje / kitten aanmaken</h2>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <Link
@@ -170,22 +183,9 @@ export default function CatsAdmin() {
       <div className="mb-2 flex items-baseline gap-2">
         <h2 className="font-display text-2xl text-forest-900">Katten &amp; dossiers</h2>
       </div>
-      <p className="mb-4 text-sm text-forest-600">Overzichtelijk gesorteerd: eerst de kittens, daarna je fokdieren (moeders en vaders). Klik op een kaart om het volledige dossier te openen.</p>
-
-      {/* Zoeken */}
-      <div className="relative mb-6 max-w-md">
-        <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-forest-400">🔍</span>
-        <input
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-          placeholder="Zoek een kitten of kat… (naam, kleur, chip, nestje)"
-          className="w-full rounded-xl border border-forest-900/15 bg-white py-2.5 pl-10 pr-9 text-sm outline-none focus:border-brass-400 focus:ring-2 focus:ring-brass-200"
-        />
-        {q && (
-          <button onClick={() => setQ('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-forest-400 hover:text-forest-700" aria-label="Wissen">✕</button>
-        )}
-      </div>
-      {q.trim() && <p className="mb-4 text-sm text-forest-600">{totalMatches} resultaat{totalMatches === 1 ? '' : 'en'} voor “{q}”.</p>}
+      <p className="mb-6 text-sm text-forest-600">Overzichtelijk gesorteerd: eerst de kittens, daarna je fokdieren (moeders en vaders). Klik op een kaart om het volledige dossier te openen.</p>
+      </>
+      )}
 
       {kittens.length === 0 ? (
         <div className="rounded-2xl border border-forest-900/10 bg-white py-12 text-center text-forest-600">
