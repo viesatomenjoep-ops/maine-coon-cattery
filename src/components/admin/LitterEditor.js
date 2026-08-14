@@ -35,11 +35,6 @@ const EMPTY_LITTER = {
   date_of_birth: '', description: '', cover_image_url: '',
   sire_id: '', sire_name: '', dam_id: '', dam_name: '',
 };
-const EMPTY_KIT = {
-  name: '', sex: 'Kater', color: '', pattern: '', ems_code: '', registration_no: '',
-  chip_no: '', birth_weight_g: '', reserved_by: '', status: 'beschikbaar',
-  priceNL: 1250, priceBE: 1300, cover_image: '',
-};
 const LITTER_STEPS = ['Naam & basis', 'Vader', 'Moeder', 'Foto & tekst'];
 
 const EMPTY_BREEDER = {
@@ -268,19 +263,16 @@ function KittenRow({ kitten, onSave, onDelete }) {
 export default function LitterEditor({ initialLitterId = null, onClose }) {
   const {
     litters = [], kittens = [], breedingCats = [], documents = [],
-    addLitter, updateLitter, addKitten, updateKitten, deleteKitten, deleteDocument,
+    addLitter, updateLitter, updateKitten, deleteKitten, deleteDocument,
   } = useStore();
 
   const [litterId, setLitterId] = useState(initialLitterId);
+  const [coverZoomed, setCoverZoomed] = useState(false);
   const [litter, setLitter] = useState(EMPTY_LITTER);
   const [litterStep, setLitterStep] = useState(0);
   const [savingLitter, setSavingLitter] = useState(false);
   const [coverUploading, setCoverUploading] = useState(false);
   const [savingCover, setSavingCover] = useState(false);
-  const [kit, setKit] = useState({ ...EMPTY_KIT });
-  const [savingKit, setSavingKit] = useState(false);
-  const [kitCoverUploading, setKitCoverUploading] = useState(false);
-  const [showKitForm, setShowKitForm] = useState(false);
   const hydrated = useRef(false);
 
   useEffect(() => {
@@ -332,16 +324,6 @@ export default function LitterEditor({ initialLitterId = null, onClose }) {
     if (litterId) await updateLitter(litterId, { cover_image_url: null });
   };
 
-  const handleKitCover = async (file) => {
-    if (!file) return;
-    setKitCoverUploading(true);
-    try {
-      const data = await uploadFile(file, 'cattery_media');
-      setKit((k) => ({ ...k, cover_image: data.url }));
-    } catch (err) { alert('Uploaden mislukt: ' + err.message); }
-    setKitCoverUploading(false);
-  };
-
   const saveLitter = async () => {
     if (!litter.name.trim()) { alert('Vul a.u.b. een naam in voor het nestje.'); return; }
     setSavingLitter(true);
@@ -366,17 +348,6 @@ export default function LitterEditor({ initialLitterId = null, onClose }) {
       });
       setSavingLitter(false);
     }
-  };
-
-  const saveKit = async () => {
-    if (!litterId) { alert('Sla eerst het nestje op.'); return; }
-    if (!kit.name.trim()) { alert('Vul a.u.b. een naam in voor het kitten.'); return; }
-    setSavingKit(true);
-    const res = await addKitten({ ...kit, litter_id: litterId, gender: kit.sex, price_nl: kit.priceNL, price_be: kit.priceBE });
-    setSavingKit(false);
-    if (res?.error) { alert('Fout bij opslaan kitten: ' + res.error.message); return; }
-    setKit({ ...EMPTY_KIT });
-    setShowKitForm(false);
   };
 
   return (
@@ -451,7 +422,14 @@ export default function LitterEditor({ initialLitterId = null, onClose }) {
             <SectionTitle hint="Een foto van alle kittens samen. Deze verschijnt als profielfoto in het nestjes-overzicht.">Profielfoto van het nest</SectionTitle>
             <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
               {litter.cover_image_url ? (
-                <img src={litter.cover_image_url} alt="Profielfoto nest" className="h-48 w-full rounded-2xl border border-forest-900/10 object-cover shadow sm:w-72" />
+                <button
+                  type="button"
+                  onClick={() => setCoverZoomed(true)}
+                  className="h-48 w-full shrink-0 cursor-zoom-in overflow-hidden rounded-2xl border border-forest-900/10 shadow sm:w-72"
+                  title="Klik om te vergroten"
+                >
+                  <img src={litter.cover_image_url} alt="Profielfoto nest" className="h-full w-full object-cover" />
+                </button>
               ) : (
                 <div className="flex h-48 w-full items-center justify-center rounded-2xl border border-dashed border-forest-900/20 bg-forest-50 text-forest-300 sm:w-72">
                   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" className="h-10 w-10"><rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="9" cy="9" r="2" /><path d="m21 15-5-5L5 21" /></svg>
@@ -523,46 +501,10 @@ export default function LitterEditor({ initialLitterId = null, onClose }) {
                 <h3 className="font-display text-lg text-forest-900">Kittens van dit nestje</h3>
                 <p className="mt-1 text-xs text-forest-600">{nestKittens.length} kitten(s) gekoppeld aan dit nestje.</p>
               </div>
-              <Btn variant="solid" onClick={() => setShowKitForm((v) => !v)} className="!px-4 !py-2 !text-sm">
-                {showKitForm ? 'Formulier sluiten' : '+ Voeg kittens toe aan dit nestje'}
-              </Btn>
+              <Link href={`/admin/litters/new-kitten?litter=${litterId}`} className="inline-flex items-center justify-center rounded-lg bg-forest-800 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-forest-900">
+                + Kitten toevoegen
+              </Link>
             </div>
-
-            {showKitForm && (
-              <div className="mb-6 rounded-2xl border border-brass-300/60 bg-brass-50/40 p-4">
-                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                  <Field label="Naam"><Input value={kit.name} onChange={(e) => setKit({ ...kit, name: e.target.value })} placeholder="Bijv. Orion" /></Field>
-                  <Field label="Geslacht"><Select value={kit.sex} onChange={(e) => setKit({ ...kit, sex: e.target.value })}>{SEXES.map((s) => <option key={s} value={s}>{s}</option>)}</Select></Field>
-                  <Field label="Status"><Select value={kit.status} onChange={(e) => setKit({ ...kit, status: e.target.value })}>{KITTEN_STATUSES.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}</Select></Field>
-                  <Field label="Kleur"><Combobox id="new-kit-color" options={COLORS} value={kit.color} onChange={(e) => setKit({ ...kit, color: e.target.value })} /></Field>
-                  <Field label="Patroon"><Combobox id="new-kit-pattern" options={PATTERNS} value={kit.pattern} onChange={(e) => setKit({ ...kit, pattern: e.target.value })} /></Field>
-                  <Field label="EMS-code"><Input value={kit.ems_code} onChange={(e) => setKit({ ...kit, ems_code: e.target.value })} placeholder="Bijv. MCO n 22" /></Field>
-                  <Field label="Stamboomnummer"><Input value={kit.registration_no} onChange={(e) => setKit({ ...kit, registration_no: e.target.value })} /></Field>
-                  <Field label="Chipnummer"><Input value={kit.chip_no} onChange={(e) => setKit({ ...kit, chip_no: e.target.value })} /></Field>
-                  <Field label="Geboortegewicht (g)"><Input type="number" min="0" value={kit.birth_weight_g} onChange={(e) => setKit({ ...kit, birth_weight_g: e.target.value })} placeholder="Bijv. 110" /></Field>
-                  <Field label="Gereserveerd door"><Input value={kit.reserved_by} onChange={(e) => setKit({ ...kit, reserved_by: e.target.value })} placeholder="Optioneel" /></Field>
-                  <Field label="Prijs NL (€)"><Input type="number" value={kit.priceNL} onChange={(e) => setKit({ ...kit, priceNL: e.target.value })} /></Field>
-                  <Field label="Prijs BE (€)"><Input type="number" value={kit.priceBE} onChange={(e) => setKit({ ...kit, priceBE: e.target.value })} /></Field>
-                </div>
-                <Field label="Cover-afbeelding (optioneel)">
-                  <div className="flex flex-col items-start gap-3">
-                    <FilePicker
-                      accept="image/*"
-                      disabled={kitCoverUploading}
-                      onFileReady={handleKitCover}
-                      uploadLabel="Cover uploaden"
-                      cameraLabel="Open camera"
-                    />
-                    {kitCoverUploading && <span className="text-xs text-forest-500">Uploaden…</span>}
-                    {kit.cover_image && <img src={kit.cover_image} alt="Preview" className="h-10 w-10 rounded object-cover shadow" />}
-                  </div>
-                </Field>
-                <div className="mt-3 flex flex-wrap gap-3">
-                  <Btn variant="brass" onClick={saveKit} disabled={savingKit}>{savingKit ? 'Opslaan…' : 'Kitten opslaan'}</Btn>
-                  <Btn variant="ghost" onClick={() => { setKit({ ...EMPTY_KIT }); setShowKitForm(false); }}>Annuleren</Btn>
-                </div>
-              </div>
-            )}
 
             {nestKittens.length === 0 ? (
               <p className="text-sm italic text-forest-600">Nog geen kittens in dit nestje. Gebruik de knop hierboven om ze toe te voegen.</p>
@@ -575,6 +517,23 @@ export default function LitterEditor({ initialLitterId = null, onClose }) {
             )}
           </section>
         </>
+      )}
+
+      {coverZoomed && litter.cover_image_url && (
+        <div
+          className="fixed inset-0 z-[300] flex items-center justify-center bg-ink/80 p-4 backdrop-blur-sm cursor-zoom-out"
+          onClick={() => setCoverZoomed(false)}
+        >
+          <img src={litter.cover_image_url} alt="Profielfoto nest — vergroot" className="max-h-[90vh] max-w-full rounded-2xl object-contain shadow-2xl" />
+          <button
+            type="button"
+            onClick={() => setCoverZoomed(false)}
+            className="absolute right-5 top-5 flex h-10 w-10 items-center justify-center rounded-full bg-white/90 text-forest-900 shadow-lg transition hover:bg-white"
+            aria-label="Sluiten"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18" /><path d="m6 6 12 12" /></svg>
+          </button>
+        </div>
       )}
     </Card>
   );

@@ -511,7 +511,7 @@ export default function CatDossier() {
                           <span className="mx-2 opacity-40">|</span>
                           Moeder: <span className="font-medium text-forest-900">{currentLitter.dam_name || 'onbekend'}</span>
                         </p>
-                        <Link href={`/admin/litters?edit=${currentLitter.id}`} className="mt-2 inline-block text-xs font-semibold text-emerald-700 hover:text-emerald-900">Vader/moeder wijzigen bij het nestje →</Link>
+                        <Link href={`/admin/litters/${currentLitter.id}`} className="mt-2 inline-block text-xs font-semibold text-emerald-700 hover:text-emerald-900">Vader/moeder wijzigen bij het nestje →</Link>
                       </>
                     ) : (
                       <p className="mt-3 text-xs italic text-forest-500">Nog geen nestje gekozen — kies er hierboven een, of vul hieronder handmatig aan en druk op "Dossier Opslaan".</p>

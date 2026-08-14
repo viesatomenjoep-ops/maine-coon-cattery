@@ -1,22 +1,11 @@
 'use client';
 import { useState, useRef, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useStore } from '@/context/StoreContext';
-import { PageHead, Card, Field, Input, Select, Combobox, Btn, Stepper } from '@/components/admin';
-import DocumentUploader, { DocumentList } from '@/components/admin/DocumentUploader';
+import { PageHead, Card, Btn } from '@/components/admin';
 import LitterEditor from '@/components/admin/LitterEditor';
-import FilePicker from '@/components/admin/FilePicker';
 
-const SEXES = ['Kater', 'Poes'];
-const PATTERNS = [
-  'Classic Tabby', 'Mackerel Tabby', 'Spotted Tabby', 'Ticked Tabby',
-  'Solid (Effen)', 'Smoke', 'Shaded', 'Shell/Chinchilla',
-  'Bicolor', 'Harlequin', 'Van', 'Tortie (Schildpad)', 'Torbie',
-];
-const COLORS = [
-  'Black (Zwart)', 'Blue (Blauw)', 'Red (Rood)', 'Cream (Crème)',
-  'White (Wit)', 'Black Tortie', 'Blue Tortie',
-];
 const LITTER_STATUSES = [
   { value: 'verwacht', label: 'Verwacht' },
   { value: 'geboren', label: 'Geboren' },
@@ -24,58 +13,13 @@ const LITTER_STATUSES = [
   { value: 'gereserveerd', label: 'Gereserveerd' },
   { value: 'afgerond', label: 'Afgerond' },
 ];
-const KITTEN_STATUSES = [
-  { value: 'beschikbaar', label: 'Beschikbaar' },
-  { value: 'gereserveerd', label: 'Gereserveerd' },
-  { value: 'verkocht', label: 'Verkocht' },
-  { value: 'houden', label: 'Houden' },
-];
 const norm = (s) => (s || '').toLowerCase();
 
-// Toon het geslacht altijd netjes als "Kater" of "Poes", ongeacht hoe het is opgeslagen.
-const sexLabel = (g) => {
-  const v = (g || '').toLowerCase();
-  if (/kater|mann|\bmale\b|\bm\b/.test(v)) return 'Kater';
-  if (/poes|vrouw|female|\bf\b/.test(v)) return 'Poes';
-  return g || 'Onbekend';
-};
-
-const KITTEN_STATUS_META = {
-  beschikbaar: { label: 'Beschikbaar', cls: 'bg-emerald-100 text-emerald-700' },
-  gereserveerd: { label: 'Gereserveerd', cls: 'bg-amber-100 text-amber-700' },
-  verkocht: { label: 'Verkocht', cls: 'bg-red-100 text-red-700' },
-  houden: { label: 'Houden', cls: 'bg-sky-100 text-sky-700' },
-};
-function KittenStatusBadge({ status }) {
-  const m = KITTEN_STATUS_META[norm(status)] || KITTEN_STATUS_META.beschikbaar;
-  return (
-    <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold uppercase tracking-wide ${m.cls}`}>
-      <span className="h-1.5 w-1.5 rounded-full bg-current opacity-70" />
-      {m.label}
-    </span>
-  );
-}
-
-const EMPTY_KIT = {
-  litter_id: '', name: '', sex: 'Kater', color: '', pattern: '', status: 'beschikbaar',
-  chip_no: '', registration_no: '', birth_weight_g: '', ems_code: '', reserved_by: '',
-  priceNL: 1250, priceBE: 1300, cover_image: '',
-};
-
-const KIT_STEPS = ['Naam & nestje', 'Uiterlijk', 'Identificatie', 'Verkoop', 'Foto'];
-
 export default function LittersPage() {
-  const {
-    litters = [], kittens = [], documents = [],
-    deleteLitter, addKitten, deleteKitten, deleteDocument,
-  } = useStore();
+  const { litters = [], kittens = [], deleteLitter } = useStore();
+  const router = useRouter();
 
-  const [mode, setMode] = useState(null); // null = tegelkeuze, 'litter' of 'kitten'
-  const [editingLitterId, setEditingLitterId] = useState(null);
-  const [kit, setKit] = useState({ ...EMPTY_KIT, litter_id: litters[0]?.id || '' });
-  const [kitStep, setKitStep] = useState(0);
-  const [uploading, setUploading] = useState(false);
-  const [savingKitten, setSavingKitten] = useState(false);
+  const [mode, setMode] = useState(null); // null = tegelkeuze, 'litter' = nieuw nestje aanmaken
   const formRef = useRef(null);
 
   const scrollToForm = () => formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -84,57 +28,14 @@ export default function LittersPage() {
     const params = new URLSearchParams(window.location.search);
     const create = params.get('create');
     const edit = params.get('edit');
-    if (edit) { setEditingLitterId(edit); setMode('litter'); scrollToForm(); }
-    else if (create === 'litter' || create === 'kitten') setMode(create);
+    if (edit) { router.replace(`/admin/litters/${edit}`); return; }
+    if (create === 'kitten') { router.replace('/admin/litters/new-kitten'); return; }
+    if (create === 'litter') { setMode('litter'); scrollToForm(); }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const openNewLitter = () => { setEditingLitterId(null); setMode('litter'); scrollToForm(); };
-  const openLitter = (id) => { setEditingLitterId(id); setMode('litter'); scrollToForm(); };
-  const openNewKitten = (litterId) => {
-    setKit((k) => ({ ...k, litter_id: litterId || k.litter_id || litters[0]?.id || '' }));
-    setKitStep(0);
-    setMode('kitten');
-    scrollToForm();
-  };
-  const closeForm = () => { setMode(null); setEditingLitterId(null); };
-
-  const handleUpload = async (file) => {
-    if (!file) return;
-    setUploading(true);
-    const fd = new FormData();
-    fd.append('file', file);
-    fd.append('folder', 'cattery_media');
-    try {
-      const res = await fetch('/api/upload', { method: 'POST', body: fd });
-      const data = await res.json();
-      if (data.url) setKit((k) => ({ ...k, cover_image: data.url }));
-    } catch (err) {
-      console.error(err);
-    }
-    setUploading(false);
-  };
-
-  const saveKitten = async () => {
-    if (!kit.litter_id) {
-      alert('Selecteer a.u.b. een nestje om dit kitten aan toe te voegen.');
-      return;
-    }
-    if (!kit.name.trim()) {
-      alert('Vul a.u.b. een naam in voor het kitten.');
-      return;
-    }
-    setSavingKitten(true);
-    const res = await addKitten({ ...kit, gender: kit.sex, price_nl: kit.priceNL, price_be: kit.priceBE });
-    setSavingKitten(false);
-    if (res?.error) {
-      alert('Fout bij opslaan kitten: ' + res.error.message);
-      return;
-    }
-    setKit((k) => ({ ...EMPTY_KIT, litter_id: k.litter_id }));
-    setKitStep(0);
-    alert('Het kitten is succesvol toegevoegd en opgeslagen.');
-  };
+  const openNewLitter = () => { setMode('litter'); scrollToForm(); };
+  const closeForm = () => { setMode(null); };
 
   return (
     <>
@@ -162,9 +63,8 @@ export default function LittersPage() {
               <span className="mt-auto text-sm font-semibold text-brass-700">Openen →</span>
             </button>
 
-            <button
-              type="button"
-              onClick={() => openNewKitten()}
+            <Link
+              href="/admin/litters/new-kitten"
               className="group flex flex-col items-start gap-4 rounded-3xl border border-forest-900/10 bg-white/70 p-8 text-left shadow-sm transition hover:-translate-y-1 hover:border-brass-400/60 hover:shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-brass-500"
             >
               <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-forest-50 text-forest-700 transition group-hover:bg-brass-100 group-hover:text-brass-700">
@@ -175,93 +75,18 @@ export default function LittersPage() {
                 <p className="mt-1 text-sm text-forest-600">Voeg snel een kitten toe aan een bestaand nestje.</p>
               </div>
               <span className="mt-auto text-sm font-semibold text-brass-700">Openen →</span>
-            </button>
+            </Link>
           </div>
           </>
         )}
 
         {mode === 'litter' && (
-          <LitterEditor initialLitterId={editingLitterId} onClose={closeForm} />
-        )}
-
-        {mode === 'kitten' && (
-          <Card className="flex flex-col">
-            <div className="mb-2 flex items-center justify-between gap-3">
-              <h2 className="font-display text-xl text-forest-900">Kitten toevoegen</h2>
-              <Btn variant="ghost" onClick={closeForm} className="!px-3 !py-1.5 !text-xs">← Terug</Btn>
-            </div>
-            <Stepper
-              steps={KIT_STEPS}
-              current={kitStep}
-              onBack={() => setKitStep((s) => Math.max(0, s - 1))}
-              onNext={() => setKitStep((s) => Math.min(KIT_STEPS.length - 1, s + 1))}
-              onFinish={saveKitten}
-              canNext={kitStep === 0 ? Boolean(kit.litter_id && kit.name.trim()) : true}
-              finishing={savingKitten}
-              finishLabel="Kitten toevoegen"
-            >
-              {kitStep === 0 && (
-                <div className="grid gap-4">
-                  <Field label="Nestje">
-                    <Select value={kit.litter_id} onChange={(e) => setKit({ ...kit, litter_id: e.target.value })}>
-                      <option value="">Selecteer nestje...</option>
-                      {litters.map((l) => <option key={l.id} value={l.id}>{l.name}</option>)}
-                    </Select>
-                  </Field>
-                  <Field label="Naam"><Input value={kit.name} onChange={(e) => setKit({ ...kit, name: e.target.value })} placeholder="Bijv. Orion" autoFocus /></Field>
-                  <Field label="Geslacht"><Select value={kit.sex} onChange={(e) => setKit({ ...kit, sex: e.target.value })}>{SEXES.map((s) => <option key={s} value={s}>{s}</option>)}</Select></Field>
-                </div>
-              )}
-              {kitStep === 1 && (
-                <div className="grid gap-4">
-                  <Field label="Kleurslag (Color)">
-                    <Combobox id="colorsList" options={COLORS} value={kit.color} onChange={(e) => setKit({ ...kit, color: e.target.value })} placeholder="Bijv. Black Solid" />
-                  </Field>
-                  <Field label="Patroon (Pattern)">
-                    <Combobox id="patternsList" options={PATTERNS} value={kit.pattern} onChange={(e) => setKit({ ...kit, pattern: e.target.value })} placeholder="Bijv. Classic Tabby" />
-                  </Field>
-                  <Field label="Geboortegewicht (g)"><Input type="number" min="0" value={kit.birth_weight_g} onChange={(e) => setKit({ ...kit, birth_weight_g: e.target.value })} placeholder="Bijv. 110" /></Field>
-                </div>
-              )}
-              {kitStep === 2 && (
-                <div className="grid gap-4">
-                  <Field label="EMS-code"><Input value={kit.ems_code} onChange={(e) => setKit({ ...kit, ems_code: e.target.value })} placeholder="Bijv. MCO n 22" /></Field>
-                  <Field label="Stamboomnummer"><Input value={kit.registration_no} onChange={(e) => setKit({ ...kit, registration_no: e.target.value })} placeholder="Registratienummer" /></Field>
-                  <Field label="Chipnummer"><Input value={kit.chip_no} onChange={(e) => setKit({ ...kit, chip_no: e.target.value })} /></Field>
-                </div>
-              )}
-              {kitStep === 3 && (
-                <div className="grid gap-4">
-                  <Field label="Status"><Select value={kit.status} onChange={(e) => setKit({ ...kit, status: e.target.value })}>{KITTEN_STATUSES.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}</Select></Field>
-                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                    <Field label="Prijs NL (€)"><Input type="number" value={kit.priceNL} onChange={(e) => setKit({ ...kit, priceNL: Number(e.target.value) })} /></Field>
-                    <Field label="Prijs BE (€)"><Input type="number" value={kit.priceBE} onChange={(e) => setKit({ ...kit, priceBE: Number(e.target.value) })} /></Field>
-                  </div>
-                  <Field label="Gereserveerd door"><Input value={kit.reserved_by} onChange={(e) => setKit({ ...kit, reserved_by: e.target.value })} placeholder="Naam klant (optioneel)" /></Field>
-                </div>
-              )}
-              {kitStep === 4 && (
-                <Field label="Cover Afbeelding (Optioneel)">
-                  <div className="flex flex-col items-start gap-3">
-                    <FilePicker
-                      accept="image/*"
-                      disabled={uploading}
-                      onFileReady={handleUpload}
-                      uploadLabel="Cover uploaden"
-                      cameraLabel="Open camera"
-                    />
-                    {uploading && <span className="text-xs text-forest-500">Uploaden...</span>}
-                    {kit.cover_image && <img src={kit.cover_image} alt="Preview" className="h-10 w-10 rounded object-cover shadow" />}
-                  </div>
-                </Field>
-              )}
-            </Stepper>
-          </Card>
+          <LitterEditor initialLitterId={null} onClose={closeForm} />
         )}
       </div>
 
-      {/* Litters & Kittens Tree — advertenties eerst */}
-      <div className="order-1 space-y-8">
+      {/* Nestjes overzicht — compacte kaarten, alles verder zit achter "Open nestje" */}
+      <div className="order-1 space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h2 className="font-display text-2xl text-forest-900">Nestjes overzicht</h2>
           <Btn variant="solid" onClick={openNewLitter} className="!px-4 !py-2 !text-sm">+ Nieuw nestje</Btn>
@@ -270,137 +95,60 @@ export default function LittersPage() {
         {litters.length === 0 && <p className="text-forest-700">Geen nestjes gevonden. Maak er bovenaan eentje aan.</p>}
 
         {litters.map((lit) => {
-          const nestKittens = kittens.filter((k) => k.litter_id === lit.id && !k.is_own_breeding_cat);
-          const litterDocs = documents.filter((d) => d.litter_id === lit.id);
+          const nestKittenCount = kittens.filter((k) => k.litter_id === lit.id && !k.is_own_breeding_cat).length;
           const statusLabel = LITTER_STATUSES.find((s) => s.value === norm(lit.status))?.label;
           return (
-            <Card key={lit.id} className="overflow-hidden p-0">
-              <div className="flex flex-col gap-4 border-b border-forest-900/10 bg-forest-900/5 p-5">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex min-w-0 items-center gap-4">
-                    {lit.cover_image_url ? (
-                      <img src={lit.cover_image_url} alt={lit.name} className="h-16 w-16 shrink-0 rounded-xl object-cover shadow" />
-                    ) : (
-                      <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-xl border border-forest-100 bg-forest-50 text-forest-300">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" className="h-7 w-7"><rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="9" cy="9" r="2" /><path d="m21 15-5-5L5 21" /></svg>
-                      </div>
-                    )}
-                    <div className="min-w-0">
-                      <h3 className="flex flex-wrap items-center gap-2 font-display text-xl text-forest-950">
-                        {lit.name}
-                        {statusLabel && <span className="rounded-full bg-brass-100 px-2.5 py-0.5 text-xs font-semibold uppercase tracking-wide text-brass-700">{statusLabel}</span>}
-                      </h3>
-                      <p className="mt-1 text-sm text-forest-700">
-                        {lit.sire_name || 'Onbekende vader'} x {lit.dam_name || 'Onbekende moeder'}
-                        <span className="mx-2 opacity-50">|</span>
-                        {lit.date_of_birth ? new Date(lit.date_of_birth).toLocaleDateString('nl-NL') : 'Datum onbekend'}
-                        <span className="mx-2 opacity-50">|</span>
-                        {nestKittens.length} {nestKittens.length === 1 ? 'kitten' : 'kittens'}
-                      </p>
+            <Card key={lit.id} className="p-5">
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex min-w-0 items-center gap-4">
+                  {lit.cover_image_url ? (
+                    <img src={lit.cover_image_url} alt={lit.name} className="h-16 w-16 shrink-0 rounded-xl object-cover shadow" />
+                  ) : (
+                    <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-xl border border-forest-100 bg-forest-50 text-forest-300">
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" className="h-7 w-7"><rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="9" cy="9" r="2" /><path d="m21 15-5-5L5 21" /></svg>
                     </div>
-                  </div>
-                  <button
-                    onClick={() => { if (confirm('Weet je zeker dat je dit nestje wilt verwijderen?')) deleteLitter(lit.id); }}
-                    title="Nestje verwijderen"
-                    className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-red-400 transition hover:bg-red-50 hover:text-red-600"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
-                  </button>
-                </div>
-
-                <div className="flex flex-col gap-2 sm:flex-row">
-                  <Link href={`/admin/litters/${lit.id}`} className="inline-flex items-center justify-center rounded-lg bg-brass-500 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-brass-600 sm:w-auto">Open nestje</Link>
-                  <div className="grid grid-cols-3 gap-1 rounded-lg border border-forest-900/10 bg-white p-1 sm:flex-1">
-                    <button
-                      onClick={() => {
-                        if (!lit.share_token) return alert('De deel-link wordt actief zodra de database-update (share_token) is toegepast.');
-                        navigator.clipboard.writeText(`${window.location.origin}/nestje/${lit.share_token}`);
-                        alert('Advertentielink van dit nestje gekopieerd! Deel hem gerust via WhatsApp.');
-                      }}
-                      className="flex flex-col items-center gap-1 rounded-md px-2 py-2 text-center text-xs font-medium leading-tight text-forest-700 transition hover:bg-forest-50 sm:flex-row sm:justify-center sm:gap-1.5 sm:text-sm"
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/></svg>
-                      Delen
-                    </button>
-                    <button onClick={() => openLitter(lit.id)} className="flex flex-col items-center gap-1 rounded-md px-2 py-2 text-center text-xs font-medium leading-tight text-forest-700 transition hover:bg-forest-50 sm:flex-row sm:justify-center sm:gap-1.5 sm:text-sm">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
-                      Bewerken
-                    </button>
-                    <button onClick={() => openNewKitten(lit.id)} className="flex flex-col items-center gap-1 rounded-md px-2 py-2 text-center text-xs font-medium leading-tight text-forest-700 transition hover:bg-forest-50 sm:flex-row sm:justify-center sm:gap-1.5 sm:text-sm">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0"><path d="M12 5v14M5 12h14"/></svg>
-                      Kitten
-                    </button>
+                  )}
+                  <div className="min-w-0">
+                    <h3 className="flex flex-wrap items-center gap-2 font-display text-xl text-forest-950">
+                      {lit.name}
+                      {statusLabel && <span className="rounded-full bg-brass-100 px-2.5 py-0.5 text-xs font-semibold uppercase tracking-wide text-brass-700">{statusLabel}</span>}
+                    </h3>
+                    <p className="mt-1 text-sm text-forest-700">
+                      {lit.sire_name || 'Onbekende vader'} x {lit.dam_name || 'Onbekende moeder'}
+                      <span className="mx-2 opacity-50">|</span>
+                      {lit.date_of_birth ? new Date(lit.date_of_birth).toLocaleDateString('nl-NL') : 'Datum onbekend'}
+                      <span className="mx-2 opacity-50">|</span>
+                      {nestKittenCount} {nestKittenCount === 1 ? 'kitten' : 'kittens'}
+                    </p>
                   </div>
                 </div>
+                <button
+                  onClick={() => { if (confirm('Weet je zeker dat je dit nestje wilt verwijderen?')) deleteLitter(lit.id); }}
+                  title="Nestje verwijderen"
+                  className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-red-400 transition hover:bg-red-50 hover:text-red-600"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+                </button>
               </div>
 
-              <div className="p-0">
-                {nestKittens.length === 0 ? (
-                  <div className="p-5">
-                    <div className="rounded-xl border border-dashed border-forest-900/15 bg-forest-50/40 p-5 text-center text-sm text-forest-600">
-                      🍼 Nog geen kittens in dit nestje — voeg ze toe met “+ Kitten toevoegen”, of beheer de advertentie bij Verkoop.
-                    </div>
-                  </div>
-                ) : (
-                  <div className="divide-y divide-forest-900/10 bg-white">
-                    {nestKittens.map((k) => (
-                      <div key={k.id} className="group relative flex flex-col gap-4 p-5 transition hover:bg-forest-50/40 sm:flex-row sm:items-center">
-                        {/* Hele kaart is klikbaar -> volledig dossier */}
-                        <Link href={`/admin/cats/${k.id}`} className="absolute inset-0 z-10" aria-label={`Open dossier van ${k.name}`} />
-
-                        {/* Foto */}
-                        {k.cover_image ? (
-                          <img src={k.cover_image} className="relative z-0 h-24 w-24 shrink-0 rounded-xl bg-forest-100 object-cover shadow-sm sm:h-20 sm:w-20" alt={k.name} />
-                        ) : (
-                          <div className="relative z-0 flex h-24 w-24 shrink-0 items-center justify-center rounded-xl border border-forest-100 bg-forest-50 text-[11px] text-forest-400 sm:h-20 sm:w-20">Geen foto</div>
-                        )}
-
-                        {/* Advertentie-info */}
-                        <div className="relative z-0 min-w-0 flex-1">
-                          <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-                            <h4 className="font-display text-xl text-forest-950">{k.name}</h4>
-                            <KittenStatusBadge status={k.status} />
-                          </div>
-                          <p className="mt-1 text-sm text-forest-700">
-                            {sexLabel(k.gender || k.sex)}
-                            <span className="mx-2 opacity-40">|</span>
-                            {[k.color, k.pattern].filter(Boolean).join(' ') || 'Vacht onbekend'}
-                            <span className="mx-2 opacity-40">|</span>
-                            <span className="font-medium text-forest-900">€ {k.price_nl || 0}</span>
-                          </p>
-                        </div>
-
-                        {/* Acties */}
-                        <div className="relative z-20 flex shrink-0 items-center gap-2">
-                          <Link href={`/admin/cats/${k.id}`} className="inline-flex items-center justify-center rounded-lg border border-forest-900/15 bg-white px-5 py-3 text-sm font-semibold text-forest-800 transition hover:bg-forest-50">Open dossier</Link>
-                          <button
-                            onClick={() => { if (confirm('Weet je zeker dat je dit kitten wilt verwijderen?')) deleteKitten(k.id); }}
-                            title="Kitten verwijderen"
-                            className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-red-400 transition hover:bg-red-50 hover:text-red-600"
-                          >
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                {/* Nestje-documenten */}
-                <div className="border-t border-forest-900/10 bg-forest-50/30 p-5">
-                  <div className="mb-3 flex items-center gap-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="text-forest-500"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6"/></svg>
-                    <h4 className="text-sm font-semibold text-forest-900">Documenten bij dit nestje</h4>
-                    {litterDocs.length > 0 && (
-                      <span className="rounded-full bg-forest-100 px-2 py-0.5 text-xs font-semibold text-forest-600">{litterDocs.length}</span>
-                    )}
-                  </div>
-                  <div className="rounded-xl border border-forest-900/10 bg-white p-4">
-                    <DocumentUploader litterId={lit.id} folder={`cattery_documents/litter_${lit.id}`} />
-                  </div>
-                  <div className="mt-4">
-                    <DocumentList documents={litterDocs} onDelete={deleteDocument} />
-                  </div>
+              <div className="mt-4 flex flex-col gap-2 sm:flex-row">
+                <Link href={`/admin/litters/${lit.id}`} className="inline-flex items-center justify-center rounded-lg bg-brass-500 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-brass-600 sm:w-auto">Open nestje →</Link>
+                <div className="grid grid-cols-2 gap-1 rounded-lg border border-forest-900/10 bg-white p-1 sm:w-56">
+                  <button
+                    onClick={() => {
+                      if (!lit.share_token) return alert('De deel-link wordt actief zodra de database-update (share_token) is toegepast.');
+                      navigator.clipboard.writeText(`${window.location.origin}/nestje/${lit.share_token}`);
+                      alert('Advertentielink van dit nestje gekopieerd! Deel hem gerust via WhatsApp.');
+                    }}
+                    className="flex items-center justify-center gap-1.5 rounded-md px-2 py-2 text-sm font-medium text-forest-700 transition hover:bg-forest-50"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/></svg>
+                    Delen
+                  </button>
+                  <Link href={`/admin/litters/new-kitten?litter=${lit.id}`} className="flex items-center justify-center gap-1.5 rounded-md px-2 py-2 text-sm font-medium text-forest-700 transition hover:bg-forest-50">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0"><path d="M12 5v14M5 12h14"/></svg>
+                    Kitten
+                  </Link>
                 </div>
               </div>
             </Card>

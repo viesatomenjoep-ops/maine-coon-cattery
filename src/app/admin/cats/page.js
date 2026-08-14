@@ -4,14 +4,6 @@ import Link from 'next/link';
 import { useStore } from '@/context/StoreContext';
 import { PageHead, Icon } from '@/components/admin';
 
-const TOOLS = [
-  { href: '/admin/news', label: 'Nieuws & Updates', icon: 'edit', desc: 'Plaats nieuwe berichten' },
-  { href: '/admin/medical', label: 'Medisch Dashboard', icon: 'health', desc: 'Overzicht & agenda voor de hele cattery' },
-  { href: '/admin/sales', label: 'Verkoop & Portaal', icon: 'tag', desc: 'Overzicht van alle advertenties tegelijk' },
-  { href: '/admin/customers', label: 'Klantenbestand', icon: 'customer', desc: 'Beheer alle kopers' },
-  { href: '/admin/media', label: 'Foto- & Videogalerij', icon: 'image', desc: 'Beheer alle media' },
-];
-
 const isMale = (g) => /kater|mann|\bmale\b|\bm\b/i.test(g || '');
 const isFemale = (g) => /poes|vrouw|female|\bf\b/i.test(g || '');
 const sexLabel = (g) => (isMale(g) ? 'Kater' : isFemale(g) ? 'Poes' : (g || 'Onbekend'));
@@ -29,23 +21,25 @@ function Badge({ children, cls }) {
 
 function CatCard({ k, badge, subtitle }) {
   return (
-    <div className="group relative flex items-center gap-4 rounded-2xl border border-forest-900/15 bg-white p-5 shadow-soft transition hover:border-brass-400 hover:shadow-md">
+    <div className="group relative flex flex-col gap-3 rounded-2xl border border-forest-900/15 bg-white p-4 shadow-soft transition hover:border-brass-400 hover:shadow-md sm:flex-row sm:items-center sm:gap-4 sm:p-5">
       <Link href={`/admin/cats/${k.id}`} className="absolute inset-0 z-10" aria-label={`Beheer dossier van ${k.name}`} />
-      {k.cover_image ? (
-        <img src={k.cover_image} alt={k.name} className="relative z-0 h-16 w-16 shrink-0 rounded-xl object-cover shadow-sm border border-forest-900/10" />
-      ) : (
-        <div className="relative z-0 flex h-16 w-16 shrink-0 items-center justify-center rounded-xl border border-forest-900/10 bg-forest-50 text-forest-300">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="h-6 w-6"><rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="9" cy="9" r="2" /><path d="m21 15-5-5L5 21" /></svg>
+      <div className="flex min-w-0 items-center gap-4">
+        {k.cover_image ? (
+          <img src={k.cover_image} alt={k.name} className="relative z-0 h-16 w-16 shrink-0 rounded-xl object-cover shadow-sm border border-forest-900/10" />
+        ) : (
+          <div className="relative z-0 flex h-16 w-16 shrink-0 items-center justify-center rounded-xl border border-forest-900/10 bg-forest-50 text-forest-300">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="h-6 w-6"><rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="9" cy="9" r="2" /><path d="m21 15-5-5L5 21" /></svg>
+          </div>
+        )}
+        <div className="relative z-0 min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <p className="font-display text-xl font-semibold text-forest-950 truncate">{k.name}</p>
+            {badge}
+          </div>
+          <p className="mt-1 text-sm text-forest-600 truncate">{subtitle}</p>
         </div>
-      )}
-      <div className="relative z-0 min-w-0 flex-1">
-        <div className="flex flex-wrap items-center gap-2">
-          <p className="font-display text-xl font-semibold text-forest-950 truncate">{k.name}</p>
-          {badge}
-        </div>
-        <p className="mt-1 text-sm text-forest-600 truncate">{subtitle}</p>
       </div>
-      <div className="relative z-20 flex shrink-0 items-center gap-2">
+      <div className="relative z-20 flex shrink-0 items-center gap-2 sm:ml-auto">
         {k.secret_token_nl && (
           <button
             onClick={(e) => { e.preventDefault(); navigator.clipboard.writeText(`${window.location.origin}/kat/${k.secret_token_nl}`); alert(`Showcase-link van ${k.name} gekopieerd! Deel hem gerust.`); }}
@@ -61,15 +55,21 @@ function CatCard({ k, badge, subtitle }) {
   );
 }
 
-function CatGroup({ title, hint, count, children }) {
+function CatGroup({ title, hint, count, defaultOpen = false, children }) {
+  const [open, setOpen] = useState(defaultOpen);
   return (
-    <section className="mb-10">
-      <div className="mb-4 flex items-baseline gap-3">
+    <section className="mb-4">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="flex w-full items-center gap-3 rounded-xl border border-forest-900/10 bg-white px-4 py-3 text-left transition hover:border-brass-300"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`shrink-0 text-forest-400 transition-transform ${open ? 'rotate-90' : ''}`}><path d="m9 18 6-6-6-6" /></svg>
         <h2 className="font-display text-xl text-forest-900">{title}</h2>
         <span className="rounded-full bg-forest-900/5 px-2.5 py-0.5 text-xs font-semibold text-forest-600">{count}</span>
-        {hint && <span className="text-sm text-forest-500">{hint}</span>}
-      </div>
-      <div className="space-y-3">{children}</div>
+        {hint && <span className="hidden text-sm text-forest-500 sm:inline">{hint}</span>}
+      </button>
+      {open && <div className="mt-3 space-y-3">{children}</div>}
     </section>
   );
 }
@@ -163,23 +163,6 @@ export default function CatsAdmin() {
         </div>
       </div>
 
-      <div className="mb-10">
-        <p className="mb-4 text-sm font-semibold uppercase tracking-wide text-forest-500">Overzichten &amp; tools</p>
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-          {TOOLS.map((t) => (
-            <Link key={t.label} href={t.href} className="group flex flex-col gap-3 rounded-xl border border-forest-900/10 bg-white p-4 transition hover:border-forest-900/20 hover:shadow-sm">
-              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-forest-50 text-forest-600 transition group-hover:bg-forest-100 group-hover:text-forest-800">
-                <Icon name={t.icon} className="h-5 w-5" />
-              </span>
-              <div>
-                <h2 className="font-display text-base text-forest-900">{t.label}</h2>
-                <p className="mt-0.5 text-xs leading-snug text-forest-600">{t.desc}</p>
-              </div>
-            </Link>
-          ))}
-        </div>
-      </div>
-
       <div className="mb-2 flex items-baseline gap-2">
         <h2 className="font-display text-2xl text-forest-900">Katten &amp; dossiers</h2>
       </div>
@@ -198,7 +181,7 @@ export default function CatsAdmin() {
       ) : (
         <>
           {litterKittens.length > 0 && (
-            <CatGroup title="Kittens" hint="horen bij een nestje" count={litterKittens.length}>
+            <CatGroup title="Kittens" hint="horen bij een nestje" count={litterKittens.length} defaultOpen={Boolean(q.trim())}>
               {litterKittens.map((k) => {
                 const nest = litterName(k.litter_id);
                 const parents = litterParents(k.litter_id);
@@ -215,7 +198,7 @@ export default function CatsAdmin() {
           )}
 
           {breedingFemales.length > 0 && (
-            <CatGroup title="Fokpoezen" hint="de moeders" count={breedingFemales.length}>
+            <CatGroup title="Fokpoezen" hint="de moeders" count={breedingFemales.length} defaultOpen={Boolean(q.trim())}>
               {breedingFemales.map((k) => (
                 <CatCard key={k.id} k={k} badge={<Badge cls="bg-rose-100 text-rose-700">Fokpoes · moeder</Badge>} subtitle={`Poes · ${vachtLabel(k)}`} />
               ))}
@@ -223,7 +206,7 @@ export default function CatsAdmin() {
           )}
 
           {breedingMales.length > 0 && (
-            <CatGroup title="Fokkaters" hint="de vaders" count={breedingMales.length}>
+            <CatGroup title="Fokkaters" hint="de vaders" count={breedingMales.length} defaultOpen={Boolean(q.trim())}>
               {breedingMales.map((k) => (
                 <CatCard key={k.id} k={k} badge={<Badge cls="bg-sky-100 text-sky-700">Fokkater · vader</Badge>} subtitle={`Kater · ${vachtLabel(k)}`} />
               ))}
@@ -231,7 +214,7 @@ export default function CatsAdmin() {
           )}
 
           {breedingOther.length > 0 && (
-            <CatGroup title="Overige fokdieren" count={breedingOther.length}>
+            <CatGroup title="Overige fokdieren" count={breedingOther.length} defaultOpen={Boolean(q.trim())}>
               {breedingOther.map((k) => (
                 <CatCard key={k.id} k={k} badge={<Badge cls="bg-stone-100 text-stone-700">Fokdier</Badge>} subtitle={`${sexLabel(k.gender)} · ${vachtLabel(k)}`} />
               ))}
@@ -239,7 +222,7 @@ export default function CatsAdmin() {
           )}
 
           {departedCats.length > 0 && (
-            <CatGroup title="Vertrokken / verkochte katten" hint="niet meer in de cattery — dossier, foto's en nestjegegevens blijven bewaard" count={departedCats.length}>
+            <CatGroup title="Vertrokken / verkochte katten" hint="niet meer in de cattery — dossier, foto's en nestjegegevens blijven bewaard" count={departedCats.length} defaultOpen={Boolean(q.trim())}>
               {departedCats.map((k) => {
                 const nest = litterName(k.litter_id);
                 const parents = litterParents(k.litter_id);

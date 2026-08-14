@@ -78,6 +78,15 @@ export default function AdminLayout({ children }) {
             )}
           </nav>
 
+          <div className="border-t border-forest-900/10 px-6 py-3 lg:px-4">
+            <div className="flex flex-wrap gap-x-3 gap-y-1.5 text-xs font-medium text-forest-500">
+              <a href="/" target="_blank" rel="noreferrer" className="hover:text-forest-800">Website</a>
+              <Link href="/admin/news" onClick={() => setOpen(false)} className="hover:text-forest-800">Nieuws</Link>
+              <Link href="/admin/customers" onClick={() => setOpen(false)} className="hover:text-forest-800">Klanten</Link>
+              <Link href="/admin/settings" onClick={() => setOpen(false)} className="hover:text-forest-800">Instellingen</Link>
+            </div>
+          </div>
+
           {currentTenant?.name && (
             <div className="border-t border-forest-900/10 px-6 py-3 lg:px-4">
               <p className="text-xs font-semibold text-forest-700">🏡 {currentTenant.name}</p>
