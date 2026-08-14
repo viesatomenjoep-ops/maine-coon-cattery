@@ -2,7 +2,7 @@
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useStore } from '@/context/StoreContext';
-import { Card, Field, Input, Select, Textarea, Combobox, Btn } from '@/components/admin';
+import { Card, Field, Input, Select, Textarea, Combobox, Btn, Stepper } from '@/components/admin';
 import DocumentUploader, { DocumentList } from '@/components/admin/DocumentUploader';
 import FilePicker from '@/components/admin/FilePicker';
 
@@ -40,6 +40,8 @@ const EMPTY_KIT = {
   chip_no: '', birth_weight_g: '', reserved_by: '', status: 'beschikbaar',
   priceNL: 1250, priceBE: 1300, cover_image: '',
 };
+const LITTER_STEPS = ['Naam & basis', 'Vader', 'Moeder', 'Foto & tekst'];
+
 const EMPTY_BREEDER = {
   name: '', registration_no: '', breed: 'Maine Coon (MCO)', ems_code: '', color: '', pattern: '',
   date_of_birth: '', chip_number: '', breeder: '', sire_name: '', dam_name: '', notes: '',
@@ -271,6 +273,7 @@ export default function LitterEditor({ initialLitterId = null, onClose }) {
 
   const [litterId, setLitterId] = useState(initialLitterId);
   const [litter, setLitter] = useState(EMPTY_LITTER);
+  const [litterStep, setLitterStep] = useState(0);
   const [savingLitter, setSavingLitter] = useState(false);
   const [coverUploading, setCoverUploading] = useState(false);
   const [savingCover, setSavingCover] = useState(false);
@@ -386,66 +389,123 @@ export default function LitterEditor({ initialLitterId = null, onClose }) {
         {onClose && <Btn variant="ghost" onClick={onClose} className="!px-3 !py-1.5 !text-xs">← Terug</Btn>}
       </div>
 
-      {/* 0. Profielfoto van het nest */}
-      <section>
-        <SectionTitle hint="Een foto van alle kittens samen. Deze verschijnt als profielfoto in het nestjes-overzicht.">Profielfoto van het nest</SectionTitle>
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
-          {litter.cover_image_url ? (
-            <img src={litter.cover_image_url} alt="Profielfoto nest" className="h-48 w-full rounded-2xl border border-forest-900/10 object-cover shadow sm:w-72" />
-          ) : (
-            <div className="flex h-48 w-full items-center justify-center rounded-2xl border border-dashed border-forest-900/20 bg-forest-50 text-forest-300 sm:w-72">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" className="h-10 w-10"><rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="9" cy="9" r="2" /><path d="m21 15-5-5L5 21" /></svg>
+      {!litterId ? (
+        <Stepper
+          steps={LITTER_STEPS}
+          current={litterStep}
+          onBack={() => setLitterStep((s) => Math.max(0, s - 1))}
+          onNext={() => setLitterStep((s) => Math.min(LITTER_STEPS.length - 1, s + 1))}
+          onFinish={saveLitter}
+          canNext={litterStep === 0 ? Boolean(litter.name.trim()) : true}
+          finishing={savingLitter}
+          finishLabel="Nestje opslaan"
+        >
+          {litterStep === 0 && (
+            <div className="grid gap-4">
+              <Field label="Naam nestje"><Input value={litter.name} onChange={(e) => setLitter({ ...litter, name: e.target.value })} placeholder="Bijv. Noorderlicht" autoFocus /></Field>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                <Field label="Ras"><Input value={litter.breed} onChange={(e) => setLitter({ ...litter, breed: e.target.value })} /></Field>
+                <Field label="Status"><Select value={litter.status} onChange={(e) => setLitter({ ...litter, status: e.target.value })}>{LITTER_STATUSES.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}</Select></Field>
+                <Field label="Aantal kittens"><Input type="number" min="0" value={litter.expected_count} onChange={(e) => setLitter({ ...litter, expected_count: e.target.value })} placeholder="Optioneel" /></Field>
+              </div>
+              <Field label="Geboortedatum"><Input type="date" value={litter.date_of_birth} onChange={(e) => setLitter({ ...litter, date_of_birth: e.target.value })} /></Field>
             </div>
           )}
-          <div className="flex flex-1 flex-col gap-3">
-            <FilePicker
-              accept="image/*"
-              disabled={coverUploading}
-              onFileReady={handleCover}
-              uploadLabel={coverUploading ? 'Uploaden…' : (litter.cover_image_url ? 'Foto vervangen' : 'Foto uploaden')}
-              cameraLabel="Open camera"
-            />
-            <div className="flex flex-wrap gap-3">
-              <Btn variant="brass" onClick={saveCover} disabled={savingCover || coverUploading}>{savingCover ? 'Opslaan…' : 'Foto opslaan'}</Btn>
-              {litter.cover_image_url && <Btn variant="danger" onClick={removeCover} disabled={savingCover}>Verwijderen</Btn>}
+          {litterStep === 1 && (
+            <ParentSection role="sire" litter={litter} setLitter={setLitter} options={sireOptions} parentCat={sireCat} parentDocs={sireDocs} deleteDocument={deleteDocument} />
+          )}
+          {litterStep === 2 && (
+            <ParentSection role="dam" litter={litter} setLitter={setLitter} options={damOptions} parentCat={damCat} parentDocs={damDocs} deleteDocument={deleteDocument} />
+          )}
+          {litterStep === 3 && (
+            <div className="grid gap-4">
+              <Field label="Beschrijving (wervende tekst)">
+                <Textarea value={litter.description} onChange={(e) => setLitter({ ...litter, description: e.target.value })} className="min-h-[90px]" placeholder="Vertel iets leuks over dit nestje…" />
+              </Field>
+              <Field label="Profielfoto van het nest (optioneel)">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
+                  {litter.cover_image_url ? (
+                    <img src={litter.cover_image_url} alt="Profielfoto nest" className="h-32 w-full rounded-2xl border border-forest-900/10 object-cover shadow sm:w-48" />
+                  ) : (
+                    <div className="flex h-32 w-full items-center justify-center rounded-2xl border border-dashed border-forest-900/20 bg-forest-50 text-forest-300 sm:w-48">
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" className="h-8 w-8"><rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="9" cy="9" r="2" /><path d="m21 15-5-5L5 21" /></svg>
+                    </div>
+                  )}
+                  <FilePicker
+                    accept="image/*"
+                    disabled={coverUploading}
+                    onFileReady={handleCover}
+                    uploadLabel={coverUploading ? 'Uploaden…' : (litter.cover_image_url ? 'Foto vervangen' : 'Foto uploaden')}
+                    cameraLabel="Open camera"
+                  />
+                </div>
+                <p className="mt-2 text-xs text-forest-600">Deze foto wordt meegenomen zodra je op "Nestje opslaan" drukt.</p>
+              </Field>
             </div>
-            {!litterId && <p className="text-xs text-forest-600">Sla eerst het nestje op om de foto los op te slaan; hij wordt ook meegenomen bij "Nestje opslaan".</p>}
+          )}
+        </Stepper>
+      ) : (
+        <>
+          {/* 0. Profielfoto van het nest */}
+          <section>
+            <SectionTitle hint="Een foto van alle kittens samen. Deze verschijnt als profielfoto in het nestjes-overzicht.">Profielfoto van het nest</SectionTitle>
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
+              {litter.cover_image_url ? (
+                <img src={litter.cover_image_url} alt="Profielfoto nest" className="h-48 w-full rounded-2xl border border-forest-900/10 object-cover shadow sm:w-72" />
+              ) : (
+                <div className="flex h-48 w-full items-center justify-center rounded-2xl border border-dashed border-forest-900/20 bg-forest-50 text-forest-300 sm:w-72">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" className="h-10 w-10"><rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="9" cy="9" r="2" /><path d="m21 15-5-5L5 21" /></svg>
+                </div>
+              )}
+              <div className="flex flex-1 flex-col gap-3">
+                <FilePicker
+                  accept="image/*"
+                  disabled={coverUploading}
+                  onFileReady={handleCover}
+                  uploadLabel={coverUploading ? 'Uploaden…' : (litter.cover_image_url ? 'Foto vervangen' : 'Foto uploaden')}
+                  cameraLabel="Open camera"
+                />
+                <div className="flex flex-wrap gap-3">
+                  <Btn variant="brass" onClick={saveCover} disabled={savingCover || coverUploading}>{savingCover ? 'Opslaan…' : 'Foto opslaan'}</Btn>
+                  {litter.cover_image_url && <Btn variant="danger" onClick={removeCover} disabled={savingCover}>Verwijderen</Btn>}
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* 1. Nestgegevens */}
+          <section>
+            <SectionTitle hint="De basisgegevens van dit nestje.">Nestgegevens</SectionTitle>
+            <div className="grid gap-4">
+              <Field label="Naam nestje"><Input value={litter.name} onChange={(e) => setLitter({ ...litter, name: e.target.value })} placeholder="Bijv. Noorderlicht" /></Field>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                <Field label="Ras"><Input value={litter.breed} onChange={(e) => setLitter({ ...litter, breed: e.target.value })} /></Field>
+                <Field label="Status"><Select value={litter.status} onChange={(e) => setLitter({ ...litter, status: e.target.value })}>{LITTER_STATUSES.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}</Select></Field>
+                <Field label="Aantal kittens"><Input type="number" min="0" value={litter.expected_count} onChange={(e) => setLitter({ ...litter, expected_count: e.target.value })} placeholder="Optioneel" /></Field>
+              </div>
+              <Field label="Geboortedatum"><Input type="date" value={litter.date_of_birth} onChange={(e) => setLitter({ ...litter, date_of_birth: e.target.value })} /></Field>
+              <Field label="Beschrijving (wervende tekst)">
+                <Textarea value={litter.description} onChange={(e) => setLitter({ ...litter, description: e.target.value })} className="min-h-[90px]" placeholder="Vertel iets leuks over dit nestje…" />
+              </Field>
+            </div>
+          </section>
+
+          {/* 2. Ouders */}
+          <section>
+            <SectionTitle hint="Kies bestaande fokdieren, voeg een nieuw fokdier toe met alle gegevens, of vul alleen een naam in.">Ouders</SectionTitle>
+            <div className="grid gap-4 lg:grid-cols-2">
+              <ParentSection role="sire" litter={litter} setLitter={setLitter} options={sireOptions} parentCat={sireCat} parentDocs={sireDocs} deleteDocument={deleteDocument} />
+              <ParentSection role="dam" litter={litter} setLitter={setLitter} options={damOptions} parentCat={damCat} parentDocs={damDocs} deleteDocument={deleteDocument} />
+            </div>
+          </section>
+
+          <div className="flex flex-wrap items-center gap-3">
+            <Btn variant="brass" onClick={saveLitter} disabled={savingLitter} className="w-full sm:w-auto">
+              {savingLitter ? 'Opslaan…' : 'Wijzigingen opslaan'}
+            </Btn>
           </div>
-        </div>
-      </section>
-
-      {/* 1. Nestgegevens */}
-      <section>
-        <SectionTitle hint="De basisgegevens van dit nestje.">Nestgegevens</SectionTitle>
-        <div className="grid gap-4">
-          <Field label="Naam nestje"><Input value={litter.name} onChange={(e) => setLitter({ ...litter, name: e.target.value })} placeholder="Bijv. Noorderlicht" /></Field>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-            <Field label="Ras"><Input value={litter.breed} onChange={(e) => setLitter({ ...litter, breed: e.target.value })} /></Field>
-            <Field label="Status"><Select value={litter.status} onChange={(e) => setLitter({ ...litter, status: e.target.value })}>{LITTER_STATUSES.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}</Select></Field>
-            <Field label="Aantal kittens"><Input type="number" min="0" value={litter.expected_count} onChange={(e) => setLitter({ ...litter, expected_count: e.target.value })} placeholder="Optioneel" /></Field>
-          </div>
-          <Field label="Geboortedatum"><Input type="date" value={litter.date_of_birth} onChange={(e) => setLitter({ ...litter, date_of_birth: e.target.value })} /></Field>
-          <Field label="Beschrijving (wervende tekst)">
-            <Textarea value={litter.description} onChange={(e) => setLitter({ ...litter, description: e.target.value })} className="min-h-[90px]" placeholder="Vertel iets leuks over dit nestje…" />
-          </Field>
-        </div>
-      </section>
-
-      {/* 2. Ouders */}
-      <section>
-        <SectionTitle hint="Kies bestaande fokdieren, voeg een nieuw fokdier toe met alle gegevens, of vul alleen een naam in.">Ouders</SectionTitle>
-        <div className="grid gap-4 lg:grid-cols-2">
-          <ParentSection role="sire" litter={litter} setLitter={setLitter} options={sireOptions} parentCat={sireCat} parentDocs={sireDocs} deleteDocument={deleteDocument} />
-          <ParentSection role="dam" litter={litter} setLitter={setLitter} options={damOptions} parentCat={damCat} parentDocs={damDocs} deleteDocument={deleteDocument} />
-        </div>
-      </section>
-
-      <div className="flex flex-wrap items-center gap-3">
-        <Btn variant="brass" onClick={saveLitter} disabled={savingLitter} className="w-full sm:w-auto">
-          {savingLitter ? 'Opslaan…' : (litterId ? 'Wijzigingen opslaan' : 'Nestje opslaan')}
-        </Btn>
-        {!litterId && <span className="text-xs text-forest-600">Sla het nestje op om documenten en kittens toe te voegen.</span>}
-      </div>
+        </>
+      )}
 
       {litterId && (
         <>

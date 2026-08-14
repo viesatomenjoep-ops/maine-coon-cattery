@@ -2,7 +2,7 @@
 import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { useStore } from '@/context/StoreContext';
-import { PageHead, Card, Field, Input, Select, Combobox, Btn } from '@/components/admin';
+import { PageHead, Card, Field, Input, Select, Combobox, Btn, Stepper } from '@/components/admin';
 import DocumentUploader, { DocumentList } from '@/components/admin/DocumentUploader';
 import LitterEditor from '@/components/admin/LitterEditor';
 import FilePicker from '@/components/admin/FilePicker';
@@ -62,6 +62,8 @@ const EMPTY_KIT = {
   priceNL: 1250, priceBE: 1300, cover_image: '',
 };
 
+const KIT_STEPS = ['Naam & nestje', 'Uiterlijk', 'Identificatie', 'Verkoop', 'Foto'];
+
 export default function LittersPage() {
   const {
     litters = [], kittens = [], documents = [],
@@ -71,7 +73,9 @@ export default function LittersPage() {
   const [mode, setMode] = useState(null); // null = tegelkeuze, 'litter' of 'kitten'
   const [editingLitterId, setEditingLitterId] = useState(null);
   const [kit, setKit] = useState({ ...EMPTY_KIT, litter_id: litters[0]?.id || '' });
+  const [kitStep, setKitStep] = useState(0);
   const [uploading, setUploading] = useState(false);
+  const [savingKitten, setSavingKitten] = useState(false);
   const formRef = useRef(null);
 
   const scrollToForm = () => formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -89,6 +93,7 @@ export default function LittersPage() {
   const openLitter = (id) => { setEditingLitterId(id); setMode('litter'); scrollToForm(); };
   const openNewKitten = (litterId) => {
     setKit((k) => ({ ...k, litter_id: litterId || k.litter_id || litters[0]?.id || '' }));
+    setKitStep(0);
     setMode('kitten');
     scrollToForm();
   };
@@ -119,12 +124,15 @@ export default function LittersPage() {
       alert('Vul a.u.b. een naam in voor het kitten.');
       return;
     }
+    setSavingKitten(true);
     const res = await addKitten({ ...kit, gender: kit.sex, price_nl: kit.priceNL, price_be: kit.priceBE });
+    setSavingKitten(false);
     if (res?.error) {
       alert('Fout bij opslaan kitten: ' + res.error.message);
       return;
     }
     setKit((k) => ({ ...EMPTY_KIT, litter_id: k.litter_id }));
+    setKitStep(0);
     alert('Het kitten is succesvol toegevoegd en opgeslagen.');
   };
 
@@ -178,58 +186,76 @@ export default function LittersPage() {
 
         {mode === 'kitten' && (
           <Card className="flex flex-col">
-            <div className="mb-4 flex items-center justify-between gap-3">
+            <div className="mb-2 flex items-center justify-between gap-3">
               <h2 className="font-display text-xl text-forest-900">Kitten toevoegen</h2>
               <Btn variant="ghost" onClick={closeForm} className="!px-3 !py-1.5 !text-xs">← Terug</Btn>
             </div>
-            <div className="grid flex-1 gap-4">
-              <Field label="Nestje">
-                <Select value={kit.litter_id} onChange={(e) => setKit({ ...kit, litter_id: e.target.value })}>
-                  <option value="">Selecteer nestje...</option>
-                  {litters.map((l) => <option key={l.id} value={l.id}>{l.name}</option>)}
-                </Select>
-              </Field>
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <Field label="Naam"><Input value={kit.name} onChange={(e) => setKit({ ...kit, name: e.target.value })} placeholder="Bijv. Orion" /></Field>
-                <Field label="Geslacht"><Select value={kit.sex} onChange={(e) => setKit({ ...kit, sex: e.target.value })}>{SEXES.map((s) => <option key={s} value={s}>{s}</option>)}</Select></Field>
-              </div>
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <Field label="Kleurslag (Color)">
-                  <Combobox id="colorsList" options={COLORS} value={kit.color} onChange={(e) => setKit({ ...kit, color: e.target.value })} placeholder="Bijv. Black Solid" />
-                </Field>
-                <Field label="Patroon (Pattern)">
-                  <Combobox id="patternsList" options={PATTERNS} value={kit.pattern} onChange={(e) => setKit({ ...kit, pattern: e.target.value })} placeholder="Bijv. Classic Tabby" />
-                </Field>
-              </div>
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <Field label="EMS-code"><Input value={kit.ems_code} onChange={(e) => setKit({ ...kit, ems_code: e.target.value })} placeholder="Bijv. MCO n 22" /></Field>
-                <Field label="Stamboomnummer"><Input value={kit.registration_no} onChange={(e) => setKit({ ...kit, registration_no: e.target.value })} placeholder="Registratienummer" /></Field>
-              </div>
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                <Field label="Chipnummer"><Input value={kit.chip_no} onChange={(e) => setKit({ ...kit, chip_no: e.target.value })} /></Field>
-                <Field label="Geboortegewicht (g)"><Input type="number" min="0" value={kit.birth_weight_g} onChange={(e) => setKit({ ...kit, birth_weight_g: e.target.value })} placeholder="Bijv. 110" /></Field>
-                <Field label="Gereserveerd door"><Input value={kit.reserved_by} onChange={(e) => setKit({ ...kit, reserved_by: e.target.value })} placeholder="Naam klant (optioneel)" /></Field>
-              </div>
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                <Field label="Status"><Select value={kit.status} onChange={(e) => setKit({ ...kit, status: e.target.value })}>{KITTEN_STATUSES.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}</Select></Field>
-                <Field label="Prijs NL (€)"><Input type="number" value={kit.priceNL} onChange={(e) => setKit({ ...kit, priceNL: Number(e.target.value) })} /></Field>
-                <Field label="Prijs BE (€)"><Input type="number" value={kit.priceBE} onChange={(e) => setKit({ ...kit, priceBE: Number(e.target.value) })} /></Field>
-              </div>
-              <Field label="Cover Afbeelding (Optioneel)">
-                <div className="flex flex-col items-start gap-3">
-                  <FilePicker
-                    accept="image/*"
-                    disabled={uploading}
-                    onFileReady={handleUpload}
-                    uploadLabel="Cover uploaden"
-                    cameraLabel="Open camera"
-                  />
-                  {uploading && <span className="text-xs text-forest-500">Uploaden...</span>}
-                  {kit.cover_image && <img src={kit.cover_image} alt="Preview" className="h-10 w-10 rounded object-cover shadow" />}
+            <Stepper
+              steps={KIT_STEPS}
+              current={kitStep}
+              onBack={() => setKitStep((s) => Math.max(0, s - 1))}
+              onNext={() => setKitStep((s) => Math.min(KIT_STEPS.length - 1, s + 1))}
+              onFinish={saveKitten}
+              canNext={kitStep === 0 ? Boolean(kit.litter_id && kit.name.trim()) : true}
+              finishing={savingKitten}
+              finishLabel="Kitten toevoegen"
+            >
+              {kitStep === 0 && (
+                <div className="grid gap-4">
+                  <Field label="Nestje">
+                    <Select value={kit.litter_id} onChange={(e) => setKit({ ...kit, litter_id: e.target.value })}>
+                      <option value="">Selecteer nestje...</option>
+                      {litters.map((l) => <option key={l.id} value={l.id}>{l.name}</option>)}
+                    </Select>
+                  </Field>
+                  <Field label="Naam"><Input value={kit.name} onChange={(e) => setKit({ ...kit, name: e.target.value })} placeholder="Bijv. Orion" autoFocus /></Field>
+                  <Field label="Geslacht"><Select value={kit.sex} onChange={(e) => setKit({ ...kit, sex: e.target.value })}>{SEXES.map((s) => <option key={s} value={s}>{s}</option>)}</Select></Field>
                 </div>
-              </Field>
-            </div>
-            <Btn variant="brass" onClick={saveKitten} className="mt-6 w-full sm:w-auto">Kitten toevoegen</Btn>
+              )}
+              {kitStep === 1 && (
+                <div className="grid gap-4">
+                  <Field label="Kleurslag (Color)">
+                    <Combobox id="colorsList" options={COLORS} value={kit.color} onChange={(e) => setKit({ ...kit, color: e.target.value })} placeholder="Bijv. Black Solid" />
+                  </Field>
+                  <Field label="Patroon (Pattern)">
+                    <Combobox id="patternsList" options={PATTERNS} value={kit.pattern} onChange={(e) => setKit({ ...kit, pattern: e.target.value })} placeholder="Bijv. Classic Tabby" />
+                  </Field>
+                  <Field label="Geboortegewicht (g)"><Input type="number" min="0" value={kit.birth_weight_g} onChange={(e) => setKit({ ...kit, birth_weight_g: e.target.value })} placeholder="Bijv. 110" /></Field>
+                </div>
+              )}
+              {kitStep === 2 && (
+                <div className="grid gap-4">
+                  <Field label="EMS-code"><Input value={kit.ems_code} onChange={(e) => setKit({ ...kit, ems_code: e.target.value })} placeholder="Bijv. MCO n 22" /></Field>
+                  <Field label="Stamboomnummer"><Input value={kit.registration_no} onChange={(e) => setKit({ ...kit, registration_no: e.target.value })} placeholder="Registratienummer" /></Field>
+                  <Field label="Chipnummer"><Input value={kit.chip_no} onChange={(e) => setKit({ ...kit, chip_no: e.target.value })} /></Field>
+                </div>
+              )}
+              {kitStep === 3 && (
+                <div className="grid gap-4">
+                  <Field label="Status"><Select value={kit.status} onChange={(e) => setKit({ ...kit, status: e.target.value })}>{KITTEN_STATUSES.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}</Select></Field>
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <Field label="Prijs NL (€)"><Input type="number" value={kit.priceNL} onChange={(e) => setKit({ ...kit, priceNL: Number(e.target.value) })} /></Field>
+                    <Field label="Prijs BE (€)"><Input type="number" value={kit.priceBE} onChange={(e) => setKit({ ...kit, priceBE: Number(e.target.value) })} /></Field>
+                  </div>
+                  <Field label="Gereserveerd door"><Input value={kit.reserved_by} onChange={(e) => setKit({ ...kit, reserved_by: e.target.value })} placeholder="Naam klant (optioneel)" /></Field>
+                </div>
+              )}
+              {kitStep === 4 && (
+                <Field label="Cover Afbeelding (Optioneel)">
+                  <div className="flex flex-col items-start gap-3">
+                    <FilePicker
+                      accept="image/*"
+                      disabled={uploading}
+                      onFileReady={handleUpload}
+                      uploadLabel="Cover uploaden"
+                      cameraLabel="Open camera"
+                    />
+                    {uploading && <span className="text-xs text-forest-500">Uploaden...</span>}
+                    {kit.cover_image && <img src={kit.cover_image} alt="Preview" className="h-10 w-10 rounded object-cover shadow" />}
+                  </div>
+                </Field>
+              )}
+            </Stepper>
           </Card>
         )}
       </div>
