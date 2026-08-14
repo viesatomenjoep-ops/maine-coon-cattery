@@ -37,39 +37,6 @@ export default function LittersPage() {
       </Link>
       <PageHead label="Fokkerij" title="Nestjes & Kittens" />
 
-      <div className="mb-10">
-        <h2 className="mb-4 font-display text-2xl text-forest-900">Nieuw aanmaken</h2>
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-          <Link
-            href="/admin/litters/new"
-            className="group flex flex-col items-start gap-4 rounded-3xl border border-forest-900/10 bg-white/70 p-8 text-left shadow-sm transition hover:-translate-y-1 hover:border-brass-400/60 hover:shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-brass-500"
-          >
-            <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-forest-50 text-forest-700 transition group-hover:bg-brass-100 group-hover:text-brass-700">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-7 w-7"><path strokeLinecap="round" strokeLinejoin="round" d="M3 10.5 12 4l9 6.5" /><path strokeLinecap="round" strokeLinejoin="round" d="M5 9.5V20h14V9.5" /><path strokeLinecap="round" strokeLinejoin="round" d="M9 20v-5a3 3 0 0 1 6 0v5" /></svg>
-            </span>
-            <div>
-              <h2 className="font-display text-xl text-forest-900">Nieuw nestje</h2>
-              <p className="mt-1 text-sm text-forest-600">Registreer een nieuw nestje met ouders, ras, status, documenten en kittens.</p>
-            </div>
-            <span className="mt-auto text-sm font-semibold text-brass-700">Openen →</span>
-          </Link>
-
-          <Link
-            href="/admin/litters/new-cat"
-            className="group flex flex-col items-start gap-4 rounded-3xl border border-forest-900/10 bg-white/70 p-8 text-left shadow-sm transition hover:-translate-y-1 hover:border-brass-400/60 hover:shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-brass-500"
-          >
-            <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-forest-50 text-forest-700 transition group-hover:bg-brass-100 group-hover:text-brass-700">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-7 w-7"><path strokeLinecap="round" strokeLinejoin="round" d="M12 21c4.5 0 7-2.5 7-6 0-2-1-3.5-2.5-4.5C16 8 15 6 12 6S8 8 7.5 10.5C6 11.5 5 13 5 15c0 3.5 2.5 6 7 6Z" /><path strokeLinecap="round" strokeLinejoin="round" d="M6.5 5.5 8 8.5M17.5 5.5 16 8.5M9.5 14h.01M14.5 14h.01" /></svg>
-            </span>
-            <div>
-              <h2 className="font-display text-xl text-forest-900">Nieuwe kitten</h2>
-              <p className="mt-1 text-sm text-forest-600">Kitten, fokpoes, fokkater of bestaande kat toevoegen.</p>
-            </div>
-            <span className="mt-auto text-sm font-semibold text-brass-700">Openen →</span>
-          </Link>
-        </div>
-      </div>
-
       {/* Nestjes overzicht — compacte kaarten, alles verder zit achter "Open nestje" */}
       <div className="space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
