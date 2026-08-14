@@ -46,6 +46,7 @@ export default function CatDossier() {
   const {
     kittens, customers, litters = [], deleteKitten, updateKitten, addKitten, addDocument, addMedia, deleteMedia, documents, media,
     addWeight, deleteWeight, deleteDocument, updateDocument, updateMedia, addNote, deleteNote, addMedical, updateMedical, deleteMedical,
+    addCustomer, updateCustomer, news = [], addNews, deleteNews,
   } = useStore();
   const isNew = id === 'new';
 
@@ -53,6 +54,7 @@ export default function CatDossier() {
   const catMedia = media.filter(m => m.media_url?.includes(id) || m.cat_id === id); // Or general media
   const currentCat = kittens.find((k) => k.id === id) || {};
   const currentLitter = litters.find((l) => l.id === currentCat.litter_id) || null;
+  const catNews = news.filter((n) => n.cat_id === id);
 
 
   let hasCloudinary = false;
@@ -62,6 +64,14 @@ export default function CatDossier() {
   const [activeTab, setActiveTab] = useState('paspoort');
   const [noteForm, setNoteForm] = useState({ date: new Date().toISOString().slice(0, 10), note: '' });
   const [medForm, setMedForm] = useState({ type: TREATMENT_TYPES[0], date: '', due: '', note: '' });
+  const [newsForm, setNewsForm] = useState({ title: '', body: '' });
+
+  const publishNews = async () => {
+    if (!newsForm.title.trim()) return alert('Vul een titel in voor het bericht.');
+    const res = await addNews({ title: newsForm.title.trim(), body: newsForm.body, cat_id: id });
+    if (res?.error) return alert('Plaatsen mislukt: ' + (res.error.message || ''));
+    setNewsForm({ title: '', body: '' });
+  };
 
   // Stel automatisch de vervaldatum voor op basis van het standaardschema (4/9/12 weken na geboorte).
   const suggestDue = (type) => {
@@ -106,6 +116,42 @@ export default function CatDossier() {
     weightDate: '',
     weightGrams: ''
   });
+
+  const [custForm, setCustForm] = useState({ name: '', email: '', whatsapp_number: '', address: '' });
+  const [newCustomer, setNewCustomer] = useState({ name: '', email: '', whatsapp_number: '', address: '' });
+  const [showNewCustomer, setShowNewCustomer] = useState(false);
+  const [savingCustomer, setSavingCustomer] = useState(false);
+
+  const linkedCustomer = customers.find((c) => c.id === formData.customer_id) || null;
+  useEffect(() => {
+    if (linkedCustomer) {
+      setCustForm({
+        name: linkedCustomer.name || '', email: linkedCustomer.email || '',
+        whatsapp_number: linkedCustomer.whatsapp_number || '', address: linkedCustomer.address || '',
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [linkedCustomer?.id]);
+
+  const saveCustomer = async () => {
+    if (!linkedCustomer) return;
+    setSavingCustomer(true);
+    await updateCustomer(linkedCustomer.id, custForm);
+    setSavingCustomer(false);
+    alert('Klantgegevens opgeslagen.');
+  };
+
+  const createAndLinkCustomer = async () => {
+    if (!newCustomer.name.trim()) return alert('Vul een naam in voor de klant.');
+    setSavingCustomer(true);
+    const created = await addCustomer(newCustomer);
+    setSavingCustomer(false);
+    if (!created?.id) return alert('Aanmaken van de klant is mislukt.');
+    await updateKitten(id, { customer_id: created.id });
+    setFormData((prev) => ({ ...prev, customer_id: created.id }));
+    setNewCustomer({ name: '', email: '', whatsapp_number: '', address: '' });
+    setShowNewCustomer(false);
+  };
 
   useEffect(() => {
     if (!isNew) {
@@ -199,9 +245,12 @@ export default function CatDossier() {
     { id: 'medisch', label: '3. Inentingen & Medisch' },
     { id: 'stamboom', label: '4. Stamboom & Afstamming' },
     { id: 'gewicht', label: '5. Groei & Weegcurves' },
-    { id: 'verkoop', label: '6. Portaal & Verkoop' },
+    { id: 'verkoop', label: '6. Verkoopprijs & Status' },
     { id: 'media', label: '7. Media & Galerij' },
-    { id: 'notities', label: '8. Algemene notities' }
+    { id: 'notities', label: '8. Algemene notities' },
+    { id: 'klant', label: '9. Klant & Contact' },
+    { id: 'advertentie', label: '10. Advertentie' },
+    { id: 'nieuws', label: '11. Nieuws' },
   ];
 
   return (
@@ -636,10 +685,10 @@ export default function CatDossier() {
                 </div>
               )}
 
-              {/* TAB 6: PORTAAL & VERKOOP */}
+              {/* TAB 6: VERKOOPPRIJS & STATUS */}
               {activeTab === 'verkoop' && (
                 <div className="grid gap-4 grid-cols-1 lg:grid-cols-2">
-                  <h2 className="col-span-full font-display text-xl text-forest-900">Verkoop & Klantenportaal</h2>
+                  <h2 className="col-span-full font-display text-xl text-forest-900">Verkoopprijs & status</h2>
                   <Field label="Status">
                     <Select name="status" value={formData.status} onChange={handleChange}>
                       <option value="Beschikbaar">Beschikbaar</option>
@@ -649,17 +698,7 @@ export default function CatDossier() {
                       <option value="Eigen fok">Eigen fok</option>
                     </Select>
                   </Field>
-                  <Field label="Gekoppelde Klant">
-                    <Select name="customer_id" value={formData.customer_id || ''} onChange={handleChange}>
-                      <option value="">- Geen klant (of nieuw in klantenbestand) -</option>
-                      {customers.map(c => (
-                        <option key={c.id} value={c.id}>{c.name}</option>
-                      ))}
-                    </Select>
-                  </Field>
-                  <Field label="Gereserveerd door (naam)"><Input name="reserved_by" value={formData.reserved_by} onChange={handleChange} placeholder="Optioneel" /></Field>
-                  
-                  <div className="col-span-full grid grid-cols-2 gap-4 items-end">
+                  <div className="grid grid-cols-2 gap-4">
                     <Field label="Prijs NL (€)">
                       <Input type="number" name="priceNL" value={formData.priceNL} onChange={handleChange} />
                     </Field>
@@ -683,33 +722,89 @@ export default function CatDossier() {
                     )}
                   </div>
 
-                  <div className="col-span-full rounded-2xl border border-forest-900/10 bg-forest-50 p-6 shadow-inner">
-                    <div className="mb-4 flex items-center gap-3">
-                      <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white font-bold text-brass-600 shadow-sm">K</span>
-                      <h3 className="font-display text-lg text-forest-900">Verborgen Klantenlinks</h3>
-                    </div>
-                    <p className="mb-4 text-xs text-forest-700">Deel deze links via WhatsApp. Ze bevatten de specifieke prijs (NL of BE) per link.</p>
-                    
-                    <div className="space-y-4">
-                      <div className="flex gap-2">
-                        <div className="flex-1 min-w-0">
-                          <Input readOnly value={typeof window !== 'undefined' ? `${window.location.origin}/k/${formData.secret_token_nl || 'Onbekend'}` : `.../k/${formData.secret_token_nl || 'Onbekend'}`} className="w-full bg-white font-mono text-[10px] text-forest-600" />
-                        </div>
-                        <Btn type="button" variant="ghost" onClick={() => { navigator.clipboard.writeText(`${window.location.origin}/k/${formData.secret_token_nl}`); alert('NL Link gekopieerd!'); }} className="whitespace-nowrap shrink-0 text-xs px-3">Kopieer NL</Btn>
-                      </div>
-                      
-                      <div className="flex gap-2">
-                        <div className="flex-1 min-w-0">
-                          <Input readOnly value={typeof window !== 'undefined' ? `${window.location.origin}/k/${formData.secret_token_be || 'Onbekend'}` : `.../k/${formData.secret_token_be || 'Onbekend'}`} className="w-full bg-white font-mono text-[10px] text-forest-600" />
-                        </div>
-                        <Btn type="button" variant="ghost" onClick={() => { navigator.clipboard.writeText(`${window.location.origin}/k/${formData.secret_token_be}`); alert('BE Link gekopieerd!'); }} className="whitespace-nowrap shrink-0 text-xs px-3">Kopieer BE</Btn>
-                      </div>
-                    </div>
+                  <div className="col-span-full"><ActionBar /></div>
+                </div>
+              )}
+
+              {/* TAB 9: KLANT & CONTACT */}
+              {activeTab === 'klant' && (
+                <div className="grid gap-4">
+                  <h2 className="font-display text-xl text-forest-900">Klant & contact</h2>
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <Field label="Gekoppelde klant">
+                      <Select name="customer_id" value={formData.customer_id || ''} onChange={handleChange}>
+                        <option value="">— Geen klant gekoppeld —</option>
+                        {customers.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                      </Select>
+                    </Field>
+                    <Field label="Gereserveerd door (naam)"><Input name="reserved_by" value={formData.reserved_by} onChange={handleChange} placeholder="Optioneel" /></Field>
                   </div>
 
-                  {!isNew && (
+                  {linkedCustomer ? (
+                    <div className="rounded-2xl border border-forest-900/10 bg-white p-5">
+                      <h3 className="font-display text-lg text-forest-900">Contactgegevens van {linkedCustomer.name}</h3>
+                      <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                        <Field label="Naam"><Input value={custForm.name} onChange={(e) => setCustForm({ ...custForm, name: e.target.value })} /></Field>
+                        <Field label="E-mailadres"><Input type="email" value={custForm.email} onChange={(e) => setCustForm({ ...custForm, email: e.target.value })} /></Field>
+                        <Field label="WhatsApp-nummer"><Input value={custForm.whatsapp_number} onChange={(e) => setCustForm({ ...custForm, whatsapp_number: e.target.value })} placeholder="Bijv. +31612345678" /></Field>
+                        <Field label="Adres"><Textarea value={custForm.address} onChange={(e) => setCustForm({ ...custForm, address: e.target.value })} className="min-h-[70px]" /></Field>
+                      </div>
+                      <Btn type="button" variant="brass" onClick={saveCustomer} disabled={savingCustomer} className="mt-4">{savingCustomer ? 'Opslaan…' : 'Klantgegevens opslaan'}</Btn>
+                    </div>
+                  ) : (
+                    <div className="rounded-2xl border border-dashed border-forest-900/20 bg-forest-50/40 p-5">
+                      <p className="text-sm text-forest-700">Nog geen klant gekoppeld aan {currentCat.name || 'deze kat'}.</p>
+                      <Btn type="button" variant="ghost" onClick={() => setShowNewCustomer((v) => !v)} className="mt-3">
+                        {showNewCustomer ? 'Sluiten' : '+ Nieuwe klant toevoegen'}
+                      </Btn>
+                      {showNewCustomer && (
+                        <div className="mt-4">
+                          <div className="grid gap-4 sm:grid-cols-2">
+                            <Field label="Naam *"><Input value={newCustomer.name} onChange={(e) => setNewCustomer({ ...newCustomer, name: e.target.value })} /></Field>
+                            <Field label="E-mailadres"><Input type="email" value={newCustomer.email} onChange={(e) => setNewCustomer({ ...newCustomer, email: e.target.value })} /></Field>
+                            <Field label="WhatsApp-nummer"><Input value={newCustomer.whatsapp_number} onChange={(e) => setNewCustomer({ ...newCustomer, whatsapp_number: e.target.value })} placeholder="Bijv. +31612345678" /></Field>
+                            <Field label="Adres"><Textarea value={newCustomer.address} onChange={(e) => setNewCustomer({ ...newCustomer, address: e.target.value })} className="min-h-[70px]" /></Field>
+                          </div>
+                          <Btn type="button" variant="brass" onClick={createAndLinkCustomer} disabled={savingCustomer} className="mt-3">{savingCustomer ? 'Opslaan…' : 'Klant aanmaken & koppelen'}</Btn>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  <div className="col-span-full"><ActionBar /></div>
+                </div>
+              )}
+
+              {/* TAB 10: ADVERTENTIE */}
+              {activeTab === 'advertentie' && (
+                <div className="grid gap-4">
+                  <h2 className="font-display text-xl text-forest-900">Advertentie</h2>
+                  {isNew ? (
+                    <p className="text-sm italic text-forest-600">Sla het dossier eerst op om de advertentie te beheren.</p>
+                  ) : (
                     <>
-                      <div className="col-span-full flex items-center justify-between gap-4 rounded-2xl border border-forest-900/10 bg-white p-5">
+                      <div className="rounded-2xl border border-forest-900/10 bg-forest-50 p-6 shadow-inner">
+                        <div className="mb-4 flex items-center gap-3">
+                          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white font-bold text-brass-600 shadow-sm">K</span>
+                          <h3 className="font-display text-lg text-forest-900">Verborgen Klantenlinks</h3>
+                        </div>
+                        <p className="mb-4 text-xs text-forest-700">Deel deze links via WhatsApp. Ze bevatten de specifieke prijs (NL of BE) per link.</p>
+                        <div className="space-y-4">
+                          <div className="flex gap-2">
+                            <div className="flex-1 min-w-0">
+                              <Input readOnly value={typeof window !== 'undefined' ? `${window.location.origin}/k/${formData.secret_token_nl || 'Onbekend'}` : `.../k/${formData.secret_token_nl || 'Onbekend'}`} className="w-full bg-white font-mono text-[10px] text-forest-600" />
+                            </div>
+                            <Btn type="button" variant="ghost" onClick={() => { navigator.clipboard.writeText(`${window.location.origin}/k/${formData.secret_token_nl}`); alert('NL Link gekopieerd!'); }} className="whitespace-nowrap shrink-0 text-xs px-3">Kopieer NL</Btn>
+                          </div>
+                          <div className="flex gap-2">
+                            <div className="flex-1 min-w-0">
+                              <Input readOnly value={typeof window !== 'undefined' ? `${window.location.origin}/k/${formData.secret_token_be || 'Onbekend'}` : `.../k/${formData.secret_token_be || 'Onbekend'}`} className="w-full bg-white font-mono text-[10px] text-forest-600" />
+                            </div>
+                            <Btn type="button" variant="ghost" onClick={() => { navigator.clipboard.writeText(`${window.location.origin}/k/${formData.secret_token_be}`); alert('BE Link gekopieerd!'); }} className="whitespace-nowrap shrink-0 text-xs px-3">Kopieer BE</Btn>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between gap-4 rounded-2xl border border-forest-900/10 bg-white p-5">
                         <div>
                           <p className="text-sm font-semibold text-forest-900">{currentCat.published ? '🟢 Live in klantenportaal' : '⚪️ Niet gepubliceerd'}</p>
                           <p className="mt-0.5 text-xs text-forest-600">Bepaalt of {currentCat.name || 'dit kitten'} zichtbaar is op de openbare website.</p>
@@ -719,7 +814,7 @@ export default function CatDossier() {
                         </Btn>
                       </div>
 
-                      <div className="col-span-full rounded-2xl border border-forest-900/10 bg-white p-5">
+                      <div className="rounded-2xl border border-forest-900/10 bg-white p-5">
                         <h3 className="font-display text-lg text-forest-900">Advertentie-weergave</h3>
                         <p className="mt-1 text-sm text-forest-600">Bepaal met vinkjes wat er op de advertentie zichtbaar is.</p>
                         <div className="mt-4 grid gap-2 sm:grid-cols-2">
@@ -739,7 +834,7 @@ export default function CatDossier() {
                         </div>
                       </div>
 
-                      <div className="col-span-full rounded-2xl border border-forest-900/10 bg-white p-5">
+                      <div className="rounded-2xl border border-forest-900/10 bg-white p-5">
                         <h3 className="font-display text-lg text-forest-900">Bestanden op de advertentie</h3>
                         <p className="mt-1 text-sm text-forest-600">Vink aan welke foto's en documenten een geïnteresseerde te zien krijgt. Uitgevinkt = verborgen.</p>
                         <div className="mt-4 space-y-2">
@@ -756,8 +851,44 @@ export default function CatDossier() {
                       </div>
                     </>
                   )}
+                </div>
+              )}
 
-                  <div className="col-span-full"><ActionBar /></div>
+              {/* TAB 11: NIEUWS */}
+              {activeTab === 'nieuws' && (
+                <div className="grid gap-4">
+                  <h2 className="font-display text-xl text-forest-900">Nieuws over {currentCat.name || 'deze kat'}</h2>
+                  <p className="text-sm text-forest-600">Plaats updates die aan dit dossier gekoppeld zijn — ze verschijnen op de website onder Nieuws.</p>
+                  {isNew ? (
+                    <p className="text-xs italic text-forest-600">Sla het dossier eerst op voordat je nieuws kunt plaatsen.</p>
+                  ) : (
+                    <>
+                      <div className="rounded-2xl border border-forest-900/10 bg-white p-5">
+                        <Field label="Titel"><Input value={newsForm.title} onChange={(e) => setNewsForm({ ...newsForm, title: e.target.value })} placeholder="Bijv. Groeit als kool!" /></Field>
+                        <div className="mt-3">
+                          <Field label="Bericht"><Textarea value={newsForm.body} onChange={(e) => setNewsForm({ ...newsForm, body: e.target.value })} className="min-h-[100px]" placeholder="Schrijf hier de update…" /></Field>
+                        </div>
+                        <Btn type="button" variant="brass" onClick={publishNews} className="mt-3">Plaatsen</Btn>
+                      </div>
+
+                      {catNews.length === 0 ? (
+                        <p className="text-sm italic text-forest-600/70">Nog geen nieuwsberichten voor {currentCat.name || 'deze kat'}.</p>
+                      ) : (
+                        <div className="space-y-2">
+                          {catNews.map((n) => (
+                            <div key={n.id} className="flex items-start justify-between gap-3 rounded-xl border border-forest-900/10 bg-white p-3">
+                              <div className="min-w-0">
+                                <p className="text-sm font-semibold text-forest-900">{n.title}</p>
+                                <p className="mt-0.5 whitespace-pre-line text-sm text-forest-700">{n.content || n.body}</p>
+                                <p className="mt-1 text-xs text-forest-500" suppressHydrationWarning>{n.created_at ? new Date(n.created_at).toLocaleDateString('nl-NL') : ''}</p>
+                              </div>
+                              <button onClick={() => { if (confirm('Dit nieuwsbericht verwijderen?')) deleteNews(n.id); }} className="shrink-0 text-xs text-red-500 hover:text-red-700">Verwijder</button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </>
+                  )}
                 </div>
               )}
 

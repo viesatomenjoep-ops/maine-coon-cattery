@@ -3,7 +3,7 @@ import { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useStore } from '@/context/StoreContext';
-import { PageHead, Card, Field, Input, Select, Combobox, Btn, Stepper } from '@/components/admin';
+import { PageHead, Card, Field, Input, Select, Textarea, Combobox, Btn, Stepper, Icon } from '@/components/admin';
 import FilePicker from '@/components/admin/FilePicker';
 
 const SEXES = ['Kater', 'Poes'];
@@ -23,12 +23,75 @@ const KITTEN_STATUSES = [
   { value: 'houden', label: 'Houden' },
 ];
 const KIT_STEPS = ['Naam & nestje', 'Uiterlijk', 'Identificatie', 'Verkoop', 'Foto'];
+const EMPTY_BREEDER = {
+  name: '', registration_no: '', breed: 'Maine Coon (MCO)', ems_code: '', color: '', pattern: '',
+  date_of_birth: '', chip_number: '', breeder: '', sire_name: '', dam_name: '', notes: '',
+};
+
+function TypeCard({ icon, title, desc, onClick }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="group flex flex-col items-start gap-3 rounded-2xl border border-forest-900/10 bg-white/70 p-6 text-left shadow-sm transition hover:-translate-y-1 hover:border-brass-400/60 hover:shadow-lg"
+    >
+      <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-forest-50 text-forest-700 transition group-hover:bg-brass-100 group-hover:text-brass-700">
+        <Icon name={icon} className="h-6 w-6" />
+      </span>
+      <div>
+        <p className="font-display text-lg text-forest-900">{title}</p>
+        <p className="text-sm text-forest-600">{desc}</p>
+      </div>
+    </button>
+  );
+}
+
+function BreedingCatWizard({ gender, onCancel }) {
+  const router = useRouter();
+  const { addBreedingCat } = useStore();
+  const [form, setForm] = useState({ ...EMPTY_BREEDER });
+  const [saving, setSaving] = useState(false);
+  const title = gender === 'male' ? 'Fokkater (vader)' : 'Fokpoes (moeder)';
+
+  const save = async () => {
+    if (!form.name.trim()) return alert('Vul een naam in.');
+    setSaving(true);
+    const res = await addBreedingCat({ ...form, gender, is_own_breeding_cat: true });
+    setSaving(false);
+    if (res?.error) return alert('Opslaan mislukt: ' + res.error.message);
+    router.push(`/admin/cats/${res.data.id}`);
+  };
+
+  return (
+    <Card className="max-w-2xl">
+      <h2 className="mb-4 font-display text-xl text-forest-900">Nieuwe {title.toLowerCase()}</h2>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <Field label="Naam"><Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Bijv. Jona" autoFocus /></Field>
+        <Field label="Ras"><Input value={form.breed} onChange={(e) => setForm({ ...form, breed: e.target.value })} /></Field>
+        <Field label="Stamboomnummer"><Input value={form.registration_no} onChange={(e) => setForm({ ...form, registration_no: e.target.value })} /></Field>
+        <Field label="EMS-code"><Input value={form.ems_code} onChange={(e) => setForm({ ...form, ems_code: e.target.value })} placeholder="Bijv. MCO n 22" /></Field>
+        <Field label="Kleur"><Combobox id="bc-color" options={COLORS} value={form.color} onChange={(e) => setForm({ ...form, color: e.target.value })} /></Field>
+        <Field label="Patroon"><Combobox id="bc-pattern" options={PATTERNS} value={form.pattern} onChange={(e) => setForm({ ...form, pattern: e.target.value })} /></Field>
+        <Field label="Geboortedatum"><Input type="date" value={form.date_of_birth} onChange={(e) => setForm({ ...form, date_of_birth: e.target.value })} /></Field>
+        <Field label="Chipnummer"><Input value={form.chip_number} onChange={(e) => setForm({ ...form, chip_number: e.target.value })} /></Field>
+        <Field label="Fokker"><Input value={form.breeder} onChange={(e) => setForm({ ...form, breeder: e.target.value })} /></Field>
+      </div>
+      <div className="mt-4"><Field label="Notities"><Textarea value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} className="min-h-[70px]" /></Field></div>
+      <div className="mt-5 flex flex-wrap gap-3">
+        <Btn variant="brass" onClick={save} disabled={saving}>{saving ? 'Opslaan…' : `${title} toevoegen`}</Btn>
+        <Btn variant="ghost" onClick={onCancel}>← Terug</Btn>
+      </div>
+    </Card>
+  );
+}
 
 function NewKittenForm() {
   const router = useRouter();
   const params = useSearchParams();
   const litterParam = params.get('litter') || '';
   const { litters = [], addKitten } = useStore();
+
+  const [type, setType] = useState(litterParam ? 'kitten' : null);
 
   const [kit, setKit] = useState({
     litter_id: litterParam, name: '', sex: 'Kater', color: '', pattern: '', status: 'beschikbaar',
@@ -67,11 +130,46 @@ function NewKittenForm() {
     router.push(`/admin/litters/${kit.litter_id}`);
   };
 
+  const backHref = litter ? `/admin/litters/${litter.id}` : '/admin/litters';
+  const backLabel = litter ? `Terug naar ${litter.name}` : 'Terug naar nestjes';
+
+  if (type === null) {
+    return (
+      <>
+        <Link href="/admin/litters" className="mb-4 inline-flex items-center gap-1.5 text-sm font-semibold text-forest-600 transition hover:text-forest-900">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m12 19-7-7 7-7" /><path d="M19 12H5" /></svg>
+          Terug naar nestjes
+        </Link>
+        <PageHead label="Fokkerij" title="Kat toevoegen" />
+        <p className="mb-6 text-sm text-forest-600">Wat wil je toevoegen?</p>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <TypeCard icon="cat" title="Nieuwe kitten" desc="Een kitten uit een van je nestjes." onClick={() => setType('kitten')} />
+          <TypeCard icon="health" title="Fokpoes" desc="Een moederdier, niet gekoppeld aan een nestje." onClick={() => setType('fokpoes')} />
+          <TypeCard icon="health" title="Fokkater" desc="Een vaderdier, niet gekoppeld aan een nestje." onClick={() => setType('fokkater')} />
+          <TypeCard icon="customer" title="Bestaande kat" desc="Een kat die je elders al had, handmatig invoeren." onClick={() => router.push('/admin/cats/new')} />
+        </div>
+      </>
+    );
+  }
+
+  if (type === 'fokpoes' || type === 'fokkater') {
+    return (
+      <>
+        <button onClick={() => setType(null)} className="mb-4 inline-flex items-center gap-1.5 text-sm font-semibold text-forest-600 transition hover:text-forest-900">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m12 19-7-7 7-7" /><path d="M19 12H5" /></svg>
+          Terug
+        </button>
+        <PageHead label="Fokkerij" title="Kat toevoegen" />
+        <BreedingCatWizard gender={type === 'fokkater' ? 'male' : 'female'} onCancel={() => setType(null)} />
+      </>
+    );
+  }
+
   return (
     <>
-      <Link href={litter ? `/admin/litters/${litter.id}` : '/admin/litters'} className="mb-4 inline-flex items-center gap-1.5 text-sm font-semibold text-forest-600 transition hover:text-forest-900">
+      <Link href={litterParam ? backHref : '/admin/litters/new-kitten'} onClick={(e) => { if (!litterParam) { e.preventDefault(); setType(null); } }} className="mb-4 inline-flex items-center gap-1.5 text-sm font-semibold text-forest-600 transition hover:text-forest-900">
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m12 19-7-7 7-7" /><path d="M19 12H5" /></svg>
-        {litter ? `Terug naar ${litter.name}` : 'Terug naar nestjes'}
+        {litterParam ? backLabel : 'Terug'}
       </Link>
       <PageHead label="Fokkerij" title="Kitten toevoegen" />
       <Card className="max-w-2xl">

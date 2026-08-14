@@ -81,21 +81,23 @@ export function DocumentList({ documents = [], onDelete }) {
       {documents.map((d) => {
         const label = DOC_TYPES.find((t) => t.value === d.document_type)?.label || d.document_type || 'Document';
         return (
-          <li key={d.id} className="group flex items-center gap-3.5 rounded-xl border border-forest-900/10 bg-white p-3 transition hover:border-forest-900/20 hover:shadow-sm">
-            {isImage(d) ? (
-              <a href={d.file_url} target="_blank" rel="noreferrer" className="shrink-0">
-                <img src={d.file_url} alt={d.title || label} className="h-14 w-14 rounded-lg object-cover border border-forest-900/10" />
-              </a>
-            ) : (
-              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg border border-forest-900/10 bg-forest-50 text-xl">📄</div>
-            )}
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-semibold text-forest-900">{d.title || label}</p>
-              <span className="mt-1 inline-flex items-center rounded-full bg-brass-100 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-brass-700">
-                {label}
-              </span>
+          <li key={d.id} className="group flex flex-col gap-3 rounded-xl border border-forest-900/10 bg-white p-3 transition hover:border-forest-900/20 hover:shadow-sm sm:flex-row sm:items-center sm:gap-3.5">
+            <div className="flex min-w-0 items-center gap-3.5">
+              {isImage(d) ? (
+                <a href={d.file_url} target="_blank" rel="noreferrer" className="shrink-0">
+                  <img src={d.file_url} alt={d.title || label} className="h-14 w-14 rounded-lg object-cover border border-forest-900/10" />
+                </a>
+              ) : (
+                <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg border border-forest-900/10 bg-forest-50 text-xl">📄</div>
+              )}
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-semibold text-forest-900">{d.title || label}</p>
+                <span className="mt-1 inline-flex items-center rounded-full bg-brass-100 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-brass-700">
+                  {label}
+                </span>
+              </div>
             </div>
-            <div className="flex shrink-0 items-center gap-1">
+            <div className="flex shrink-0 items-center gap-1 sm:ml-auto">
               <a
                 href={d.file_url}
                 target="_blank"
