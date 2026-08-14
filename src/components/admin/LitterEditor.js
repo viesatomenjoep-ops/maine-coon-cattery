@@ -129,7 +129,7 @@ function ParentSection({ role, litter, setLitter, options, parentCat, parentDocs
   };
 
   return (
-    <Card className="bg-white/60">
+    <div className="rounded-2xl border border-forest-900/10 bg-white p-5">
       <SectionTitle hint={isSire ? 'De dekkater van dit nestje.' : 'De poes die dit nestje draagt en werpt.'}>{title}</SectionTitle>
       <Field label="Selecteer of voeg toe">
         <Select value={selectValue} onChange={(e) => onSelect(e.target.value)}>
@@ -153,7 +153,7 @@ function ParentSection({ role, litter, setLitter, options, parentCat, parentDocs
       )}
 
       {parentCat && (
-        <div className="mt-4 rounded-2xl border border-forest-900/10 bg-white p-4">
+        <div className="mt-4 border-t border-forest-900/10 pt-4">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div>
               <p className="font-display text-base text-forest-900">{parentCat.name}</p>
@@ -163,14 +163,14 @@ function ParentSection({ role, litter, setLitter, options, parentCat, parentDocs
             </div>
             <Link href={`/admin/cats/${parentCat.id}`} className="text-xs font-semibold text-emerald-700 hover:text-emerald-900">Open dossier →</Link>
           </div>
-          <div className="mt-3">
-            <p className="mb-2 text-xs font-bold uppercase tracking-wider text-forest-700">Papieren van {isSire ? 'de vader' : 'de moeder'}</p>
+          <div className="mt-4">
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-forest-700">Papieren van {isSire ? 'de vader' : 'de moeder'}</p>
             <DocumentUploader catId={parentCat.id} folder={`cattery_documents/cat_${parentCat.id}`} />
             <div className="mt-3"><DocumentList documents={parentDocs} onDelete={deleteDocument} /></div>
           </div>
         </div>
       )}
-    </Card>
+    </div>
   );
 }
 

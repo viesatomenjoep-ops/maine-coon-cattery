@@ -77,11 +77,11 @@ export function DocumentList({ documents = [], onDelete }) {
     return <p className="text-sm text-forest-600 italic">Nog geen documenten geüpload.</p>;
   }
   return (
-    <ul className="grid gap-3 sm:grid-cols-2">
+    <ul className="grid gap-3">
       {documents.map((d) => {
         const label = DOC_TYPES.find((t) => t.value === d.document_type)?.label || d.document_type || 'Document';
         return (
-          <li key={d.id} className="group flex flex-col gap-3 rounded-xl border border-forest-900/10 bg-white p-3 transition hover:border-forest-900/20 hover:shadow-sm sm:flex-row sm:items-center sm:gap-3.5">
+          <li key={d.id} className="group flex flex-col gap-3 rounded-xl border border-forest-900/10 bg-white p-3 transition hover:border-forest-900/20 hover:shadow-sm">
             <div className="flex min-w-0 items-center gap-3.5">
               {isImage(d) ? (
                 <a href={d.file_url} target="_blank" rel="noreferrer" className="shrink-0">
@@ -97,7 +97,7 @@ export function DocumentList({ documents = [], onDelete }) {
                 </span>
               </div>
             </div>
-            <div className="flex shrink-0 items-center gap-1 sm:ml-auto">
+            <div className="flex shrink-0 items-center gap-1">
               <a
                 href={d.file_url}
                 target="_blank"
