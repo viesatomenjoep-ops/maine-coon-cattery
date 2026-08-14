@@ -61,7 +61,7 @@ export default function AdminDashboard() {
       {newInterests.length > 0 && (
         <div className="mt-8">
           <Card className="border-brass-300 bg-brass-50/40">
-            <div className="mb-4 flex items-center justify-between">
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
               <h2 className="font-display text-xl text-forest-900">💬 Nieuwe interesse in kittens</h2>
               <span className="rounded-full bg-brass-200 px-3 py-1 text-xs font-semibold text-brass-800">{newInterests.length} nieuw</span>
             </div>
@@ -93,9 +93,9 @@ export default function AdminDashboard() {
       {/* Behandelagenda: aankomende ontwormingen & inentingen */}
       <div className="mt-8">
         <Card>
-          <div className="mb-4 flex items-center justify-between">
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
             <h2 className="font-display text-xl text-forest-900">🗓️ Behandelagenda</h2>
-            <Link href="/admin/medical" className="text-sm text-brass-600 hover:underline">Medisch dashboard →</Link>
+            <Link href="/admin/medical" className="shrink-0 text-sm text-brass-600 hover:underline">Medisch dashboard →</Link>
           </div>
           {agenda.length === 0 ? (
             <p className="text-sm text-forest-600/70">Geen geplande behandelingen. Plan een ontworming of inenting in het medisch dashboard.</p>
@@ -104,13 +104,15 @@ export default function AdminDashboard() {
               {agenda.map((a, i) => {
                 const u = urgency(a.due);
                 return (
-                  <Link key={a.medId || i} href="/admin/medical" className={`flex items-center gap-4 rounded-xl border bg-white p-4 transition hover:shadow-md ${u?.key === 'overdue' || u?.key === 'today' ? 'border-red-200' : 'border-forest-900/10'}`}>
-                    <span className="text-2xl">{treatmentIcon(a.type)}</span>
-                    <div className="min-w-0 flex-1">
-                      <p className="font-semibold text-forest-900">{a.catName}</p>
-                      <p className="text-sm text-forest-700">{a.type} · {formatDate(a.due)}{a.note ? ` · ${a.note}` : ''}</p>
+                  <Link key={a.medId || i} href="/admin/medical" className={`flex flex-col gap-2 rounded-xl border bg-white p-4 transition hover:shadow-md sm:flex-row sm:items-center sm:gap-4 ${u?.key === 'overdue' || u?.key === 'today' ? 'border-red-200' : 'border-forest-900/10'}`}>
+                    <div className="flex min-w-0 items-center gap-3">
+                      <span className="shrink-0 text-2xl">{treatmentIcon(a.type)}</span>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate font-semibold text-forest-900">{a.catName}</p>
+                        <p className="truncate text-sm text-forest-700">{a.type} · {formatDate(a.due)}{a.note ? ` · ${a.note}` : ''}</p>
+                      </div>
                     </div>
-                    {u && <span className={`shrink-0 rounded-full border px-3 py-1 text-xs font-semibold ${u.cls}`}>{u.label}</span>}
+                    {u && <span className={`self-start rounded-full border px-3 py-1 text-xs font-semibold sm:shrink-0 sm:self-auto ${u.cls}`}>{u.label}</span>}
                   </Link>
                 );
               })}
@@ -121,7 +123,7 @@ export default function AdminDashboard() {
 
       <div className="mt-8 grid gap-6 lg:grid-cols-[1.4fr_1fr]">
         <Card>
-          <div className="mb-4 flex items-center justify-between">
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
             <h2 className="font-display text-xl text-forest-900">Alle katten</h2>
             <Link href="/admin/cats" className="text-sm text-brass-600 hover:underline">Beheren →</Link>
           </div>
@@ -150,7 +152,7 @@ export default function AdminDashboard() {
         </Card>
 
         <Card>
-          <div className="mb-4 flex items-center justify-between">
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
             <h2 className="font-display text-xl text-forest-900">Recente nieuwsberichten</h2>
             <Link href="/admin/news" className="text-sm text-brass-600 hover:underline">Editor →</Link>
           </div>

@@ -12,6 +12,8 @@ const NAV = [
   { href: '/admin', label: 'Startscherm', icon: 'grid' },
   { href: '/admin/cats', label: 'Katten & Dossiers', icon: 'cat' },
   { href: '/admin/overview', label: 'Cattery Overzicht', icon: 'layout' },
+  { href: '/admin/media', label: "Bestanden & Foto's", icon: 'image' },
+  { href: '/admin/settings', label: 'Instellingen', icon: 'settings' },
 ];
 
 export default function AdminLayout({ children }) {
@@ -81,7 +83,6 @@ export default function AdminLayout({ children }) {
           <div className="border-t border-forest-900/10 px-6 py-3 lg:px-4">
             <div className="flex flex-wrap gap-x-3 gap-y-1.5 text-xs font-medium text-forest-500">
               <a href="/" target="_blank" rel="noreferrer" className="hover:text-forest-800">Website</a>
-              <Link href="/admin/settings" onClick={() => setOpen(false)} className="hover:text-forest-800">Instellingen</Link>
             </div>
           </div>
 

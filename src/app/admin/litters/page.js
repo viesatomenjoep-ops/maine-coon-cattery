@@ -1,10 +1,9 @@
 'use client';
-import { useState, useRef, useEffect } from 'react';
+import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useStore } from '@/context/StoreContext';
-import { PageHead, Card, Btn } from '@/components/admin';
-import LitterEditor from '@/components/admin/LitterEditor';
+import { PageHead, Card } from '@/components/admin';
 
 const LITTER_STATUSES = [
   { value: 'verwacht', label: 'Verwacht' },
@@ -19,77 +18,63 @@ export default function LittersPage() {
   const { litters = [], kittens = [], deleteLitter } = useStore();
   const router = useRouter();
 
-  const [mode, setMode] = useState(null); // null = tegelkeuze, 'litter' = nieuw nestje aanmaken
-  const formRef = useRef(null);
-
-  const scrollToForm = () => formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-
+  // Oude links met querystrings blijven werken door door te sturen naar de nieuwe, aparte pagina's.
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const create = params.get('create');
     const edit = params.get('edit');
     if (edit) { router.replace(`/admin/litters/${edit}`); return; }
-    if (create === 'kitten') { router.replace('/admin/litters/new-kitten'); return; }
-    if (create === 'litter') { setMode('litter'); scrollToForm(); }
+    if (create === 'kitten') { router.replace('/admin/litters/new-cat'); return; }
+    if (create === 'litter') { router.replace('/admin/litters/new'); return; }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const openNewLitter = () => { setMode('litter'); scrollToForm(); };
-  const closeForm = () => { setMode(null); };
-
   return (
     <>
+      <Link href="/admin/cats" className="mb-4 inline-flex items-center gap-1.5 text-sm font-semibold text-forest-600 transition hover:text-forest-900">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m12 19-7-7 7-7" /><path d="M19 12H5" /></svg>
+        Terug naar katten &amp; dossiers
+      </Link>
       <PageHead label="Fokkerij" title="Nestjes & Kittens" />
 
-      <div className="flex flex-col">
+      <div className="mb-10">
+        <h2 className="mb-4 font-display text-2xl text-forest-900">Nieuw aanmaken</h2>
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+          <Link
+            href="/admin/litters/new"
+            className="group flex flex-col items-start gap-4 rounded-3xl border border-forest-900/10 bg-white/70 p-8 text-left shadow-sm transition hover:-translate-y-1 hover:border-brass-400/60 hover:shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-brass-500"
+          >
+            <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-forest-50 text-forest-700 transition group-hover:bg-brass-100 group-hover:text-brass-700">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-7 w-7"><path strokeLinecap="round" strokeLinejoin="round" d="M3 10.5 12 4l9 6.5" /><path strokeLinecap="round" strokeLinejoin="round" d="M5 9.5V20h14V9.5" /><path strokeLinecap="round" strokeLinejoin="round" d="M9 20v-5a3 3 0 0 1 6 0v5" /></svg>
+            </span>
+            <div>
+              <h2 className="font-display text-xl text-forest-900">Nieuw nestje</h2>
+              <p className="mt-1 text-sm text-forest-600">Registreer een nieuw nestje met ouders, ras, status, documenten en kittens.</p>
+            </div>
+            <span className="mt-auto text-sm font-semibold text-brass-700">Openen →</span>
+          </Link>
 
-      <div ref={formRef} className="order-2 mt-12 scroll-mt-24">
-        {mode === null && (
-          <>
-          <h2 className="mb-4 font-display text-2xl text-forest-900">Nieuw aanmaken</h2>
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-            <button
-              type="button"
-              onClick={openNewLitter}
-              className="group flex flex-col items-start gap-4 rounded-3xl border border-forest-900/10 bg-white/70 p-8 text-left shadow-sm transition hover:-translate-y-1 hover:border-brass-400/60 hover:shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-brass-500"
-            >
-              <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-forest-50 text-forest-700 transition group-hover:bg-brass-100 group-hover:text-brass-700">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-7 w-7"><path strokeLinecap="round" strokeLinejoin="round" d="M3 10.5 12 4l9 6.5" /><path strokeLinecap="round" strokeLinejoin="round" d="M5 9.5V20h14V9.5" /><path strokeLinecap="round" strokeLinejoin="round" d="M9 20v-5a3 3 0 0 1 6 0v5" /></svg>
-              </span>
-              <div>
-                <h2 className="font-display text-xl text-forest-900">Nieuw nestje</h2>
-                <p className="mt-1 text-sm text-forest-600">Registreer een nieuw nestje met ouders, ras, status, documenten en kittens.</p>
-              </div>
-              <span className="mt-auto text-sm font-semibold text-brass-700">Openen →</span>
-            </button>
-
-            <Link
-              href="/admin/litters/new-kitten"
-              className="group flex flex-col items-start gap-4 rounded-3xl border border-forest-900/10 bg-white/70 p-8 text-left shadow-sm transition hover:-translate-y-1 hover:border-brass-400/60 hover:shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-brass-500"
-            >
-              <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-forest-50 text-forest-700 transition group-hover:bg-brass-100 group-hover:text-brass-700">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-7 w-7"><path strokeLinecap="round" strokeLinejoin="round" d="M12 21c4.5 0 7-2.5 7-6 0-2-1-3.5-2.5-4.5C16 8 15 6 12 6S8 8 7.5 10.5C6 11.5 5 13 5 15c0 3.5 2.5 6 7 6Z" /><path strokeLinecap="round" strokeLinejoin="round" d="M6.5 5.5 8 8.5M17.5 5.5 16 8.5M9.5 14h.01M14.5 14h.01" /></svg>
-              </span>
-              <div>
-                <h2 className="font-display text-xl text-forest-900">Nieuwe kitten</h2>
-                <p className="mt-1 text-sm text-forest-600">Voeg snel een kitten toe aan een bestaand nestje.</p>
-              </div>
-              <span className="mt-auto text-sm font-semibold text-brass-700">Openen →</span>
-            </Link>
-          </div>
-          </>
-        )}
-
-        {mode === 'litter' && (
-          <LitterEditor initialLitterId={null} onClose={closeForm} />
-        )}
+          <Link
+            href="/admin/litters/new-cat"
+            className="group flex flex-col items-start gap-4 rounded-3xl border border-forest-900/10 bg-white/70 p-8 text-left shadow-sm transition hover:-translate-y-1 hover:border-brass-400/60 hover:shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-brass-500"
+          >
+            <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-forest-50 text-forest-700 transition group-hover:bg-brass-100 group-hover:text-brass-700">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-7 w-7"><path strokeLinecap="round" strokeLinejoin="round" d="M12 21c4.5 0 7-2.5 7-6 0-2-1-3.5-2.5-4.5C16 8 15 6 12 6S8 8 7.5 10.5C6 11.5 5 13 5 15c0 3.5 2.5 6 7 6Z" /><path strokeLinecap="round" strokeLinejoin="round" d="M6.5 5.5 8 8.5M17.5 5.5 16 8.5M9.5 14h.01M14.5 14h.01" /></svg>
+            </span>
+            <div>
+              <h2 className="font-display text-xl text-forest-900">Nieuwe kitten</h2>
+              <p className="mt-1 text-sm text-forest-600">Kitten, fokpoes, fokkater of bestaande kat toevoegen.</p>
+            </div>
+            <span className="mt-auto text-sm font-semibold text-brass-700">Openen →</span>
+          </Link>
+        </div>
       </div>
 
       {/* Nestjes overzicht — compacte kaarten, alles verder zit achter "Open nestje" */}
-      <div className="order-1 space-y-4">
+      <div className="space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h2 className="font-display text-2xl text-forest-900">Nestjes overzicht</h2>
-          <Btn variant="solid" onClick={openNewLitter} className="!px-4 !py-2 !text-sm">+ Nieuw nestje</Btn>
+          <Link href="/admin/litters/new" className="inline-flex items-center rounded-lg bg-forest-800 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-forest-900">+ Nieuw nestje</Link>
         </div>
 
         {litters.length === 0 && <p className="text-forest-700">Geen nestjes gevonden. Maak er bovenaan eentje aan.</p>}
@@ -154,8 +139,6 @@ export default function LittersPage() {
             </Card>
           );
         })}
-      </div>
-
       </div>
     </>
   );
