@@ -668,6 +668,21 @@ export default function CatDossier() {
                     </Field>
                   </div>
 
+                  <div className="col-span-full rounded-xl border border-brass-200 bg-brass-50 p-4">
+                    <p className="mb-1 text-sm font-semibold text-brass-900">Aankoopnota's & betaalbewijzen</p>
+                    <p className="mb-3 text-xs text-forest-600">Upload hier facturen, aankoopnota's en betaalbewijzen die bij de verkoop van {currentCat.name || 'deze kat'} horen.</p>
+                    {isNew ? (
+                      <p className="text-xs italic text-forest-600">Sla het dossier eerst op voordat je documenten kunt uploaden.</p>
+                    ) : (
+                      <>
+                        <DocumentUploader kittenId={id} folder={`cattery_documents/${id}`} defaultType="aankoopnota" types={['aankoopnota', 'betaalbewijs', 'contract', 'verkoop', 'overig']} />
+                        <div className="mt-4">
+                          <DocumentList documents={catDocs.filter(d => ['aankoopnota', 'betaalbewijs', 'contract', 'verkoop'].includes(d.document_type))} onDelete={deleteDocument} />
+                        </div>
+                      </>
+                    )}
+                  </div>
+
                   <div className="col-span-full rounded-2xl border border-forest-900/10 bg-forest-50 p-6 shadow-inner">
                     <div className="mb-4 flex items-center gap-3">
                       <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white font-bold text-brass-600 shadow-sm">K</span>

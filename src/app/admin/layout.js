@@ -10,8 +10,8 @@ import TreatmentReminders from '@/components/admin/TreatmentReminders';
 
 const NAV = [
   { href: '/admin', label: 'Startscherm', icon: 'grid' },
-  { href: '/admin/overview', label: 'Cattery Overzicht', icon: 'cat' },
-  { href: '/admin/litters', label: 'Nestjes & Kittens', icon: 'tag' },
+  { href: '/admin/cats', label: 'Katten & Dossiers', icon: 'cat' },
+  { href: '/admin/overview', label: 'Cattery Overzicht', icon: 'layout' },
 ];
 
 export default function AdminLayout({ children }) {

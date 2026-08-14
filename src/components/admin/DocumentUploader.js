@@ -17,6 +17,8 @@ export const DOC_TYPES = [
   { value: 'groei', label: 'Groei / Weegcurve' },
   { value: 'verkoop', label: 'Verkoop' },
   { value: 'contract', label: 'Contract' },
+  { value: 'aankoopnota', label: 'Aankoopnota' },
+  { value: 'betaalbewijs', label: 'Betaalbewijs' },
   { value: 'overig', label: 'Overig' },
 ];
 
@@ -44,6 +46,8 @@ export const DOC_TYPE_SECTION = {
   groei: 'gewicht',
   verkoop: 'verkoop',
   contract: 'verkoop',
+  aankoopnota: 'verkoop',
+  betaalbewijs: 'verkoop',
   overig: 'overig',
 };
 
