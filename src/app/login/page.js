@@ -117,8 +117,11 @@ export default function LoginPage() {
               <path fill="#FBBC05" d="M5.55 14.18a6.9 6.9 0 0 1 0-4.36V6.84H1.7a11.5 11.5 0 0 0 0 10.32l3.85-2.98Z" />
               <path fill="#EA4335" d="M12 5.02c1.69 0 3.2.58 4.4 1.72l3.3-3.3C17.7 1.58 15.1.5 12 .5A11.5 11.5 0 0 0 1.7 6.84l3.85 2.98C6.46 7.1 9 5.02 12 5.02Z" />
             </svg>
-            {googleLoading ? 'Bezig met inloggen…' : 'Inloggen met Google'}
+            {googleLoading ? 'Bezig…' : 'Doorgaan met Google'}
           </button>
+          <p className="mt-2 text-center text-xs text-ink/50">
+            Nog geen account? Hiermee maak je er meteen een aan.
+          </p>
 
           <div className="my-6 flex items-center gap-4">
             <span className="h-px flex-1 bg-terracotta-900/10" />

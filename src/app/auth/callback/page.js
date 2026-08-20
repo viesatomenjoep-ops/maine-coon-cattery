@@ -21,19 +21,23 @@ export default function AuthCallbackPage() {
         return;
       }
 
-      // Rol bepalen: eerst uit de user-metadata, anders uit het profiel.
-      let role = session.user.user_metadata?.role;
-      if (!role) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('role')
-          .eq('id', session.user.id)
-          .maybeSingle();
-        role = profile?.role;
-      }
+      // Hoort deze gebruiker al bij een fokkerij?
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('tenant_id, role')
+        .eq('user_id', session.user.id)
+        .maybeSingle();
 
       if (cancelled) return;
-      router.replace(role === 'admin' ? '/admin' : '/portal');
+
+      // Nog geen omgeving: dit is een nieuwe registratie, dus eerst welkom heten.
+      if (!profile?.tenant_id) {
+        router.replace('/welkom');
+        return;
+      }
+
+      const role = session.user.user_metadata?.role || profile.role;
+      router.replace(role === 'admin' || role === 'owner' ? '/admin' : '/portal');
     })();
 
     return () => { cancelled = true; };
