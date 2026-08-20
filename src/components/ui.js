@@ -2,7 +2,7 @@
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 
-export function Logo({ light = false }) {
+export function Logo({ light = false, href = '/wendysdream' }) {
   const [scrollY, setScrollY] = useState(0);
 
   useEffect(() => {
@@ -16,7 +16,7 @@ export function Logo({ light = false }) {
   const rotation = Math.sin(scrollY * 0.005) * 10;
 
   return (
-    <Link href="/" className="group flex flex-col md:flex-row items-center justify-center transition-all duration-500 z-[60]">
+    <Link href={href} className="group flex flex-col md:flex-row items-center justify-center transition-all duration-500 z-[60]">
       <img 
         src="/logo.png" 
         alt="Wendy's Dream Logo" 

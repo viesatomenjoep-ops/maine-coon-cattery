@@ -20,10 +20,10 @@ export default function PublicNav() {
   const isScrolled = scrollY > 50;
 
   const links = [
-    { href: '/#ras', label: t('nav_ras') },
-    { href: '/#verhaal', label: t('nav_verhaal') },
-    { href: '/#nieuws', label: t('nav_nieuws') },
-    { href: '/#contact', label: t('nav_contact') },
+    { href: '/wendysdream#ras', label: t('nav_ras') },
+    { href: '/wendysdream#verhaal', label: t('nav_verhaal') },
+    { href: '/wendysdream#nieuws', label: t('nav_nieuws') },
+    { href: '/wendysdream#contact', label: t('nav_contact') },
   ];
 
   const languages = [

@@ -27,7 +27,7 @@ export default function PortalLayout({ children }) {
             {user.role === 'admin' && (
               <Link href="/admin" className="text-sm font-semibold text-terracotta-600 hover:underline">Admin</Link>
             )}
-            <button onClick={() => { logout(); router.push('/'); }} className="rounded-full border border-terracotta-900/10 px-5 py-2 text-xs font-semibold uppercase tracking-wider text-terracotta-800 transition hover:bg-terracotta-600 hover:text-cream-50 hover:border-terracotta-600 shadow-soft">
+            <button onClick={() => { logout(); router.push('/wendysdream'); }} className="rounded-full border border-terracotta-900/10 px-5 py-2 text-xs font-semibold uppercase tracking-wider text-terracotta-800 transition hover:bg-terracotta-600 hover:text-cream-50 hover:border-terracotta-600 shadow-soft">
               Uitloggen
             </button>
           </div>

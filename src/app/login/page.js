@@ -10,7 +10,7 @@ const LAST_EMAIL_KEY = 'wd_last_email';
 const LAST_PW_KEY = 'wd_last_pw';
 
 export default function LoginPage() {
-  const { login } = useAuth();
+  const { login, loginWithGoogle } = useAuth();
   const router = useRouter();
   const { t, mounted } = useLanguage();
   const [email, setEmail] = useState('');
@@ -19,6 +19,18 @@ export default function LoginPage() {
   const [notRobot, setNotRobot] = useState(false);
   const [remember, setRemember] = useState(true);
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
+
+  const handleGoogle = async () => {
+    setError('');
+    setGoogleLoading(true);
+    const res = await loginWithGoogle();
+    // Bij succes navigeert de browser weg naar Google; alleen bij een fout komen we hier terug.
+    if (!res.ok) {
+      setGoogleLoading(false);
+      setError(res.error);
+    }
+  };
 
   // Onthoud het laatst gebruikte e-mailadres én wachtwoord op dit apparaat,
   // zodat inloggen de volgende keer vanzelf gaat (werkt ook samen met de
@@ -92,7 +104,29 @@ export default function LoginPage() {
             {mounted ? t('login_desc') : 'Voer uw inloggegevens in.'}
           </p>
 
-          <form onSubmit={submit} className="mt-8 space-y-4" method="post" autoComplete="on">
+          {/* Inloggen met Google — het makkelijkst voor nieuwe klanten */}
+          <button
+            type="button"
+            onClick={handleGoogle}
+            disabled={googleLoading}
+            className="mt-8 flex w-full items-center justify-center gap-3 rounded-xl border border-terracotta-900/15 bg-white py-3.5 text-base font-semibold text-ink shadow-soft transition hover:bg-cream-50 disabled:opacity-60"
+          >
+            <svg className="h-5 w-5" viewBox="0 0 24 24" aria-hidden>
+              <path fill="#4285F4" d="M23.06 12.25c0-.85-.08-1.67-.22-2.45H12v4.63h6.2a5.3 5.3 0 0 1-2.3 3.48v2.89h3.72c2.18-2 3.44-4.96 3.44-8.55Z" />
+              <path fill="#34A853" d="M12 23.5c3.1 0 5.71-1.03 7.62-2.79l-3.72-2.89c-1.03.69-2.35 1.1-3.9 1.1-3 0-5.54-2.02-6.45-4.74H1.7v2.98A11.5 11.5 0 0 0 12 23.5Z" />
+              <path fill="#FBBC05" d="M5.55 14.18a6.9 6.9 0 0 1 0-4.36V6.84H1.7a11.5 11.5 0 0 0 0 10.32l3.85-2.98Z" />
+              <path fill="#EA4335" d="M12 5.02c1.69 0 3.2.58 4.4 1.72l3.3-3.3C17.7 1.58 15.1.5 12 .5A11.5 11.5 0 0 0 1.7 6.84l3.85 2.98C6.46 7.1 9 5.02 12 5.02Z" />
+            </svg>
+            {googleLoading ? 'Bezig met inloggen…' : 'Inloggen met Google'}
+          </button>
+
+          <div className="my-6 flex items-center gap-4">
+            <span className="h-px flex-1 bg-terracotta-900/10" />
+            <span className="text-xs uppercase tracking-wider text-ink/40">of met e-mail</span>
+            <span className="h-px flex-1 bg-terracotta-900/10" />
+          </div>
+
+          <form onSubmit={submit} className="space-y-4" method="post" autoComplete="on">
             <div>
               <label htmlFor="login-email" className="text-xs font-semibold uppercase tracking-wide text-terracotta-800">
                 {mounted ? t('login_email') : 'E-mailadres'}

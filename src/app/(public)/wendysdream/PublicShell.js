@@ -2,7 +2,7 @@
 import PublicNav from '@/components/PublicNav';
 import { useLanguage } from '@/context/LanguageContext';
 
-export default function PublicLayout({ children }) {
+export default function PublicShell({ children }) {
   const { t, mounted } = useLanguage();
 
   return (

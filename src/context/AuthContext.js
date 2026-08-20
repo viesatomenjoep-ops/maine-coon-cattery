@@ -37,6 +37,20 @@ export function AuthProvider({ children }) {
     return { ok: true, role: 'admin' };
   };
 
+  // Inloggen met een Google-/Gmail-account. Supabase stuurt de gebruiker naar
+  // Google en daarna terug naar /auth/callback, die bepaalt waar hij hoort.
+  const loginWithGoogle = async () => {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback`,
+        queryParams: { access_type: 'offline', prompt: 'select_account' },
+      },
+    });
+    if (error) return { ok: false, error: 'Inloggen met Google is niet gelukt. Probeer het opnieuw.' };
+    return { ok: true };
+  };
+
   const logout = async () => {
     setUser(null);
     await supabase.auth.signOut();
@@ -46,7 +60,7 @@ export function AuthProvider({ children }) {
   // Dit blokkeerde de hele website rendering, nu verwijderd omdat middleware dit opvangt.
 
   return (
-    <AuthContext.Provider value={{ user, login, logout }}>
+    <AuthContext.Provider value={{ user, login, loginWithGoogle, logout }}>
       {children}
     </AuthContext.Provider>
   );

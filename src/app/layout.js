@@ -4,8 +4,8 @@ import { LanguageProvider } from '@/context/LanguageContext';
 import { StoreProvider } from '@/context/StoreContext';
 
 export const metadata = {
-  title: "Wendy's Dream · Maine Coon Cattery",
-  description: 'Een oase van rust en pure liefde voor de majestueuze Maine Coon.',
+  title: 'Mainbreed · Software voor fokkers',
+  description: 'Mainbreed is het beheerplatform voor hoogwaardige fokkers — nestjes, dossiers, gezondheid en verkoop op één plek. Nu voor Maine Coon-catteries, gebouwd voor alle rassen.',
 };
 
 export default function RootLayout({ children }) {

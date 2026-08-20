@@ -55,7 +55,7 @@ export default function AdminLayout({ children }) {
           <div className="px-6 pb-3 lg:px-4">
             <div className="flex items-center justify-between gap-2 rounded-xl border border-forest-900/10 bg-forest-50/60 px-3 py-2">
               <span className="min-w-0 truncate text-xs font-medium text-forest-800">{user.user_metadata?.name || 'Beheerder'}</span>
-              <button onClick={async () => { await logout(); window.location.href = '/'; }} className="shrink-0 rounded-lg border border-forest-900/10 bg-white px-3 py-1.5 text-xs font-semibold text-forest-700 transition hover:bg-forest-100">Uitloggen</button>
+              <button onClick={async () => { await logout(); window.location.href = '/wendysdream'; }} className="shrink-0 rounded-lg border border-forest-900/10 bg-white px-3 py-1.5 text-xs font-semibold text-forest-700 transition hover:bg-forest-100">Uitloggen</button>
             </div>
           </div>
 
@@ -81,7 +81,7 @@ export default function AdminLayout({ children }) {
 
           <div className="border-t border-forest-900/10 px-6 py-3 lg:px-4">
             <div className="flex flex-wrap gap-x-3 gap-y-1.5 text-xs font-medium text-forest-500">
-              <a href="/" target="_blank" rel="noreferrer" className="hover:text-forest-800">Website</a>
+              <a href="/wendysdream" target="_blank" rel="noreferrer" className="hover:text-forest-800">Website</a>
             </div>
           </div>
 
