@@ -1,6 +1,7 @@
 'use client';
 import { useState } from 'react';
 import Link from 'next/link';
+import MainbreedLogo from '@/components/MainbreedLogo';
 
 const FEATURES = [
   {
@@ -51,13 +52,10 @@ export default function MainbreedHome() {
   return (
     <div className="min-h-screen bg-cream-50 text-ink">
       {/* Header */}
-      <header className="sticky top-0 z-50 border-b border-terracotta-900/5 bg-cream-50/95 backdrop-blur-md">
+      <header className="sticky top-0 z-50 border-b border-mainbreed-900/5 bg-cream-50/95 backdrop-blur-md">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4 md:px-12">
-          <Link href="/" className="flex items-center gap-2.5">
-            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-forest-800 text-brass-300">
-              <Icon className="h-5 w-5"><path d="M12 5 8 3v4" /><path d="M12 5l4-2v4" /><path d="M5 9c0 5 3 11 7 11s7-6 7-11a7 7 0 0 0-14 0Z" /></Icon>
-            </span>
-            <span className="font-display text-2xl font-semibold tracking-tight">Mainbreed</span>
+          <Link href="/" className="text-[1.35rem]">
+            <MainbreedLogo />
           </Link>
           <nav className="hidden items-center gap-8 text-sm font-medium text-ink/70 md:flex">
             <a href="#features" className="transition hover:text-ink">Functies</a>
@@ -65,20 +63,20 @@ export default function MainbreedHome() {
             <a href="#prijzen" className="transition hover:text-ink">Prijzen</a>
           </nav>
           <div className="hidden items-center gap-3 md:flex">
-            <Link href="/login" className="rounded-full border border-terracotta-500/20 bg-white px-5 py-2.5 text-sm font-semibold text-terracotta-800 shadow-soft transition hover:border-terracotta-500/40 hover:bg-terracotta-50">Inloggen</Link>
-            <a href="#prijzen" className="rounded-full bg-terracotta-500 px-5 py-2.5 text-sm font-semibold text-cream-50 shadow-soft transition hover:bg-terracotta-600">Aan de slag</a>
+            <Link href="/login" className="rounded-full border border-mainbreed-500/20 bg-white px-5 py-2.5 text-sm font-semibold text-mainbreed-800 shadow-soft transition hover:border-mainbreed-500/40 hover:bg-mainbreed-50">Inloggen</Link>
+            <a href="#prijzen" className="rounded-full bg-mainbreed-500 px-5 py-2.5 text-sm font-semibold text-cream-50 shadow-soft transition hover:bg-mainbreed-600">Aan de slag</a>
           </div>
-          <button onClick={() => setMenuOpen((v) => !v)} className="rounded-xl border border-terracotta-900/10 p-2.5 md:hidden" aria-label="Menu">
+          <button onClick={() => setMenuOpen((v) => !v)} className="rounded-xl border border-mainbreed-900/10 p-2.5 md:hidden" aria-label="Menu">
             <Icon className="h-5 w-5">{menuOpen ? <><path d="M18 6 6 18" /><path d="m6 6 12 12" /></> : <><path d="M4 6h16" /><path d="M4 12h16" /><path d="M4 18h16" /></>}</Icon>
           </button>
         </div>
         {menuOpen && (
-          <div className="border-t border-terracotta-900/5 bg-cream-50 px-6 py-4 md:hidden">
+          <div className="border-t border-mainbreed-900/5 bg-cream-50 px-6 py-4 md:hidden">
             <div className="flex flex-col gap-4 text-sm font-medium">
               <a href="#features" onClick={() => setMenuOpen(false)}>Functies</a>
               <a href="#voorbeeld" onClick={() => setMenuOpen(false)}>Voorbeeld</a>
               <a href="#prijzen" onClick={() => setMenuOpen(false)}>Prijzen</a>
-              <Link href="/login" onClick={() => setMenuOpen(false)} className="font-semibold text-terracotta-700">Inloggen</Link>
+              <Link href="/login" onClick={() => setMenuOpen(false)} className="font-semibold text-mainbreed-700">Inloggen</Link>
             </div>
           </div>
         )}
@@ -87,7 +85,7 @@ export default function MainbreedHome() {
       {/* Hero */}
       <section className="relative overflow-hidden px-6 pb-20 pt-16 md:px-12 md:pb-28 md:pt-24">
         <div className="mx-auto max-w-4xl text-center">
-          <span className="inline-flex items-center gap-2 rounded-full border border-terracotta-500/20 bg-white px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.2em] text-terracotta-700 shadow-soft">
+          <span className="inline-flex items-center gap-2 rounded-full border border-mainbreed-500/20 bg-white px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.2em] text-mainbreed-700 shadow-soft">
             Nu beschikbaar voor Maine Coon-catteries
           </span>
           <h1 className="mt-6 font-display text-4xl leading-[1.1] text-ink md:text-6xl">
@@ -99,10 +97,10 @@ export default function MainbreedHome() {
             Maine Coon-catteries, morgen voor elk ras en elke fokker.
           </p>
           <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
-            <a href="#prijzen" className="inline-flex items-center justify-center rounded-full bg-terracotta-500 px-8 py-3.5 text-sm font-semibold uppercase tracking-wider text-cream-50 shadow-lux transition hover:bg-terracotta-600 hover:shadow-glow">
+            <a href="#prijzen" className="inline-flex items-center justify-center rounded-full bg-mainbreed-500 px-8 py-3.5 text-sm font-semibold uppercase tracking-wider text-cream-50 shadow-lux transition hover:bg-mainbreed-600 hover:shadow-glow">
               Bekijk de prijzen
             </a>
-            <Link href="/wendysdream" className="inline-flex items-center justify-center gap-2 rounded-full border border-terracotta-500/20 bg-white px-8 py-3.5 text-sm font-semibold uppercase tracking-wider text-terracotta-800 shadow-soft transition hover:border-terracotta-500/40 hover:bg-terracotta-50">
+            <Link href="/wendysdream" className="inline-flex items-center justify-center gap-2 rounded-full border border-mainbreed-500/20 bg-white px-8 py-3.5 text-sm font-semibold uppercase tracking-wider text-mainbreed-800 shadow-soft transition hover:border-mainbreed-500/40 hover:bg-mainbreed-50">
               Bekijk een live voorbeeld →
             </Link>
           </div>
@@ -110,7 +108,7 @@ export default function MainbreedHome() {
       </section>
 
       {/* Voor wie */}
-      <section className="border-y border-terracotta-900/5 bg-white/60 px-6 py-12 md:px-12">
+      <section className="border-y border-mainbreed-900/5 bg-white/60 px-6 py-12 md:px-12">
         <div className="mx-auto max-w-4xl text-center">
           <p className="text-sm leading-relaxed text-ink/60">
             <strong className="text-ink">Op dit moment</strong> is Mainbreed ingericht voor Maine Coon-catteries.
@@ -124,13 +122,13 @@ export default function MainbreedHome() {
       <section id="features" className="px-6 py-20 md:px-12 md:py-28">
         <div className="mx-auto max-w-6xl">
           <div className="mx-auto max-w-2xl text-center">
-            <span className="text-xs font-semibold uppercase tracking-[0.25em] text-terracotta-600">Functies</span>
+            <span className="text-xs font-semibold uppercase tracking-[0.25em] text-mainbreed-600">Functies</span>
             <h2 className="mt-3 font-display text-3xl text-ink md:text-4xl">Wat Mainbreed voor je regelt</h2>
           </div>
           <div className="mt-14 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {FEATURES.map((f) => (
-              <div key={f.title} className="rounded-3xl border border-terracotta-900/8 bg-white p-7 shadow-soft transition hover:-translate-y-1 hover:shadow-lux">
-                <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-terracotta-50 text-terracotta-700">
+              <div key={f.title} className="rounded-3xl border border-mainbreed-900/8 bg-white p-7 shadow-soft transition hover:-translate-y-1 hover:shadow-lux">
+                <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-mainbreed-50 text-mainbreed-700">
                   <Icon>{f.icon}</Icon>
                 </span>
                 <h3 className="mt-5 font-display text-xl text-ink">{f.title}</h3>
@@ -144,7 +142,7 @@ export default function MainbreedHome() {
       {/* Voorbeeld */}
       <section id="voorbeeld" className="px-6 py-20 md:px-12 md:py-28">
         <div className="mx-auto max-w-5xl overflow-hidden rounded-[2.5rem] bg-ink px-8 py-14 text-center shadow-lux md:px-16 md:py-20">
-          <span className="text-xs font-semibold uppercase tracking-[0.25em] text-terracotta-300">Live voorbeeld</span>
+          <span className="text-xs font-semibold uppercase tracking-[0.25em] text-mainbreed-300">Live voorbeeld</span>
           <h2 className="mx-auto mt-4 max-w-2xl font-display text-3xl text-cream-100 md:text-4xl">
             Zo ziet Mainbreed eruit voor een echte cattery
           </h2>
@@ -152,17 +150,17 @@ export default function MainbreedHome() {
             Wendy's Dream is een Maine Coon-cattery die vandaag al volledig op Mainbreed draait —
             van nestje tot verkoop tot klantenportaal.
           </p>
-          <Link href="/wendysdream" className="mt-8 inline-flex items-center justify-center gap-2 rounded-full bg-terracotta-500 px-8 py-3.5 text-sm font-semibold uppercase tracking-wider text-cream-50 shadow-glow transition hover:bg-terracotta-600">
+          <Link href="/wendysdream" className="mt-8 inline-flex items-center justify-center gap-2 rounded-full bg-mainbreed-500 px-8 py-3.5 text-sm font-semibold uppercase tracking-wider text-cream-50 shadow-glow transition hover:bg-mainbreed-600">
             Bekijk Wendy's Dream →
           </Link>
         </div>
       </section>
 
       {/* Prijzen */}
-      <section id="prijzen" className="border-t border-terracotta-900/5 bg-white/60 px-6 py-20 md:px-12 md:py-28">
+      <section id="prijzen" className="border-t border-mainbreed-900/5 bg-white/60 px-6 py-20 md:px-12 md:py-28">
         <div className="mx-auto max-w-6xl">
           <div className="mx-auto max-w-2xl text-center">
-            <span className="text-xs font-semibold uppercase tracking-[0.25em] text-terracotta-600">Prijzen</span>
+            <span className="text-xs font-semibold uppercase tracking-[0.25em] text-mainbreed-600">Prijzen</span>
             <h2 className="mt-3 font-display text-3xl text-ink md:text-4xl">Eenvoudig, per maand</h2>
             <p className="mt-3 text-sm text-ink/60">
               De definitieve tarieven maken we binnenkort bekend — hieronder alvast de indeling.
@@ -172,10 +170,10 @@ export default function MainbreedHome() {
             {PRICE_TIERS.map((tier) => (
               <div
                 key={tier.name}
-                className={`flex flex-col rounded-3xl border p-8 shadow-soft ${tier.featured ? 'border-2 border-terracotta-500 bg-white shadow-lux' : 'border-terracotta-900/8 bg-white'}`}
+                className={`flex flex-col rounded-3xl border p-8 shadow-soft ${tier.featured ? 'border-2 border-mainbreed-500 bg-white shadow-lux' : 'border-mainbreed-900/8 bg-white'}`}
               >
                 {tier.featured && (
-                  <span className="mb-4 inline-flex w-fit items-center rounded-full bg-terracotta-500 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-cream-50">Meest gekozen</span>
+                  <span className="mb-4 inline-flex w-fit items-center rounded-full bg-mainbreed-500 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-cream-50">Meest gekozen</span>
                 )}
                 <h3 className="font-display text-2xl text-ink">{tier.name}</h3>
                 <p className="mt-4 font-display text-4xl text-ink">{tier.price}</p>
@@ -184,14 +182,14 @@ export default function MainbreedHome() {
                 <ul className="mt-6 flex-1 space-y-3 text-sm text-ink/70">
                   {tier.features.map((f) => (
                     <li key={f} className="flex items-start gap-2.5">
-                      <Icon className="mt-0.5 h-4 w-4 shrink-0 text-terracotta-500"><path d="M20 6 9 17l-5-5" /></Icon>
+                      <Icon className="mt-0.5 h-4 w-4 shrink-0 text-mainbreed-500"><path d="M20 6 9 17l-5-5" /></Icon>
                       {f}
                     </li>
                   ))}
                 </ul>
                 <a
                   href="mailto:hallo@mainbreed.com"
-                  className={`mt-8 inline-flex items-center justify-center rounded-full px-6 py-3 text-sm font-semibold uppercase tracking-wider transition ${tier.featured ? 'bg-terracotta-500 text-cream-50 hover:bg-terracotta-600' : 'border border-terracotta-500/20 text-terracotta-800 hover:bg-terracotta-50'}`}
+                  className={`mt-8 inline-flex items-center justify-center rounded-full px-6 py-3 text-sm font-semibold uppercase tracking-wider transition ${tier.featured ? 'bg-mainbreed-500 text-cream-50 hover:bg-mainbreed-600' : 'border border-mainbreed-500/20 text-mainbreed-800 hover:bg-mainbreed-50'}`}
                 >
                   Interesse doorgeven
                 </a>
@@ -205,17 +203,17 @@ export default function MainbreedHome() {
       <footer className="bg-ink text-cream-100/80">
         <div className="mx-auto grid max-w-7xl gap-10 px-6 py-16 md:grid-cols-3 md:px-12">
           <div>
-            <p className="font-display text-2xl font-light text-cream-100">Mainbreed</p>
-            <p className="mt-3 max-w-xs text-sm leading-relaxed text-cream-100/60">
+            <MainbreedLogo light className="text-[1.3rem]" />
+            <p className="mt-4 max-w-xs text-sm leading-relaxed text-cream-100/60">
               Beheerplatform voor hoogwaardige dierenfokkers. Vandaag Maine Coon-catteries, morgen alle rassen.
             </p>
           </div>
           <div className="text-sm">
-            <p className="mb-3 text-xs font-semibold uppercase tracking-[0.3em] text-terracotta-300">Contact</p>
+            <p className="mb-3 text-xs font-semibold uppercase tracking-[0.3em] text-mainbreed-300">Contact</p>
             <a href="mailto:hallo@mainbreed.com" className="text-cream-100/70 transition hover:text-cream-100">hallo@mainbreed.com</a>
           </div>
           <div className="text-sm">
-            <p className="mb-3 text-xs font-semibold uppercase tracking-[0.3em] text-terracotta-300">Voorbeeld</p>
+            <p className="mb-3 text-xs font-semibold uppercase tracking-[0.3em] text-mainbreed-300">Voorbeeld</p>
             <Link href="/wendysdream" className="text-cream-100/70 transition hover:text-cream-100">Wendy's Dream cattery →</Link>
           </div>
         </div>

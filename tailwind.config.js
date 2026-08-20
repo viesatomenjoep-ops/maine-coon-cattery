@@ -35,6 +35,13 @@ module.exports = {
           400: '#d1a047', 500: '#c4893a', 600: '#a96d2f', 700: '#875229',
           800: '#6f4326', 900: '#5d3922', 950: '#351d10',
         },
+        // Merkkleur van het Mainbreed-logo (roze/framboos) + de crème cirkel.
+        mainbreed: {
+          50: '#fdf4f6', 100: '#fae8ec', 200: '#f4cfd8', 300: '#eba9b9',
+          400: '#de7a92', 500: '#cb5b76', 600: '#b64863', 700: '#983a52',
+          800: '#7f3348', 900: '#6c2f41',
+          circle: '#f7efe6',
+        },
       },
       fontSize: {
         xs: ['0.95rem', { lineHeight: '1.4' }],
@@ -51,6 +58,8 @@ module.exports = {
       fontFamily: {
         display: ['Cormorant Garamond', 'Georgia', 'serif'],
         body: ['Montserrat', 'system-ui', 'sans-serif'],
+        // Ronde, vriendelijke letter van het Mainbreed-woordmerk.
+        brand: ['Quicksand', 'Montserrat', 'system-ui', 'sans-serif'],
       },
       boxShadow: {
         lux: '0 24px 60px -24px rgba(106, 48, 29, 0.2)',
