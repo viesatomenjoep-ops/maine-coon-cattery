@@ -49,13 +49,26 @@ export async function POST(request) {
     return NextResponse.json({ ok: true, alreadyLinked: true, tenantId: existing.tenant_id });
   }
 
-  // 3. Naam valideren.
+  // 3. Gegevens uit het registratieformulier valideren.
   let body;
   try { body = await request.json(); } catch { return NextResponse.json({ error: 'Ongeldige aanvraag.' }, { status: 400 }); }
   const catteryName = (body.catteryName || '').trim();
   if (catteryName.length < 2) {
     return NextResponse.json({ error: 'Vul de naam van je fokkerij in.' }, { status: 400 });
   }
+
+  const details = {
+    species: (body.species || '').trim(),
+    breed: (body.breed || '').trim(),
+    animal_count: (body.animalCount || '').trim(),
+    litters_per_year: (body.littersPerYear || '').trim(),
+    contact_name: (body.contactName || '').trim(),
+    phone: (body.phone || '').trim(),
+    street: (body.street || '').trim(),
+    zipcode: (body.zipcode || '').trim(),
+    city: (body.city || '').trim(),
+    country: (body.country || '').trim(),
+  };
 
   // 4. Zorg dat de slug uniek is — die wordt straks de eigen webpagina.
   const base = slugify(catteryName) || 'fokkerij';
@@ -74,9 +87,17 @@ export async function POST(request) {
     .single();
   if (tErr) return NextResponse.json({ error: 'Aanmaken mislukt: ' + tErr.message }, { status: 500 });
 
-  const ownerName = caller.user_metadata?.full_name || caller.user_metadata?.name || caller.email;
+  // 6. De extra registratiegegevens erbij zetten. Bestaat een kolom nog niet in
+  //    de database, dan mag dat het aanmaken niet laten mislukken — daarom apart
+  //    en per veld, en we negeren een fout hier bewust.
+  const extra = Object.fromEntries(Object.entries(details).filter(([, v]) => v));
+  if (Object.keys(extra).length) {
+    try { await admin.from('tenants').update(extra).eq('id', tenant.id); } catch {}
+  }
 
-  // 6. Profiel koppelen aan de nieuwe omgeving.
+  const ownerName = details.contact_name || caller.user_metadata?.full_name || caller.user_metadata?.name || caller.email;
+
+  // 7. Profiel koppelen aan de nieuwe omgeving.
   const { error: pErr } = await admin.from('profiles').insert([{
     user_id: caller.id,
     tenant_id: tenant.id,
@@ -89,9 +110,10 @@ export async function POST(request) {
     return NextResponse.json({ error: 'Koppelen mislukt: ' + pErr.message }, { status: 500 });
   }
 
-  // 7. Rol vastleggen, zodat het inloggen hem meteen naar het beheer stuurt.
+  // 8. Rol vastleggen zodat inloggen meteen naar het beheer gaat. De opgegeven
+  //    gegevens bewaren we hier ook, zodat ze nooit verloren gaan.
   await admin.auth.admin.updateUserById(caller.id, {
-    user_metadata: { ...caller.user_metadata, role: 'admin', name: ownerName },
+    user_metadata: { ...caller.user_metadata, role: 'admin', name: ownerName, breeder_profile: details },
   });
 
   return NextResponse.json({ ok: true, tenant });

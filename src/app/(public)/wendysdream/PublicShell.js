@@ -1,5 +1,7 @@
 'use client';
+import Link from 'next/link';
 import PublicNav from '@/components/PublicNav';
+import { PawLogo } from '@/components/MainbreedLogo';
 import { useLanguage } from '@/context/LanguageContext';
 
 export default function PublicShell({ children }) {
@@ -7,6 +9,17 @@ export default function PublicShell({ children }) {
 
   return (
     <div className="relative z-10">
+      {/* Deze cattery is een voorbeeld op Mainbreed — laat de weg terug zien. */}
+      <Link
+        href="/"
+        className="group flex items-center justify-center gap-2 bg-mainbreed-500 px-4 py-2.5 text-center text-xs font-semibold text-cream-50 transition hover:bg-mainbreed-600"
+      >
+        <PawLogo className="h-3.5 w-3.5" />
+        <span>Deze fokkerij werkt met Mainbreed</span>
+        <span className="hidden font-normal text-cream-50/70 sm:inline">·</span>
+        <span className="hidden underline-offset-2 group-hover:underline sm:inline">Terug naar Mainbreed →</span>
+        <span className="underline underline-offset-2 sm:hidden">Terug →</span>
+      </Link>
       <PublicNav />
       <main>{children}</main>
       <footer id="contact" className="mt-24 bg-ink text-cream-100/80">
@@ -49,8 +62,14 @@ export default function PublicShell({ children }) {
             <p className="mt-2 text-cream-100/50 font-light">{mounted ? t('footer_care_sub') : 'Grootgebracht in liefdevolle kring.'}</p>
           </div>
         </div>
-        <div className="border-t border-cream-100/10 py-6 text-center text-xs text-cream-100/40 font-light">
-          © {new Date().getFullYear()} {mounted ? t('footer_copyright') : 'Wendy\'s Dream'}
+        <div className="flex flex-col items-center gap-3 border-t border-cream-100/10 py-6 text-center text-xs font-light text-cream-100/40 sm:flex-row sm:justify-center sm:gap-4">
+          <span>© {new Date().getFullYear()} {mounted ? t('footer_copyright') : 'Wendy\'s Dream'}</span>
+          <span className="hidden sm:inline">·</span>
+          <Link href="/" className="group inline-flex items-center gap-1.5 text-cream-100/60 transition hover:text-cream-100">
+            <PawLogo className="h-3 w-3" />
+            Terug naar Mainbreed
+            <span className="transition-transform duration-300 group-hover:translate-x-0.5">→</span>
+          </Link>
         </div>
       </footer>
     </div>

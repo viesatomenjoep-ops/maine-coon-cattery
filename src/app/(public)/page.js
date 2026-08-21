@@ -3,6 +3,72 @@ import { useState } from 'react';
 import Link from 'next/link';
 import MainbreedLogo from '@/components/MainbreedLogo';
 import Reveal from '@/components/Reveal';
+import Faq from '@/components/Faq';
+
+// Diersoorten waarvoor Mainbreed bedoeld is. Katten werkt vandaag, de rest
+// volgt — dat staat er eerlijk bij zodat niemand zich misleid voelt.
+const SPECIES = [
+  { label: 'Katten', hint: 'Beschikbaar', live: true, icon: <><circle cx="12" cy="14" r="6" /><path d="M7 9 5 4l4 4" /><path d="M17 9l2-5-4 4" /><path d="M9.5 15h.01M14.5 15h.01" /></> },
+  { label: 'Honden', hint: 'In aanbouw', icon: <><path d="M10 5.2 8 3v4" /><path d="M14 5.2 16 3v4" /><path d="M6 9a6 6 0 0 1 12 0v4a6 6 0 0 1-12 0Z" /><path d="M10 12h.01M14 12h.01M12 15v1" /></> },
+  { label: 'Vogels', hint: 'In aanbouw', icon: <><path d="M16 7h.01" /><path d="M3.4 18a10 10 0 0 0 8.6-4 8 8 0 0 0 8-8 3 3 0 0 0-6 0 8 8 0 0 0-8 8v6" /><path d="m9 14 6 6" /></> },
+  { label: 'Duiven', hint: 'In aanbouw', icon: <><path d="M20 6c-1 4-4 6-8 6s-6 3-6 7" /><path d="M20 6a3 3 0 0 0-5-2" /><path d="M17 5h.01" /><path d="M6 19h8" /></> },
+  { label: 'Knaagdieren', hint: 'In aanbouw', icon: <><circle cx="12" cy="15" r="5" /><path d="M8 8c0-3 1-5 2-5s2 2 2 4" /><path d="M16 8c0-3-1-5-2-5" /><path d="M10 15h.01M14 15h.01" /></> },
+  { label: 'Paarden', hint: 'In aanbouw', icon: <><path d="M5 20c0-5 3-8 7-8h4l3-4-2-3-4 2H8a5 5 0 0 0-5 5v8" /><path d="M14 8h.01" /></> },
+];
+
+const WHY = [
+  {
+    title: 'Alles bij het dier, niet in mappen',
+    desc: 'De meeste fokkers werken met een schrift, een map met papieren en foto\'s op de telefoon. Bij Mainbreed hangt alles aan het dier zelf. Zoek op naam of chipnummer en je hebt het complete verhaal, ook jaren later.',
+  },
+  {
+    title: 'Je vergeet geen enting meer',
+    desc: 'Ontworming, entingen en controles plan je per dier in. Je krijgt vanzelf te zien wat er aankomt, zodat je nooit voor verrassingen staat vlak voordat een dier naar zijn nieuwe huis gaat.',
+  },
+  {
+    title: 'Kopers die zelf kunnen kijken',
+    desc: 'Elke koper krijgt een eigen link naar het dossier van zijn dier: foto\'s, groei, papieren. Dat scheelt je een hoop appjes, en het geeft mensen vertrouwen in waar hun dier vandaan komt.',
+  },
+  {
+    title: 'Gemaakt met een echte fokker',
+    desc: 'Mainbreed is niet vanachter een bureau bedacht. Het is stap voor stap gebouwd samen met een Maine Coon-cattery die er dagelijks mee werkt. Wat niet werkte in de praktijk, is eruit gegaan.',
+  },
+];
+
+const FAQ_ITEMS = [
+  {
+    q: 'Is Mainbreed alleen voor kattenfokkers?',
+    a: 'Op dit moment is alles ingericht en getest voor catteries, omdat we samen met een Maine Coon-fokker zijn begonnen. De software zelf kent geen verschil tussen een kitten en een pup: het gaat om dieren, nestjes, ouderdieren en papieren. Hondenkennels, vogel- en duivenfokkers kunnen er straks net zo goed mee werken. Meld je gerust nu al aan, dan bouwen we jouw diersoort met voorrang uit.',
+  },
+  {
+    q: 'Ik fok honden. Wat mis ik nu nog?',
+    a: 'Functioneel kun je vandaag al alles vastleggen: nestjes met teef en dekreu, pups, gezondheidscontroles, kopers en papieren. Wat nog niet klopt, zijn een paar woorden in het scherm — er staat nu "kitten" waar "pup" hoort te staan, en "cattery" waar "kennel" hoort. Dat passen we per fokker aan zodra je je aanmeldt.',
+  },
+  {
+    q: 'Wat als ik meerdere rassen of diersoorten fok?',
+    a: 'Dat kan gewoon. Je legt per dier vast om welk ras het gaat, en je kunt zoveel nestjes en ouderdieren toevoegen als je wilt. Er is geen limiet op het aantal dieren, ook niet in het instappakket.',
+  },
+  {
+    q: 'Moet ik verstand van computers hebben?',
+    a: 'Nee. Als je kunt appen, kun je met Mainbreed werken. Je voegt een dier toe via een paar schermen die je stap voor stap door de gegevens leiden, en foto\'s maak je gewoon met de camera van je telefoon. Wij zetten je omgeving op en helpen je op weg.',
+  },
+  {
+    q: 'Wat gebeurt er met mijn gegevens?',
+    a: 'Je gegevens zijn van jou. Ze staan op beveiligde servers binnen Europa, en niemand anders kan bij je dossiers. Je bepaalt zelf per foto en per document of een koper het mag zien. Wil je stoppen, dan krijg je alles mee in een export.',
+  },
+  {
+    q: 'Kan ik mijn bestaande administratie overzetten?',
+    a: 'Ja. Heb je al een lijst in Excel, of mappen vol met papieren en scans? Stuur ze op, dan zetten we de basis voor je klaar zodat je niet alles opnieuw hoeft in te tikken. Bij het instappakket doen we dat eenmalig kosteloos.',
+  },
+  {
+    q: 'Krijg ik echt een eigen website?',
+    a: 'Ja, elke fokker krijgt een eigen pagina op mainbreed.com, bijvoorbeeld mainbreed.com/jouwfokkerij. Daarop staan je nestjes en beschikbare dieren, en die houdt zichzelf bij zodra jij iets in het beheer aanpast. Wendy\'s Dream is daar een levend voorbeeld van.',
+  },
+  {
+    q: 'Wat kost het en zit ik ergens aan vast?',
+    a: 'Je betaalt per maand en je kunt maandelijks opzeggen. De exacte bedragen maken we binnenkort bekend; wat er in elk pakket zit zie je hierboven al. Meld je nu aan, dan hoor je het als eerste en denk je mee over de prijs.',
+  },
+];
 
 const FEATURES = [
   {
@@ -78,9 +144,11 @@ export default function MainbreedHome() {
             <MainbreedLogo />
           </Link>
           <nav className="hidden items-center gap-8 text-sm font-medium text-ink/70 md:flex">
+            <a href="#waarom" className="transition hover:text-ink">Waarom</a>
             <a href="#features" className="transition hover:text-ink">Functies</a>
             <a href="#voorbeeld" className="transition hover:text-ink">Voorbeeld</a>
             <a href="#prijzen" className="transition hover:text-ink">Prijzen</a>
+            <a href="#vragen" className="transition hover:text-ink">Vragen</a>
           </nav>
           <div className="hidden items-center gap-3 md:flex">
             <Link href="/login" className="rounded-full border border-mainbreed-500/20 bg-white px-5 py-2.5 text-sm font-semibold text-mainbreed-800 shadow-soft transition-all duration-300 hover:border-mainbreed-500/40 hover:bg-mainbreed-50">Inloggen</Link>
@@ -93,9 +161,11 @@ export default function MainbreedHome() {
         {menuOpen && (
           <div className="border-t border-mainbreed-900/5 bg-cream-50 px-6 py-4 md:hidden">
             <div className="flex flex-col gap-4 text-sm font-medium">
+              <a href="#waarom" onClick={() => setMenuOpen(false)}>Waarom</a>
               <a href="#features" onClick={() => setMenuOpen(false)}>Functies</a>
               <a href="#voorbeeld" onClick={() => setMenuOpen(false)}>Voorbeeld</a>
               <a href="#prijzen" onClick={() => setMenuOpen(false)}>Prijzen</a>
+              <a href="#vragen" onClick={() => setMenuOpen(false)}>Vragen</a>
               <Link href="/login" onClick={() => setMenuOpen(false)} className="font-semibold text-mainbreed-700">Inloggen</Link>
             </div>
           </div>
@@ -128,15 +198,64 @@ export default function MainbreedHome() {
         </div>
       </section>
 
-      {/* Voor wie */}
-      <section className="border-y border-mainbreed-900/5 bg-white/60 px-6 py-12 md:px-12">
-        <Reveal className="mx-auto max-w-4xl text-center">
-          <p className="text-sm leading-relaxed text-ink/60">
-            <strong className="text-ink">Op dit moment</strong> werkt Mainbreed voor Maine Coon-catteries.
-            De software is zo gebouwd dat hondenkennels en fokkers van andere rassen er straks
-            net zo goed mee uit de voeten kunnen. Daar werken we nu aan.
-          </p>
-        </Reveal>
+      {/* Voor welke fokkers */}
+      <section className="border-y border-mainbreed-900/5 bg-white/60 px-6 py-16 md:px-12 md:py-20">
+        <div className="mx-auto max-w-5xl">
+          <Reveal className="mx-auto max-w-2xl text-center">
+            <span className="text-xs font-semibold uppercase tracking-[0.25em] text-mainbreed-600">Voor wie</span>
+            <h2 className="mt-3 font-display text-3xl text-ink md:text-4xl">Voor iedereen die fokt met zorg</h2>
+            <p className="mt-4 text-sm leading-relaxed text-ink/60">
+              Een nestje is een nestje, of het nu kittens, pups of jonge duiven zijn. Je legt ouderdieren vast,
+              houdt gezondheid bij en begeleidt kopers. Mainbreed is daarop gebouwd — we beginnen bij katten
+              en breiden per diersoort uit.
+            </p>
+          </Reveal>
+
+          <div className="mt-12 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+            {SPECIES.map((s, i) => (
+              <Reveal key={s.label} delay={i * 70} className="h-full">
+                <div className={`group flex h-full flex-col items-center gap-2 rounded-2xl border p-5 text-center transition-all duration-500 hover:-translate-y-1.5 ${s.live ? 'border-mainbreed-400 bg-white shadow-soft' : 'border-mainbreed-900/8 bg-white/60 hover:border-mainbreed-200'}`}>
+                  <span className={`transition-all duration-500 group-hover:scale-110 ${s.live ? 'text-mainbreed-500' : 'text-ink/30'}`}>
+                    <Icon className="h-7 w-7">{s.icon}</Icon>
+                  </span>
+                  <span className="text-sm font-semibold text-ink">{s.label}</span>
+                  <span className={`text-[10px] font-bold uppercase tracking-wider ${s.live ? 'text-mainbreed-600' : 'text-ink/35'}`}>{s.hint}</span>
+                </div>
+              </Reveal>
+            ))}
+          </div>
+
+          <Reveal delay={200} className="mt-8 text-center">
+            <p className="text-xs leading-relaxed text-ink/50">
+              Fok je iets wat er niet bij staat? Laat het weten — we bouwen op volgorde van wie zich meldt.
+            </p>
+          </Reveal>
+        </div>
+      </section>
+
+      {/* Waarom Mainbreed */}
+      <section id="waarom" className="px-6 py-20 md:px-12 md:py-28">
+        <div className="mx-auto max-w-5xl">
+          <Reveal className="mx-auto max-w-2xl text-center">
+            <span className="text-xs font-semibold uppercase tracking-[0.25em] text-mainbreed-600">Waarom Mainbreed</span>
+            <h2 className="mt-3 font-display text-3xl text-ink md:text-4xl">Waarom fokkers overstappen</h2>
+          </Reveal>
+          <div className="mt-14 grid gap-x-10 gap-y-10 md:grid-cols-2">
+            {WHY.map((w, i) => (
+              <Reveal key={w.title} delay={i * 100}>
+                <div className="flex gap-5">
+                  <span className="mt-1 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-mainbreed-500 font-display text-base text-cream-50">
+                    {i + 1}
+                  </span>
+                  <div>
+                    <h3 className="font-display text-xl leading-snug text-ink">{w.title}</h3>
+                    <p className="mt-2 text-sm leading-relaxed text-ink/60">{w.desc}</p>
+                  </div>
+                </div>
+              </Reveal>
+            ))}
+          </div>
+        </div>
       </section>
 
       {/* Features */}
@@ -192,28 +311,40 @@ export default function MainbreedHome() {
           </Reveal>
           <div className="mt-14 grid gap-6 lg:grid-cols-3">
             {PRICE_TIERS.map((tier, i) => (
-              <Reveal key={tier.name} delay={i * 110}>
+              <Reveal key={tier.name} delay={i * 110} className="h-full">
                 <div
                   className={`flex h-full flex-col rounded-3xl border p-8 shadow-soft transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-2 hover:shadow-lux ${tier.featured ? 'border-2 border-mainbreed-500 bg-white shadow-lux lg:-translate-y-3 lg:hover:-translate-y-5' : 'border-mainbreed-900/8 bg-white hover:border-mainbreed-300/60'}`}
                 >
-                  {tier.featured && (
-                    <span className="mb-4 inline-flex w-fit items-center rounded-full bg-mainbreed-500 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-cream-50">Meest gekozen</span>
-                  )}
-                  <h3 className="font-display text-2xl text-ink">{tier.name}</h3>
-                  <p className="mt-4 font-display text-3xl text-ink">{tier.price}</p>
-                  <p className="mt-1 text-xs uppercase tracking-wide text-ink/40">{tier.sub}</p>
-                  <p className="mt-4 text-sm leading-relaxed text-ink/60">{tier.desc}</p>
-                  <ul className="mt-6 flex-1 space-y-3 text-sm text-ink/70">
+                  {/* Vaste hoogte, zodat alle kaarten op dezelfde regel beginnen — ook zonder badge. */}
+                  <div className="mb-4 h-6">
+                    {tier.featured && (
+                      <span className="inline-flex items-center rounded-full bg-mainbreed-500 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-cream-50">
+                        Meest gekozen
+                      </span>
+                    )}
+                  </div>
+
+                  <h3 className="font-display text-2xl leading-none text-ink">{tier.name}</h3>
+
+                  <div className="mt-5">
+                    <p className="font-display text-3xl leading-none text-ink">{tier.price}</p>
+                    <p className="mt-2 text-xs uppercase tracking-wide text-ink/40">{tier.sub}</p>
+                  </div>
+
+                  <p className="mt-5 min-h-[5.5rem] text-sm leading-relaxed text-ink/60">{tier.desc}</p>
+
+                  <ul className="flex-1 space-y-3 border-t border-mainbreed-900/8 pt-6 text-sm text-ink/70">
                     {tier.features.map((f) => (
                       <li key={f} className="flex items-start gap-2.5">
-                        <Icon className="mt-0.5 h-4 w-4 shrink-0 text-mainbreed-500"><path d="M20 6 9 17l-5-5" /></Icon>
-                        {f}
+                        <Icon className="mt-1 h-4 w-4 shrink-0 text-mainbreed-500"><path d="M20 6 9 17l-5-5" /></Icon>
+                        <span className="leading-snug">{f}</span>
                       </li>
                     ))}
                   </ul>
+
                   <a
                     href="mailto:hallo@mainbreed.com?subject=Interesse%20in%20Mainbreed"
-                    className={`mt-8 inline-flex items-center justify-center rounded-full px-6 py-3 text-sm font-semibold uppercase tracking-wider transition-all duration-300 hover:-translate-y-0.5 ${tier.featured ? 'bg-mainbreed-500 text-cream-50 hover:bg-mainbreed-600' : 'border border-mainbreed-500/20 text-mainbreed-800 hover:bg-mainbreed-50'}`}
+                    className={`mt-8 inline-flex items-center justify-center rounded-full px-6 py-3 text-center text-sm font-semibold uppercase tracking-wider transition-all duration-300 hover:-translate-y-0.5 ${tier.featured ? 'bg-mainbreed-500 text-cream-50 hover:bg-mainbreed-600' : 'border border-mainbreed-500/20 text-mainbreed-800 hover:bg-mainbreed-50'}`}
                   >
                     Neem contact op
                   </a>
@@ -222,6 +353,45 @@ export default function MainbreedHome() {
             ))}
           </div>
         </div>
+      </section>
+
+      {/* Veelgestelde vragen */}
+      <section id="vragen" className="px-6 py-20 md:px-12 md:py-28">
+        <div className="mx-auto max-w-3xl">
+          <Reveal className="text-center">
+            <span className="text-xs font-semibold uppercase tracking-[0.25em] text-mainbreed-600">Vragen</span>
+            <h2 className="mt-3 font-display text-3xl text-ink md:text-4xl">Veelgestelde vragen</h2>
+            <p className="mt-4 text-sm leading-relaxed text-ink/60">
+              Staat je vraag er niet bij? Mail gerust naar{' '}
+              <a href="mailto:hallo@mainbreed.com" className="font-semibold text-mainbreed-600 hover:underline">hallo@mainbreed.com</a> —
+              je krijgt altijd antwoord van een mens.
+            </p>
+          </Reveal>
+          <Reveal delay={120} className="mt-12">
+            <Faq items={FAQ_ITEMS} />
+          </Reveal>
+        </div>
+      </section>
+
+      {/* Slot-oproep */}
+      <section className="px-6 pb-24 md:px-12">
+        <Reveal className="mx-auto max-w-4xl rounded-[2.5rem] border border-mainbreed-300/50 bg-gradient-to-b from-mainbreed-50 to-cream-50 px-8 py-14 text-center shadow-soft md:px-16">
+          <h2 className="mx-auto max-w-xl font-display text-3xl leading-tight text-ink md:text-4xl">
+            Begin vandaag met één dier
+          </h2>
+          <p className="mx-auto mt-4 max-w-lg text-sm leading-relaxed text-ink/65">
+            Je hoeft niet meteen je hele administratie over te zetten. Voeg één dier toe, kijk hoe het voelt,
+            en bouw het rustig verder uit. Aanmelden kost een minuut met je Google-account.
+          </p>
+          <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
+            <Link href="/login" className="inline-flex items-center justify-center rounded-full bg-mainbreed-500 px-8 py-3.5 text-sm font-semibold uppercase tracking-wider text-cream-50 shadow-lux transition-all duration-300 hover:-translate-y-0.5 hover:bg-mainbreed-600 hover:shadow-glow">
+              Gratis beginnen
+            </Link>
+            <a href="mailto:hallo@mainbreed.com?subject=Vraag%20over%20Mainbreed" className="inline-flex items-center justify-center rounded-full border border-mainbreed-500/25 bg-white px-8 py-3.5 text-sm font-semibold uppercase tracking-wider text-mainbreed-800 transition-all duration-300 hover:-translate-y-0.5 hover:bg-mainbreed-50">
+              Stel een vraag
+            </a>
+          </div>
+        </Reveal>
       </section>
 
       {/* Footer */}
