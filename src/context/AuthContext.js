@@ -70,6 +70,18 @@ export function AuthProvider({ children }) {
     return { ok: true };
   };
 
+  // Inloggen met Apple. Werkt pas zodra de Apple-provider aanstaat in Supabase
+  // (Authentication → Providers → Apple), met een Services ID + private key
+  // van een Apple Developer-account.
+  const loginWithApple = async () => {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'apple',
+      options: { redirectTo: `${window.location.origin}/auth/callback` },
+    });
+    if (error) return { ok: false, error: 'Inloggen met Apple is niet gelukt. Probeer het opnieuw.' };
+    return { ok: true };
+  };
+
   const logout = async () => {
     setUser(null);
     await supabase.auth.signOut();
@@ -79,7 +91,7 @@ export function AuthProvider({ children }) {
   // Dit blokkeerde de hele website rendering, nu verwijderd omdat middleware dit opvangt.
 
   return (
-    <AuthContext.Provider value={{ user, login, signUp, loginWithGoogle, logout }}>
+    <AuthContext.Provider value={{ user, login, signUp, loginWithGoogle, loginWithApple, logout }}>
       {children}
     </AuthContext.Provider>
   );
