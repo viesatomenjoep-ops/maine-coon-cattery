@@ -578,6 +578,17 @@ export function StoreProvider({ children }) {
     return { data };
   };
 
+  // Eigen fokkerij-gegevens bijwerken (naam, diersoort, ras, adres…). Wordt
+  // gebruikt door Instellingen — ook bruikbaar als de registratiewizard een
+  // veld nog niet kon opslaan (bijv. voordat een kolom bestond).
+  const updateTenant = async (patch) => {
+    if (!tenantId) return { error: 'Geen fokkerij gekoppeld.' };
+    const { data, error } = await supabase.from('tenants').update(patch).eq('id', tenantId).select().single();
+    if (error) return { error: error.message };
+    setCurrentTenant(data);
+    return { data };
+  };
+
   const breedingCats = kittens.filter(k => k.is_own_breeding_cat);
 
   // Welke diersoort fokt deze klant? Bepaalt de woorden door de hele app heen.
@@ -588,7 +599,7 @@ export function StoreProvider({ children }) {
     <StoreContext.Provider value={{
       news, litters, kittens, breedingCats, documents, media, customers, interests, siteContent,
       updateInterest, deleteInterest,
-      currentTenant, isSuperadmin, tenants, createCattery, species, terms,
+      currentTenant, isSuperadmin, tenants, createCattery, updateTenant, species, terms,
       addNews, deleteNews, addLitter, updateLitter, deleteLitter,
       addKitten, updateKitten, deleteKitten,
       addBreedingCat, updateBreedingCat,

@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabase';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { treatmentIcon, urgency, formatDate } from '@/lib/treatments';
 import Lightbox from '@/components/Lightbox';
+import { termsFor, cap } from '@/lib/species';
 
 // Helper component for updates
 function TimelineUpdate({ update }) {
@@ -56,7 +57,7 @@ export default function CustomerPortal({ params }) {
         <div className="text-center max-w-md px-6">
           <PawMark className="mx-auto mb-4 h-10 w-10 text-brass-400" />
           <h1 className="font-display text-3xl text-forest-950 mb-3">Link niet gevonden</h1>
-          <p className="text-forest-700">Deze link is niet geldig of is verlopen. Neem contact op met de cattery voor een nieuwe link.</p>
+          <p className="text-forest-700">Deze link is niet geldig of is verlopen. Neem contact op met de fokkerij voor een nieuwe link.</p>
         </div>
       </div>
     );
@@ -75,7 +76,8 @@ export default function CustomerPortal({ params }) {
     }
   };
 
-  const { customer, kittens, litters, updates } = data;
+  const { customer, kittens, litters, updates, species } = data;
+  const terms = termsFor(species);
 
   return (
     <div className="min-h-screen bg-cream-50 pb-20">
@@ -87,12 +89,12 @@ export default function CustomerPortal({ params }) {
         <div className="text-center mb-12">
           <PawMark className="mx-auto mb-4 h-8 w-8 text-brass-400" />
           <h1 className="font-display text-4xl text-forest-950">Hallo {customer.name}!</h1>
-          <p className="mt-2 text-forest-700">Welkom in jouw persoonlijke Wendy's Dream portaal.</p>
+          <p className="mt-2 text-forest-700">Welkom in jouw persoonlijke portaal.</p>
         </div>
 
         {kittens.length > 0 && (
           <div className="mb-12">
-            <h2 className="font-display text-2xl text-forest-900 mb-6 text-center">Jouw Gekoppelde Kittens</h2>
+            <h2 className="font-display text-2xl text-forest-900 mb-6 text-center">{`Jouw gekoppelde ${terms.youngPlural}`}</h2>
             <div className={`grid gap-6 ${kittens.length === 1 ? 'max-w-xl mx-auto' : 'sm:grid-cols-2 lg:grid-cols-3'}`}>
               {kittens.map(k => (
                 <div key={k.id} className="overflow-hidden rounded-2xl border border-forest-900/10 bg-white shadow-soft">
@@ -184,7 +186,7 @@ export default function CustomerPortal({ params }) {
                         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
                           {k.media.map(m => (
                             <div key={m.id} className="flex flex-col gap-2 rounded-xl bg-white p-2 border border-forest-900/10 shadow-sm">
-                              <img src={m.media_url} alt="Kitten foto" className="aspect-square w-full rounded-lg object-cover cursor-zoom-in hover:opacity-90 transition" onClick={() => setZoom(m.media_url)} />
+                              <img src={m.media_url} alt={`${cap(terms.young)} foto`} className="aspect-square w-full rounded-lg object-cover cursor-zoom-in hover:opacity-90 transition" onClick={() => setZoom(m.media_url)} />
                               <button onClick={() => forceDownload(m.media_url, m.name || `foto-${k.name}.jpg`)} className="w-full inline-flex items-center justify-center gap-1.5 rounded bg-forest-50 border border-forest-900/5 px-2 py-2 text-[10px] font-bold text-forest-800 hover:bg-forest-100 hover:text-forest-950 transition uppercase tracking-wider">
                                 <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
                                 Download
@@ -283,7 +285,7 @@ export default function CustomerPortal({ params }) {
 
         {litters.length > 0 && (
           <div className="mb-12">
-            <h2 className="font-display text-2xl text-forest-900 mb-6 text-center">Nestjes die je volgt</h2>
+            <h2 className="font-display text-2xl text-forest-900 mb-6 text-center">{`${cap(terms.litterPlural)} die je volgt`}</h2>
             <div className={`grid gap-6 ${litters.length === 1 ? 'max-w-xl mx-auto' : 'sm:grid-cols-2 lg:grid-cols-3'}`}>
               {litters.map(l => (
                 <div key={l.id} className="rounded-2xl border border-forest-900/10 bg-white shadow-soft p-5">

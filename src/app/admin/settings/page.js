@@ -2,11 +2,37 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useStore } from '@/context/StoreContext';
-import { PageHead, Card, Field, Input, Btn } from '@/components/admin';
+import { PageHead, Card, Field, Input, Select, Btn } from '@/components/admin';
 import { cap } from '@/lib/species';
 
+const SPECIES_OPTIONS = [
+  { value: 'katten', label: 'Katten' },
+  { value: 'honden', label: 'Honden' },
+  { value: 'vogels', label: 'Vogels' },
+  { value: 'duiven', label: 'Duiven' },
+  { value: 'knaagdieren', label: 'Knaagdieren' },
+  { value: 'anders', label: 'Iets anders' },
+];
+
 export default function SettingsPage() {
-  const { siteContent, saveSiteContent, currentTenant, terms } = useStore();
+  const { siteContent, saveSiteContent, currentTenant, terms, updateTenant } = useStore();
+
+  const [speciesForm, setSpeciesForm] = useState({ species: 'katten', breed: '' });
+  const [savingSpecies, setSavingSpecies] = useState(false);
+
+  useEffect(() => {
+    if (currentTenant) {
+      setSpeciesForm({ species: currentTenant.species || 'katten', breed: currentTenant.breed || '' });
+    }
+  }, [currentTenant]);
+
+  const saveSpecies = async () => {
+    setSavingSpecies(true);
+    const res = await updateTenant({ species: speciesForm.species, breed: speciesForm.breed || null });
+    setSavingSpecies(false);
+    if (res?.error) return alert('Opslaan mislukt: ' + res.error + ' — mogelijk moet de kolom "species" nog aan de database worden toegevoegd (migratie 20260823090000).');
+    alert('Diersoort opgeslagen.');
+  };
 
   const [formData, setFormData] = useState({
     catteryName: currentTenant?.name || '',
@@ -57,6 +83,29 @@ export default function SettingsPage() {
             <p className="text-sm text-forest-600">Download een kopie van al je gegevens</p>
           </div>
         </Link>
+      </div>
+
+      <div className="mb-8 max-w-4xl">
+        <Card>
+          <h2 className="font-display text-xl text-forest-900 mb-1 border-b border-forest-900/10 pb-4">Diersoort</h2>
+          <p className="mb-6 mt-3 text-sm text-forest-600">
+            Bepaalt de woorden door de hele app heen — bijvoorbeeld "pup" en "kennel" bij honden,
+            of "kitten" en "cattery" bij katten.
+          </p>
+          <div className="grid gap-6 grid-cols-1 sm:grid-cols-2">
+            <Field label="Diersoort">
+              <Select value={speciesForm.species} onChange={(e) => setSpeciesForm((s) => ({ ...s, species: e.target.value }))}>
+                {SPECIES_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+              </Select>
+            </Field>
+            <Field label="Ras (optioneel)">
+              <Input value={speciesForm.breed} onChange={(e) => setSpeciesForm((s) => ({ ...s, breed: e.target.value }))} placeholder="Bijv. Maine Coon" />
+            </Field>
+          </div>
+          <div className="mt-5">
+            <Btn variant="brass" type="button" onClick={saveSpecies} disabled={savingSpecies}>{savingSpecies ? 'Opslaan…' : 'Diersoort opslaan'}</Btn>
+          </div>
+        </Card>
       </div>
 
       <form onSubmit={handleSave} className="space-y-8 max-w-4xl">

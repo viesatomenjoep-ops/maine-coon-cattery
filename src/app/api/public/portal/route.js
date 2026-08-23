@@ -82,6 +82,13 @@ export async function GET(request) {
   const token = new URL(request.url).searchParams.get('token');
   if (!token) return NextResponse.json({ error: 'Geen token.' }, { status: 400 });
 
+  // Welke diersoort fokt deze tenant? Bepaalt de woorden in het portaal.
+  const speciesFor = async (tenantId) => {
+    if (!tenantId) return null;
+    const { data } = await db.from('tenants').select('species').eq('id', tenantId).maybeSingle();
+    return data?.species || null;
+  };
+
   // 1. Klant-token: toon alle kittens van die klant.
   const { data: customer } = await db.from('customers').select('*').eq('token', token).single();
   if (customer) {
@@ -89,7 +96,8 @@ export async function GET(request) {
     const { data: littersData } = await db.from('litters').select('*').eq('customer_id', customer.id);
     const kittens = await enrichKittens(db, kittensData);
     const updates = await newsFor(db, (kittensData || []).map((k) => k.id), kittensData || []);
-    return NextResponse.json({ customer, kittens, litters: littersData || [], updates });
+    const species = await speciesFor(customer.tenant_id);
+    return NextResponse.json({ customer, kittens, litters: littersData || [], updates, species });
   }
 
   // 2. Geheime kitten-link (NL of BE): toon die ene kitten met de juiste prijs.
@@ -109,7 +117,8 @@ export async function GET(request) {
     const kitten = { ...enriched[0], price, nationality };
     const updates = await newsFor(db, [cat.id], [cat]);
     const pseudoCustomer = { name: cat.reserved_by || cat.customer_name || 'Welkom', email: null };
-    return NextResponse.json({ customer: pseudoCustomer, kittens: [kitten], litters: [], updates, single: true });
+    const species = await speciesFor(cat.tenant_id);
+    return NextResponse.json({ customer: pseudoCustomer, kittens: [kitten], litters: [], updates, single: true, species });
   }
 
   return NextResponse.json({ error: 'not_found' }, { status: 404 });

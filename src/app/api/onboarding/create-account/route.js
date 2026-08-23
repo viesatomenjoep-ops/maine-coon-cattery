@@ -87,12 +87,18 @@ export async function POST(request) {
     .single();
   if (tErr) return NextResponse.json({ error: 'Aanmaken mislukt: ' + tErr.message }, { status: 500 });
 
-  // 6. De extra registratiegegevens erbij zetten. Bestaat een kolom nog niet in
-  //    de database, dan mag dat het aanmaken niet laten mislukken — daarom apart
-  //    en per veld, en we negeren een fout hier bewust.
+  // 6. De extra registratiegegevens erbij zetten. Eén update-call faalt in zijn
+  //    geheel zodra ook maar één kolom nog niet bestaat, dus proberen we eerst
+  //    alles in één keer en vallen we terug op per-veld zodat de velden die wél
+  //    al een kolom hebben (zoals species) nooit verloren gaan.
   const extra = Object.fromEntries(Object.entries(details).filter(([, v]) => v));
   if (Object.keys(extra).length) {
-    try { await admin.from('tenants').update(extra).eq('id', tenant.id); } catch {}
+    const { error: extraErr } = await admin.from('tenants').update(extra).eq('id', tenant.id);
+    if (extraErr) {
+      for (const [key, value] of Object.entries(extra)) {
+        try { await admin.from('tenants').update({ [key]: value }).eq('id', tenant.id); } catch {}
+      }
+    }
   }
 
   const ownerName = details.contact_name || caller.user_metadata?.full_name || caller.user_metadata?.name || caller.email;
