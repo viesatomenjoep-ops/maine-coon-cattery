@@ -29,12 +29,31 @@ export function AuthProvider({ children }) {
       email: email.trim(),
       password,
     });
-    
+
     if (error) {
       return { ok: false, error: 'Onjuiste inloggegevens of account bestaat niet.' };
     }
-    
+
     return { ok: true, role: 'admin' };
+  };
+
+  // Zelf registreren met een los e-mailadres (geen Google/Apple nodig). Als
+  // e-mailbevestiging aanstaat in Supabase krijg je meteen na het klikken op
+  // de link in je mail een sessie; anders (bevestiging uit) meteen hier al.
+  const signUp = async (email, password) => {
+    const { data, error } = await supabase.auth.signUp({
+      email: email.trim(),
+      password,
+      options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
+    });
+    if (error) {
+      if (/already registered|already exists/i.test(error.message)) {
+        return { ok: false, error: 'Er bestaat al een account met dit e-mailadres. Log in plaats daarvan in.' };
+      }
+      return { ok: false, error: 'Registreren is niet gelukt: ' + error.message };
+    }
+    // Sommige Supabase-projecten vereisen e-mailbevestiging — dan is er nog geen sessie.
+    return { ok: true, needsConfirmation: !data.session };
   };
 
   // Inloggen met een Google-/Gmail-account. Supabase stuurt de gebruiker naar
@@ -60,7 +79,7 @@ export function AuthProvider({ children }) {
   // Dit blokkeerde de hele website rendering, nu verwijderd omdat middleware dit opvangt.
 
   return (
-    <AuthContext.Provider value={{ user, login, loginWithGoogle, logout }}>
+    <AuthContext.Provider value={{ user, login, signUp, loginWithGoogle, logout }}>
       {children}
     </AuthContext.Provider>
   );

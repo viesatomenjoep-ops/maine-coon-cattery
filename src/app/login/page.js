@@ -10,7 +10,7 @@ const LAST_EMAIL_KEY = 'wd_last_email';
 const LAST_PW_KEY = 'wd_last_pw';
 
 export default function LoginPage() {
-  const { login, loginWithGoogle } = useAuth();
+  const { login, signUp, loginWithGoogle } = useAuth();
   const router = useRouter();
   const { t, mounted } = useLanguage();
   const [email, setEmail] = useState('');
@@ -20,6 +20,10 @@ export default function LoginPage() {
   const [remember, setRemember] = useState(true);
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
+  // Los van Google/Apple: hier kun je ook met alleen een e-mailadres een
+  // nieuw account aanmaken, in plaats van inloggen op een bestaand account.
+  const [mode, setMode] = useState('login'); // 'login' | 'signup'
+  const [signupDone, setSignupDone] = useState(false);
 
   const handleGoogle = async () => {
     setError('');
@@ -52,8 +56,23 @@ export default function LoginPage() {
       setError('Bevestig eerst dat je geen robot bent.');
       return;
     }
+    if (mode === 'signup' && password.length < 6) {
+      setError('Kies een wachtwoord van minimaal 6 tekens.');
+      return;
+    }
 
     setLoading(true);
+
+    if (mode === 'signup') {
+      const res = await signUp(email, password);
+      setLoading(false);
+      if (!res.ok) { setError(res.error); return; }
+      if (res.needsConfirmation) { setSignupDone(true); return; }
+      // Bevestiging staat uit in dit project: er is meteen een sessie, ga door naar de wizard.
+      router.push('/welkom');
+      return;
+    }
+
     const res = await login(email, password);
     setLoading(false);
 
@@ -98,10 +117,10 @@ export default function LoginPage() {
         <div className="w-full max-w-sm">
           <div className="md:hidden mb-6"><Logo /></div>
           <h1 className="mt-8 font-display text-3xl text-ink font-light">
-            {mounted ? t('login_title') : 'Exclusieve Toegang'}
+            {mode === 'signup' ? 'Account aanmaken' : (mounted ? t('login_title') : 'Exclusieve Toegang')}
           </h1>
           <p className="mt-2 text-sm text-ink/75 font-light">
-            {mounted ? t('login_desc') : 'Voer uw inloggegevens in.'}
+            {mode === 'signup' ? 'Los van Google of Apple — met alleen je e-mailadres.' : (mounted ? t('login_desc') : 'Voer uw inloggegevens in.')}
           </p>
 
           {/* Inloggen met Google — het makkelijkst voor nieuwe klanten */}
@@ -129,6 +148,22 @@ export default function LoginPage() {
             <span className="h-px flex-1 bg-terracotta-900/10" />
           </div>
 
+          {signupDone ? (
+            <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-5 text-center">
+              <p className="font-semibold text-emerald-900">Check je inbox</p>
+              <p className="mt-1.5 text-sm leading-relaxed text-emerald-800/80">
+                We hebben een bevestigingslink gestuurd naar <b>{email}</b>. Klik daarop om je account te activeren —
+                daarna kun je meteen je fokkerij aanmaken.
+              </p>
+              <button
+                type="button"
+                onClick={() => { setSignupDone(false); setMode('login'); }}
+                className="mt-4 text-sm font-semibold text-emerald-700 hover:underline"
+              >
+                Terug naar inloggen
+              </button>
+            </div>
+          ) : (
           <form onSubmit={submit} className="space-y-4" method="post" autoComplete="on">
             <div>
               <label htmlFor="login-email" className="text-xs font-semibold uppercase tracking-wide text-terracotta-800">
@@ -157,12 +192,13 @@ export default function LoginPage() {
                 id="login-password"
                 name="password"
                 type="password"
-                autoComplete="current-password"
+                autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="mt-1.5 w-full rounded-xl border border-terracotta-900/10 bg-cream-50 px-4 py-3 text-base outline-none transition focus:border-terracotta-400 focus:ring-2 focus:ring-terracotta-200"
                 placeholder="••••••••"
               />
+              {mode === 'signup' && <p className="mt-1 text-xs text-ink/45">Minimaal 6 tekens.</p>}
             </div>
 
             {/* Gratis verificatie: "Ik ben geen robot" */}
@@ -183,16 +219,18 @@ export default function LoginPage() {
               <span className="text-sm font-medium text-ink">I am not a human ✓ <span className="text-ink/50 font-normal">(ik ben geen robot)</span></span>
             </button>
 
-            {/* Onthoud mij */}
-            <label className="flex items-center gap-2 text-sm text-ink/80 cursor-pointer select-none">
-              <input
-                type="checkbox"
-                checked={remember}
-                onChange={(e) => setRemember(e.target.checked)}
-                className="h-4 w-4 rounded border-terracotta-900/30 accent-terracotta-500"
-              />
-              Onthoud mijn gegevens op dit apparaat
-            </label>
+            {/* Onthoud mij — alleen relevant bij inloggen op een bestaand account */}
+            {mode === 'login' && (
+              <label className="flex items-center gap-2 text-sm text-ink/80 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={remember}
+                  onChange={(e) => setRemember(e.target.checked)}
+                  className="h-4 w-4 rounded border-terracotta-900/30 accent-terracotta-500"
+                />
+                Onthoud mijn gegevens op dit apparaat
+              </label>
+            )}
 
             {error && <p className="text-sm text-red-700 font-semibold text-center">{error}</p>}
             <button
@@ -200,13 +238,30 @@ export default function LoginPage() {
               disabled={loading}
               className="w-full rounded-xl bg-terracotta-500 py-3.5 text-base font-semibold text-cream-50 transition hover:bg-terracotta-600 shadow-soft hover:shadow-glow disabled:opacity-60"
             >
-              {loading ? 'Bezig met inloggen…' : (mounted ? t('login_btn') : 'Inloggen')}
+              {mode === 'signup'
+                ? (loading ? 'Account aanmaken…' : 'Account aanmaken')
+                : (loading ? 'Bezig met inloggen…' : (mounted ? t('login_btn') : 'Inloggen'))}
             </button>
 
-            <p className="text-center text-[11px] text-ink/50 leading-relaxed">
-              Tip: laat "Onthoud mijn gegevens" aan staan, dan zijn je e-mail en wachtwoord de volgende keer al ingevuld. Sla je wachtwoord ook op in je telefoon voor Face ID / Touch ID.
-            </p>
+            {mode === 'login' ? (
+              <p className="text-center text-[11px] text-ink/50 leading-relaxed">
+                Tip: laat "Onthoud mijn gegevens" aan staan, dan zijn je e-mail en wachtwoord de volgende keer al ingevuld. Sla je wachtwoord ook op in je telefoon voor Face ID / Touch ID.
+              </p>
+            ) : (
+              <p className="text-center text-[11px] text-ink/50 leading-relaxed">
+                Door een account aan te maken ga je akkoord met de verwerking van je gegevens om je fokkerij-omgeving te beheren.
+              </p>
+            )}
+
+            <button
+              type="button"
+              onClick={() => { setMode((m) => (m === 'login' ? 'signup' : 'login')); setError(''); }}
+              className="w-full text-center text-sm font-semibold text-terracotta-600 hover:underline"
+            >
+              {mode === 'login' ? 'Nog geen account? Registreer met e-mail →' : '← Heb je al een account? Inloggen'}
+            </button>
           </form>
+          )}
         </div>
       </div>
     </div>
