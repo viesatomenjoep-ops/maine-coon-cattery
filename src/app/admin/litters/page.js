@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useStore } from '@/context/StoreContext';
 import { PageHead, Card } from '@/components/admin';
+import { cap } from '@/lib/species';
 
 const LITTER_STATUSES = [
   { value: 'verwacht', label: 'Verwacht' },
@@ -15,7 +16,7 @@ const LITTER_STATUSES = [
 const norm = (s) => (s || '').toLowerCase();
 
 export default function LittersPage() {
-  const { litters = [], kittens = [], deleteLitter } = useStore();
+  const { litters = [], kittens = [], deleteLitter, terms } = useStore();
   const router = useRouter();
 
   // Oude links met querystrings blijven werken door door te sturen naar de nieuwe, aparte pagina's.
@@ -30,21 +31,21 @@ export default function LittersPage() {
   }, []);
 
   return (
-    <>
+    <div className="">
       <Link href="/admin/cats" className="mb-4 inline-flex items-center gap-1.5 text-sm font-semibold text-forest-600 transition hover:text-forest-900">
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m12 19-7-7 7-7" /><path d="M19 12H5" /></svg>
-        Terug naar katten &amp; dossiers
+        {`Terug naar ${terms.animalPlural} & dossiers`}
       </Link>
-      <PageHead label="Fokkerij" title="Nestjes & Kittens" />
+      <PageHead label="Fokkerij" title={`${cap(terms.litterPlural)} & ${terms.youngPlural}`} />
 
-      {/* Nestjes overzicht — compacte kaarten, alles verder zit achter "Open nestje" */}
+      {/* Overzicht — compacte kaarten, alles verder zit achter "Open" */}
       <div className="space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <h2 className="font-display text-2xl text-forest-900">Nestjes overzicht</h2>
-          <Link href="/admin/litters/new" className="inline-flex items-center rounded-lg bg-forest-800 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-forest-900">+ Nieuw nestje</Link>
+          <h2 className="font-display text-2xl text-forest-900">{cap(terms.litterPlural)} overzicht</h2>
+          <Link href="/admin/litters/new" className="inline-flex items-center rounded-lg bg-forest-800 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-forest-900">{`+ Nieuw ${terms.litter}`}</Link>
         </div>
 
-        {litters.length === 0 && <p className="text-forest-700">Geen nestjes gevonden. Maak er bovenaan eentje aan.</p>}
+        {litters.length === 0 && <p className="text-forest-700">{`Geen ${terms.litterPlural} gevonden. Maak er bovenaan eentje aan.`}</p>}
 
         {litters.map((lit) => {
           const nestKittenCount = kittens.filter((k) => k.litter_id === lit.id && !k.is_own_breeding_cat).length;
@@ -70,7 +71,7 @@ export default function LittersPage() {
                       <span className="mx-2 opacity-50">|</span>
                       {lit.date_of_birth ? new Date(lit.date_of_birth).toLocaleDateString('nl-NL') : 'Datum onbekend'}
                       <span className="mx-2 opacity-50">|</span>
-                      {nestKittenCount} {nestKittenCount === 1 ? 'kitten' : 'kittens'}
+                      {nestKittenCount} {nestKittenCount === 1 ? terms.young : terms.youngPlural}
                     </p>
                   </div>
                 </div>
@@ -90,7 +91,7 @@ export default function LittersPage() {
                     onClick={() => {
                       if (!lit.share_token) return alert('De deel-link wordt actief zodra de database-update (share_token) is toegepast.');
                       navigator.clipboard.writeText(`${window.location.origin}/nestje/${lit.share_token}`);
-                      alert('Advertentielink van dit nestje gekopieerd! Deel hem gerust via WhatsApp.');
+                      alert(`Advertentielink van dit ${terms.litter} gekopieerd! Deel hem gerust via WhatsApp.`);
                     }}
                     className="flex items-center justify-center gap-1.5 rounded-md px-2 py-2 text-sm font-medium text-forest-700 transition hover:bg-forest-50"
                   >
@@ -99,7 +100,7 @@ export default function LittersPage() {
                   </button>
                   <Link href={`/admin/litters/new-kitten?litter=${lit.id}`} className="flex items-center justify-center gap-1.5 rounded-md px-2 py-2 text-sm font-medium text-forest-700 transition hover:bg-forest-50">
                     <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0"><path d="M12 5v14M5 12h14"/></svg>
-                    Kitten
+                    {cap(terms.young)}
                   </Link>
                 </div>
               </div>
@@ -107,6 +108,6 @@ export default function LittersPage() {
           );
         })}
       </div>
-    </>
+    </div>
   );
 }

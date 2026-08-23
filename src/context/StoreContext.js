@@ -1,6 +1,7 @@
 'use client';
 import { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
+import { normalizeSpecies, termsFor } from '@/lib/species';
 
 const StoreContext = createContext(null);
 
@@ -579,11 +580,15 @@ export function StoreProvider({ children }) {
 
   const breedingCats = kittens.filter(k => k.is_own_breeding_cat);
 
+  // Welke diersoort fokt deze klant? Bepaalt de woorden door de hele app heen.
+  const species = normalizeSpecies(currentTenant?.species);
+  const terms = termsFor(species);
+
   return (
     <StoreContext.Provider value={{
       news, litters, kittens, breedingCats, documents, media, customers, interests, siteContent,
       updateInterest, deleteInterest,
-      currentTenant, isSuperadmin, tenants, createCattery,
+      currentTenant, isSuperadmin, tenants, createCattery, species, terms,
       addNews, deleteNews, addLitter, updateLitter, deleteLitter,
       addKitten, updateKitten, deleteKitten,
       addBreedingCat, updateBreedingCat,

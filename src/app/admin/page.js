@@ -5,21 +5,14 @@ import { PageHead, Card, Icon } from '@/components/admin';
 import { StatusPill, PawMark } from '@/components/ui';
 import { collectUpcoming, urgency, treatmentIcon, formatDate } from '@/lib/treatments';
 import PushSetup from '@/components/admin/PushSetup';
-
-// Toon het geslacht altijd in het Nederlands.
-const sexLabel = (g) => {
-  const v = (g || '').toLowerCase();
-  if (/kater|mann|\bmale\b|\bm\b/.test(v)) return 'Kater';
-  if (/poes|vrouw|female|\bf\b/.test(v)) return 'Poes';
-  return g || 'Onbekend';
-};
+import { cap, sexLabel } from '@/lib/species';
 
 export default function AdminDashboard() {
-  const { kittens, litters, news, interests = [], updateInterest, deleteInterest, updateKitten } = useStore();
+  const { kittens, litters, news, interests = [], updateInterest, deleteInterest, updateKitten, species, terms } = useStore();
   const agenda = collectUpcoming(kittens).slice(0, 8);
 
   const newInterests = interests.filter((i) => (i.status || 'nieuw') === 'nieuw');
-  const kittenName = (id) => kittens.find((k) => k.id === id)?.name || 'Onbekende kitten';
+  const kittenName = (id) => kittens.find((k) => k.id === id)?.name || `Onbekende ${terms.young}`;
   const litterName = (id) => litters.find((l) => l.id === id)?.name;
 
   const reserve = async (it) => {
@@ -32,14 +25,14 @@ export default function AdminDashboard() {
   const published = kittens.filter((k) => k.published).length;
 
   const stats = [
-    { label: 'Actieve nestjes', value: litters.filter((l) => !l.expected).length, sub: `${litters.filter((l) => l.expected).length} verwacht`, href: '/admin/litters' },
+    { label: `Actieve ${terms.litterPlural}`, value: litters.filter((l) => !l.expected).length, sub: `${litters.filter((l) => l.expected).length} verwacht`, href: '/admin/litters' },
     { label: 'Beschikbaar', value: available, sub: 'live in portaal', href: '/admin/cats' },
     { label: 'Gereserveerd', value: reserved, sub: 'in proces', href: '/admin/cats' },
     { label: 'Gepubliceerd', value: published, sub: 'advertenties', href: '/admin/sales' },
   ];
 
   return (
-    <>
+    <div className="">
       <PageHead label="Welkom terug" title="Startscherm" />
 
       <PushSetup />
@@ -49,8 +42,8 @@ export default function AdminDashboard() {
           <Icon name="cat" className="h-8 w-8" />
         </span>
         <div className="min-w-0 flex-1">
-          <h2 className="font-display text-2xl text-forest-900">Katten &amp; Dossiers</h2>
-          <p className="mt-1 text-sm text-forest-700">Start hier: dossier per kat, met alles erop en eraan — medisch, stamboom, verkoop en media in één.</p>
+          <h2 className="font-display text-2xl text-forest-900">{`${cap(terms.animalPlural)} & dossiers`}</h2>
+          <p className="mt-1 text-sm text-forest-700">Start hier: dossier per {terms.animal}, met alles erop en eraan — medisch, stamboom, verkoop en media in één.</p>
         </div>
         <Icon name="arrow" className="hidden h-5 w-5 shrink-0 text-brass-500 transition group-hover:translate-x-1 sm:block" />
       </Link>
@@ -72,7 +65,7 @@ export default function AdminDashboard() {
         <div className="mt-8">
           <Card className="border-brass-300 bg-brass-50/40">
             <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-              <h2 className="font-display text-xl text-forest-900">💬 Nieuwe interesse in kittens</h2>
+              <h2 className="font-display text-xl text-forest-900">{`\u{1F4AC} Nieuwe interesse in ${terms.youngPlural}`}</h2>
               <span className="rounded-full bg-brass-200 px-3 py-1 text-xs font-semibold text-brass-800">{newInterests.length} nieuw</span>
             </div>
             <div className="space-y-3">
@@ -81,7 +74,7 @@ export default function AdminDashboard() {
                   <div className="min-w-0">
                     <p className="font-semibold text-forest-900">
                       {it.name} wil <span className="text-brass-700">{kittenName(it.cat_id)}</span>
-                      {litterName(it.litter_id) && <span className="text-forest-500"> · nestje {litterName(it.litter_id)}</span>}
+                      {litterName(it.litter_id) && <span className="text-forest-500"> · {terms.litter} {litterName(it.litter_id)}</span>}
                     </p>
                     <p className="text-xs text-forest-600">
                       {it.contact ? <>📞 {it.contact} · </> : null}
@@ -134,7 +127,7 @@ export default function AdminDashboard() {
       <div className="mt-8 grid gap-6 lg:grid-cols-[1.4fr_1fr]">
         <Card>
           <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-            <h2 className="font-display text-xl text-forest-900">Alle katten</h2>
+            <h2 className="font-display text-xl text-forest-900">{`Alle ${terms.animalPlural}`}</h2>
             <Link href="/admin/cats" className="text-sm text-brass-600 hover:underline">Beheren →</Link>
           </div>
           <div className="space-y-2">
@@ -150,8 +143,8 @@ export default function AdminDashboard() {
                   <div className="min-w-0 flex-1">
                     <p className="truncate font-medium text-forest-900">{k.name}</p>
                     <p className="truncate text-xs text-forest-600/70">
-                      {[sexLabel(k.gender), k.color].filter(Boolean).join(' · ')}
-                      {lit ? ` · Nestje: ${lit.name}` : ''}
+                      {[sexLabel(k.gender, species), k.color].filter(Boolean).join(' · ')}
+                      {lit ? ` · ${cap(terms.litter)}: ${lit.name}` : ''}
                     </p>
                   </div>
                   <StatusPill status={k.status} />
@@ -176,6 +169,6 @@ export default function AdminDashboard() {
           </div>
         </Card>
       </div>
-    </>
+    </div>
   );
 }

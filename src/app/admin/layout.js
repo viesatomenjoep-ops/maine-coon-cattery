@@ -7,20 +7,29 @@ import { StoreProvider, useStore } from '@/context/StoreContext';
 import { Logo, PawMark } from '@/components/ui';
 import { Icon } from '@/components/admin';
 import TreatmentReminders from '@/components/admin/TreatmentReminders';
-
-const NAV = [
-  { href: '/admin', label: 'Startscherm', icon: 'grid' },
-  { href: '/admin/cats', label: 'Katten & Dossiers', icon: 'cat' },
-  { href: '/admin/media', label: "Bestanden & Foto's", icon: 'image' },
-  { href: '/admin/settings', label: 'Instellingen', icon: 'settings' },
-];
+import MobileTabBar from '@/components/admin/MobileTabBar';
+import { cap } from '@/lib/species';
 
 export default function AdminLayout({ children }) {
   const { user, logout } = useAuth();
-  const { currentTenant, isSuperadmin } = useStore();
+  const { currentTenant, isSuperadmin, terms } = useStore();
   const router = useRouter();
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+
+  // De zijbalk volgt de diersoort van de fokkerij: een hondenfokker leest
+  // "Honden & dossiers", een kattenfokker "Katten & dossiers".
+  const NAV = [
+    { href: '/admin', label: 'Startscherm', icon: 'grid' },
+    { href: '/admin/cats', label: `${cap(terms.animalPlural)} & dossiers`, icon: 'cat' },
+    { href: '/admin/litters', label: `${cap(terms.litterPlural)}`, icon: 'grid' },
+    { href: '/admin/medical', label: 'Gezondheid', icon: 'settings' },
+    { href: '/admin/customers', label: 'Klanten', icon: 'customer' },
+    { href: '/admin/sales', label: 'Verkoop', icon: 'cat' },
+    { href: '/admin/news', label: 'Nieuws', icon: 'image' },
+    { href: '/admin/media', label: "Bestanden & foto's", icon: 'image' },
+    { href: '/admin/settings', label: 'Instellingen', icon: 'settings' },
+  ];
 
   useEffect(() => {
     if (!user) router.replace('/login');
@@ -95,24 +104,27 @@ export default function AdminLayout({ children }) {
 
       {/* content */}
       <div className="min-h-screen">
-        <header className="relative flex items-center justify-between border-b border-forest-900/10 bg-white px-4 py-4 lg:hidden">
-          <button onClick={() => setOpen(!open)} className="relative z-10 rounded-xl border border-forest-900/15 p-2.5 transition hover:bg-forest-50">
-            <PawMark className="h-8 w-8 text-forest-800" />
+        <header className="relative flex items-center justify-between border-b border-forest-900/10 bg-white px-4 py-3 lg:hidden">
+          <button onClick={() => setOpen(!open)} aria-label="Menu" className="relative z-10 rounded-xl border border-forest-900/15 p-2 transition hover:bg-forest-50">
+            <PawMark className="h-6 w-6 text-forest-800" />
           </button>
-          
-          <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none pt-1">
-            <img src="/logo.png" alt="Wendy's Dream" className="h-8 w-auto object-contain" />
-            <span className="mt-1 block font-display text-xl font-semibold leading-none text-forest-950">Wendy's Dream</span>
-            <span className="mt-0.5 block text-[7px] font-bold uppercase tracking-[0.2em] text-forest-600">Maine Coon Cattery</span>
+
+          <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
+            <span className="block font-display text-lg font-semibold leading-tight text-forest-950">
+              {currentTenant?.name || "Wendy's Dream"}
+            </span>
           </div>
-          
-          <div className="w-[58px]" />
+
+          <div className="w-[42px]" />
         </header>
-        <div className="p-4 sm:p-6 md:p-10">
+        <div className="p-4 pb-28 sm:p-6 sm:pb-28 md:p-10 lg:pb-10">
           <TreatmentReminders />
           {children}
         </div>
       </div>
+
+      {/* Onderbalk op mobiel — de app-navigatie */}
+      <MobileTabBar />
     </div>
   );
 }

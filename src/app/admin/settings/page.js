@@ -3,12 +3,13 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useStore } from '@/context/StoreContext';
 import { PageHead, Card, Field, Input, Btn } from '@/components/admin';
+import { cap } from '@/lib/species';
 
 export default function SettingsPage() {
-  const { siteContent, saveSiteContent } = useStore();
-  
+  const { siteContent, saveSiteContent, currentTenant, terms } = useStore();
+
   const [formData, setFormData] = useState({
-    catteryName: "Wendy's Dream Maine Coon Cattery",
+    catteryName: currentTenant?.name || '',
     email: '',
     phone: '',
     whatsapp: '',
@@ -23,6 +24,10 @@ export default function SettingsPage() {
     }
   }, [siteContent]);
 
+  useEffect(() => {
+    if (currentTenant?.name) setFormData((prev) => (prev.catteryName ? prev : { ...prev, catteryName: currentTenant.name }));
+  }, [currentTenant]);
+
   const handleChange = (e) => {
     setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
   };
@@ -34,7 +39,7 @@ export default function SettingsPage() {
   };
 
   return (
-    <>
+    <div>
       <PageHead label="Configuratie" title="Instellingen" />
 
       <div className="mb-8 grid max-w-4xl gap-4 sm:grid-cols-2">
@@ -56,10 +61,10 @@ export default function SettingsPage() {
 
       <form onSubmit={handleSave} className="space-y-8 max-w-4xl">
         <Card>
-          <h2 className="font-display text-xl text-forest-900 mb-6 border-b border-forest-900/10 pb-4">Cattery Informatie</h2>
+          <h2 className="font-display text-xl text-forest-900 mb-6 border-b border-forest-900/10 pb-4">{`${cap(terms.facility)}-informatie`}</h2>
           <div className="grid gap-6 grid-cols-1 sm:grid-cols-2">
-            <Field label="Naam van de Cattery *">
-              <Input required name="catteryName" value={formData.catteryName} onChange={handleChange} placeholder="Wendy's Dream" />
+            <Field label={`Naam van de ${terms.facility} *`}>
+              <Input required name="catteryName" value={formData.catteryName} onChange={handleChange} placeholder="Bijv. Wendy's Dream" />
             </Field>
             <div className="col-span-full">
               <Field label="Volledig Adres">
@@ -108,6 +113,6 @@ export default function SettingsPage() {
           <Btn variant="brass" type="submit">Instellingen Opslaan</Btn>
         </div>
       </form>
-    </>
+    </div>
   );
 }

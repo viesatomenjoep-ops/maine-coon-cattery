@@ -5,6 +5,7 @@ import { useStore } from '@/context/StoreContext';
 import { Card, Field, Input, Select, Textarea, Combobox, Btn, Stepper, CollapsibleSection } from '@/components/admin';
 import DocumentUploader, { DocumentList } from '@/components/admin/DocumentUploader';
 import FilePicker from '@/components/admin/FilePicker';
+import { cap, sexLabel } from '@/lib/species';
 
 const LITTER_STATUSES = [
   { value: 'verwacht', label: 'Verwacht' },
@@ -31,14 +32,14 @@ const PATTERNS = [
 ];
 
 const EMPTY_LITTER = {
-  name: '', breed: 'Maine Coon (MCO)', status: 'verwacht', expected_count: '',
+  name: '', breed: '', status: 'verwacht', expected_count: '',
   date_of_birth: '', description: '', cover_image_url: '',
   sire_id: '', sire_name: '', dam_id: '', dam_name: '',
 };
 const LITTER_STEPS = ['Naam & basis', 'Vader', 'Moeder', 'Foto & tekst'];
 
 const EMPTY_BREEDER = {
-  name: '', registration_no: '', breed: 'Maine Coon (MCO)', ems_code: '', color: '', pattern: '',
+  name: '', registration_no: '', breed: '', ems_code: '', color: '', pattern: '',
   date_of_birth: '', chip_number: '', breeder: '', sire_name: '', dam_name: '', notes: '',
 };
 
@@ -61,8 +62,9 @@ function SectionTitle({ children, hint }) {
   );
 }
 
-function BreedingCatForm({ gender, onSaved, onCancel }) {
+function BreedingCatForm({ gender, onSaved, onCancel, terms, species }) {
   const { addBreedingCat } = useStore();
+  const isCat = species === 'katten';
   const [form, setForm] = useState({ ...EMPTY_BREEDER });
   const [saving, setSaving] = useState(false);
 
@@ -78,15 +80,21 @@ function BreedingCatForm({ gender, onSaved, onCancel }) {
   return (
     <div className="mt-3 rounded-2xl border border-brass-300/60 bg-brass-50/40 p-4">
       <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-brass-700">
-        Nieuw {gender === 'male' ? 'vader (kater)' : 'moeder (poes)'} toevoegen
+        {`Nieuw${gender === 'male' ? ` vader (${terms.male})` : ` moeder (${terms.female})`} toevoegen`}
       </p>
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         <Field label="Naam"><Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Bijv. Jona" /></Field>
         <Field label="Ras"><Input value={form.breed} onChange={(e) => setForm({ ...form, breed: e.target.value })} /></Field>
         <Field label="Stamboomnummer"><Input value={form.registration_no} onChange={(e) => setForm({ ...form, registration_no: e.target.value })} /></Field>
-        <Field label="EMS-code"><Input value={form.ems_code} onChange={(e) => setForm({ ...form, ems_code: e.target.value })} placeholder="Bijv. MCO n 22" /></Field>
-        <Field label="Kleur"><Combobox id={`bc-color-${gender}`} options={COLORS} value={form.color} onChange={(e) => setForm({ ...form, color: e.target.value })} /></Field>
-        <Field label="Patroon"><Combobox id={`bc-pattern-${gender}`} options={PATTERNS} value={form.pattern} onChange={(e) => setForm({ ...form, pattern: e.target.value })} /></Field>
+        {isCat && <Field label="EMS-code"><Input value={form.ems_code} onChange={(e) => setForm({ ...form, ems_code: e.target.value })} placeholder="Bijv. MCO n 22" /></Field>}
+        {isCat ? (
+          <>
+            <Field label="Kleur"><Combobox id={`bc-color-${gender}`} options={COLORS} value={form.color} onChange={(e) => setForm({ ...form, color: e.target.value })} /></Field>
+            <Field label="Patroon"><Combobox id={`bc-pattern-${gender}`} options={PATTERNS} value={form.pattern} onChange={(e) => setForm({ ...form, pattern: e.target.value })} /></Field>
+          </>
+        ) : (
+          <Field label="Kleur / aftekening"><Input value={form.color} onChange={(e) => setForm({ ...form, color: e.target.value })} /></Field>
+        )}
         <Field label="Geboortedatum"><Input type="date" value={form.date_of_birth} onChange={(e) => setForm({ ...form, date_of_birth: e.target.value })} /></Field>
         <Field label="Chipnummer"><Input value={form.chip_number} onChange={(e) => setForm({ ...form, chip_number: e.target.value })} /></Field>
         <Field label="Fokker"><Input value={form.breeder} onChange={(e) => setForm({ ...form, breeder: e.target.value })} /></Field>
@@ -102,12 +110,12 @@ function BreedingCatForm({ gender, onSaved, onCancel }) {
   );
 }
 
-function ParentSection({ role, litter, setLitter, options, parentCat, parentDocs, deleteDocument }) {
+function ParentSection({ role, litter, setLitter, options, parentCat, parentDocs, deleteDocument, terms, species }) {
   const isSire = role === 'sire';
   const gender = isSire ? 'male' : 'female';
   const idKey = isSire ? 'sire_id' : 'dam_id';
   const nameKey = isSire ? 'sire_name' : 'dam_name';
-  const title = isSire ? 'Vader (Sire)' : 'Moeder (Dam) — geboortemoeder';
+  const title = isSire ? `${cap(terms.male)} (vader)` : `${cap(terms.female)} (moeder) — draagt en werpt`;
   const [mode, setMode] = useState(litter[idKey] ? 'select' : (litter[nameKey] ? 'manual' : 'select'));
 
   const selectValue = mode === 'new' ? '__new__' : mode === 'manual' ? '__manual__' : (litter[idKey] || '');
@@ -130,7 +138,7 @@ function ParentSection({ role, litter, setLitter, options, parentCat, parentDocs
 
   return (
     <div className="rounded-2xl border border-forest-900/10 bg-white p-5">
-      <SectionTitle hint={isSire ? 'De dekkater van dit nestje.' : 'De poes die dit nestje draagt en werpt.'}>{title}</SectionTitle>
+      <SectionTitle hint={isSire ? `De dek${terms.male} van dit ${terms.litter}.` : `De ${terms.female} die dit ${terms.litter} draagt en werpt.`}>{title}</SectionTitle>
       <Field label="Selecteer of voeg toe">
         <Select value={selectValue} onChange={(e) => onSelect(e.target.value)}>
           <option value="">Selecteer fokdier…</option>
@@ -149,7 +157,7 @@ function ParentSection({ role, litter, setLitter, options, parentCat, parentDocs
       )}
 
       {mode === 'new' && (
-        <BreedingCatForm gender={gender} onSaved={onCreated} onCancel={() => setMode('select')} />
+        <BreedingCatForm gender={gender} onSaved={onCreated} onCancel={() => setMode('select')} terms={terms} species={species} />
       )}
 
       {parentCat && (
@@ -174,14 +182,15 @@ function ParentSection({ role, litter, setLitter, options, parentCat, parentDocs
   );
 }
 
-function KittenRow({ kitten, onSave, onDelete }) {
+function KittenRow({ kitten, onSave, onDelete, terms, species }) {
+  const isCat = species === 'katten';
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState(null);
   const [saving, setSaving] = useState(false);
 
   const startEdit = () => {
     setDraft({
-      name: kitten.name || '', sex: kitten.gender || kitten.sex || 'Kater',
+      name: kitten.name || '', sex: kitten.gender || kitten.sex || cap(terms.male),
       color: kitten.color || '', pattern: kitten.pattern || '',
       ems_code: kitten.ems_code || '', registration_no: kitten.registration_no || '',
       chip_no: kitten.chip_number || kitten.chip_no || '', birth_weight_g: kitten.birth_weight_g ?? '',
@@ -192,7 +201,7 @@ function KittenRow({ kitten, onSave, onDelete }) {
   };
 
   const save = async () => {
-    if (!draft.name.trim()) { alert('Vul een naam in voor het kitten.'); return; }
+    if (!draft.name.trim()) { alert(`Vul een naam in voor het ${terms.young}.`); return; }
     setSaving(true);
     const res = await onSave(kitten.id, {
       name: draft.name, sex: draft.sex, color: draft.color, pattern: draft.pattern,
@@ -202,7 +211,7 @@ function KittenRow({ kitten, onSave, onDelete }) {
       priceBE: draft.priceBE === '' ? '' : Number(draft.priceBE),
     });
     setSaving(false);
-    if (res?.error) { alert('Fout bij opslaan kitten: ' + res.error.message); return; }
+    if (res?.error) { alert(`Fout bij opslaan ${terms.young}: ` + res.error.message); return; }
     setOpen(false);
   };
 
@@ -216,7 +225,7 @@ function KittenRow({ kitten, onSave, onDelete }) {
           <div className="min-w-0">
             <p className="truncate font-semibold text-forest-900">{kitten.name || 'Naamloos'}</p>
             <p className="truncate text-xs text-forest-600">
-              {[kitten.gender || kitten.sex, kitten.color, kitten.pattern].filter(Boolean).join(' · ') || 'Geen details'}
+              {[sexLabel(kitten.gender || kitten.sex, species), kitten.color, kitten.pattern].filter(Boolean).join(' · ') || 'Geen details'}
             </p>
           </div>
         </div>
@@ -226,7 +235,7 @@ function KittenRow({ kitten, onSave, onDelete }) {
           </span>
           <Link href={`/admin/cats/${kitten.id}`} className="text-xs font-semibold text-emerald-700 hover:text-emerald-900">Dossier →</Link>
           <Btn variant="ghost" onClick={() => (open ? setOpen(false) : startEdit())} className="!px-3 !py-1.5 !text-xs">{open ? 'Sluiten' : 'Bewerken'}</Btn>
-          <Btn variant="danger" onClick={() => { if (confirm('Dit kitten verwijderen?')) onDelete(kitten.id); }} className="!px-3 !py-1.5 !text-xs">Verwijderen</Btn>
+          <Btn variant="danger" onClick={() => { if (confirm(`Dit ${terms.young} verwijderen?`)) onDelete(kitten.id); }} className="!px-3 !py-1.5 !text-xs">Verwijderen</Btn>
         </div>
       </div>
 
@@ -234,11 +243,17 @@ function KittenRow({ kitten, onSave, onDelete }) {
         <div className="border-t border-forest-900/10 p-4">
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             <Field label="Naam"><Input value={draft.name} onChange={(e) => setDraft({ ...draft, name: e.target.value })} /></Field>
-            <Field label="Geslacht"><Select value={draft.sex} onChange={(e) => setDraft({ ...draft, sex: e.target.value })}>{SEXES.map((s) => <option key={s} value={s}>{s}</option>)}</Select></Field>
+            <Field label="Geslacht"><Select value={draft.sex} onChange={(e) => setDraft({ ...draft, sex: e.target.value })}>{[cap(terms.male), cap(terms.female)].map((s) => <option key={s} value={s}>{s}</option>)}</Select></Field>
             <Field label="Status"><Select value={draft.status} onChange={(e) => setDraft({ ...draft, status: e.target.value })}>{KITTEN_STATUSES.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}</Select></Field>
-            <Field label="Kleur"><Combobox id={`k-color-${kitten.id}`} options={COLORS} value={draft.color} onChange={(e) => setDraft({ ...draft, color: e.target.value })} /></Field>
-            <Field label="Patroon"><Combobox id={`k-pattern-${kitten.id}`} options={PATTERNS} value={draft.pattern} onChange={(e) => setDraft({ ...draft, pattern: e.target.value })} /></Field>
-            <Field label="EMS-code"><Input value={draft.ems_code} onChange={(e) => setDraft({ ...draft, ems_code: e.target.value })} /></Field>
+            {isCat ? (
+              <>
+                <Field label="Kleur"><Combobox id={`k-color-${kitten.id}`} options={COLORS} value={draft.color} onChange={(e) => setDraft({ ...draft, color: e.target.value })} /></Field>
+                <Field label="Patroon"><Combobox id={`k-pattern-${kitten.id}`} options={PATTERNS} value={draft.pattern} onChange={(e) => setDraft({ ...draft, pattern: e.target.value })} /></Field>
+                <Field label="EMS-code"><Input value={draft.ems_code} onChange={(e) => setDraft({ ...draft, ems_code: e.target.value })} /></Field>
+              </>
+            ) : (
+              <Field label="Kleur / aftekening"><Input value={draft.color} onChange={(e) => setDraft({ ...draft, color: e.target.value })} /></Field>
+            )}
             <Field label="Stamboomnummer"><Input value={draft.registration_no} onChange={(e) => setDraft({ ...draft, registration_no: e.target.value })} /></Field>
             <Field label="Chipnummer"><Input value={draft.chip_no} onChange={(e) => setDraft({ ...draft, chip_no: e.target.value })} /></Field>
             <Field label="Geboortegewicht (g)"><Input type="number" min="0" value={draft.birth_weight_g} onChange={(e) => setDraft({ ...draft, birth_weight_g: e.target.value })} /></Field>
@@ -247,7 +262,7 @@ function KittenRow({ kitten, onSave, onDelete }) {
             <Field label="Prijs BE (€)"><Input type="number" value={draft.priceBE} onChange={(e) => setDraft({ ...draft, priceBE: e.target.value })} /></Field>
           </div>
           <div className="mt-4">
-            <p className="mb-2 text-xs font-bold uppercase tracking-wider text-forest-700">Papieren van dit kitten</p>
+            <p className="mb-2 text-xs font-bold uppercase tracking-wider text-forest-700">{`Papieren van dit ${terms.young}`}</p>
             <DocumentUploader catId={kitten.id} folder={`cattery_documents/cat_${kitten.id}`} />
           </div>
           <div className="mt-4 flex flex-wrap gap-3">
@@ -263,7 +278,7 @@ function KittenRow({ kitten, onSave, onDelete }) {
 export default function LitterEditor({ initialLitterId = null, onClose }) {
   const {
     litters = [], kittens = [], breedingCats = [], documents = [],
-    addLitter, updateLitter, updateKitten, deleteKitten, deleteDocument,
+    addLitter, updateLitter, updateKitten, deleteKitten, deleteDocument, terms, species,
   } = useStore();
 
   const [litterId, setLitterId] = useState(initialLitterId);
@@ -280,7 +295,7 @@ export default function LitterEditor({ initialLitterId = null, onClose }) {
     const l = litters.find((x) => x.id === initialLitterId);
     if (l) {
       setLitter({
-        name: l.name || '', breed: l.breed || 'Maine Coon (MCO)', status: l.status || 'verwacht',
+        name: l.name || '', breed: l.breed || '', status: l.status || 'verwacht',
         expected_count: l.expected_count ?? '', date_of_birth: l.date_of_birth || '', description: l.description || '',
         cover_image_url: l.cover_image_url || '', sire_id: l.sire_id || '', sire_name: l.sire_name || '',
         dam_id: l.dam_id || '', dam_name: l.dam_name || '',
@@ -311,31 +326,31 @@ export default function LitterEditor({ initialLitterId = null, onClose }) {
   };
 
   const saveCover = async () => {
-    if (!litterId) { alert('Sla eerst het nestje op; de profielfoto wordt dan meegenomen.'); return; }
+    if (!litterId) { alert(`Sla eerst het ${terms.litter} op; de profielfoto wordt dan meegenomen.`); return; }
     setSavingCover(true);
     await updateLitter(litterId, { cover_image_url: litter.cover_image_url || null });
     setSavingCover(false);
-    alert('Profielfoto van het nest opgeslagen.');
+    alert(`Profielfoto van het ${terms.litter} opgeslagen.`);
   };
 
   const removeCover = async () => {
-    if (!confirm('Weet je zeker dat je de profielfoto van dit nestje wilt verwijderen?')) return;
+    if (!confirm(`Weet je zeker dat je de profielfoto van dit ${terms.litter} wilt verwijderen?`)) return;
     setLitter((l) => ({ ...l, cover_image_url: '' }));
     if (litterId) await updateLitter(litterId, { cover_image_url: null });
   };
 
   const saveLitter = async () => {
-    if (!litter.name.trim()) { alert('Vul a.u.b. een naam in voor het nestje.'); return; }
+    if (!litter.name.trim()) { alert(`Vul a.u.b. een naam in voor het ${terms.litter}.`); return; }
     setSavingLitter(true);
     if (!litterId) {
       const res = await addLitter({ ...litter, born: litter.date_of_birth });
       setSavingLitter(false);
-      if (res?.error) { alert('Fout bij opslaan nestje: ' + res.error.message); return; }
+      if (res?.error) { alert(`Fout bij opslaan ${terms.litter}: ` + res.error.message); return; }
       setLitterId(res.data.id);
     } else {
       await updateLitter(litterId, {
         name: litter.name,
-        breed: litter.breed || 'Maine Coon (MCO)',
+        breed: litter.breed || null,
         status: litter.status || 'verwacht',
         expected_count: (litter.expected_count === '' || litter.expected_count == null) ? null : Number(litter.expected_count),
         date_of_birth: litter.date_of_birth || null,
@@ -354,7 +369,7 @@ export default function LitterEditor({ initialLitterId = null, onClose }) {
     <Card className="flex flex-col gap-8">
       <div className="flex items-center justify-between gap-3">
         <div>
-          <h2 className="font-display text-2xl text-forest-900">{litterId ? 'Nestje bewerken' : 'Nieuw nestje aanmaken'}</h2>
+          <h2 className="font-display text-2xl text-forest-900">{litterId ? `${cap(terms.litter)} bewerken` : `Nieuw ${terms.litter} aanmaken`}</h2>
           {savedLitter && <p className="mt-1 text-sm text-forest-600">{savedLitter.name}</p>}
         </div>
         {onClose && <Btn variant="ghost" onClick={onClose} className="!px-3 !py-1.5 !text-xs">← Terug</Btn>}
@@ -369,31 +384,31 @@ export default function LitterEditor({ initialLitterId = null, onClose }) {
           onFinish={saveLitter}
           canNext={litterStep === 0 ? Boolean(litter.name.trim()) : true}
           finishing={savingLitter}
-          finishLabel="Nestje opslaan"
+          finishLabel={`${cap(terms.litter)} opslaan`}
         >
           {litterStep === 0 && (
             <div className="grid gap-4">
-              <Field label="Naam nestje"><Input value={litter.name} onChange={(e) => setLitter({ ...litter, name: e.target.value })} placeholder="Bijv. Noorderlicht" autoFocus /></Field>
+              <Field label={`Naam ${terms.litter}`}><Input value={litter.name} onChange={(e) => setLitter({ ...litter, name: e.target.value })} placeholder="Bijv. Noorderlicht" autoFocus /></Field>
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                 <Field label="Ras"><Input value={litter.breed} onChange={(e) => setLitter({ ...litter, breed: e.target.value })} /></Field>
                 <Field label="Status"><Select value={litter.status} onChange={(e) => setLitter({ ...litter, status: e.target.value })}>{LITTER_STATUSES.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}</Select></Field>
-                <Field label="Aantal kittens"><Input type="number" min="0" value={litter.expected_count} onChange={(e) => setLitter({ ...litter, expected_count: e.target.value })} placeholder="Optioneel" /></Field>
+                <Field label={`Aantal ${terms.youngPlural}`}><Input type="number" min="0" value={litter.expected_count} onChange={(e) => setLitter({ ...litter, expected_count: e.target.value })} placeholder="Optioneel" /></Field>
               </div>
               <Field label="Geboortedatum"><Input type="date" value={litter.date_of_birth} onChange={(e) => setLitter({ ...litter, date_of_birth: e.target.value })} /></Field>
             </div>
           )}
           {litterStep === 1 && (
-            <ParentSection role="sire" litter={litter} setLitter={setLitter} options={sireOptions} parentCat={sireCat} parentDocs={sireDocs} deleteDocument={deleteDocument} />
+            <ParentSection role="sire" litter={litter} setLitter={setLitter} options={sireOptions} parentCat={sireCat} parentDocs={sireDocs} deleteDocument={deleteDocument} terms={terms} species={species} />
           )}
           {litterStep === 2 && (
-            <ParentSection role="dam" litter={litter} setLitter={setLitter} options={damOptions} parentCat={damCat} parentDocs={damDocs} deleteDocument={deleteDocument} />
+            <ParentSection role="dam" litter={litter} setLitter={setLitter} options={damOptions} parentCat={damCat} parentDocs={damDocs} deleteDocument={deleteDocument} terms={terms} species={species} />
           )}
           {litterStep === 3 && (
             <div className="grid gap-4">
               <Field label="Beschrijving (wervende tekst)">
-                <Textarea value={litter.description} onChange={(e) => setLitter({ ...litter, description: e.target.value })} className="min-h-[90px]" placeholder="Vertel iets leuks over dit nestje…" />
+                <Textarea value={litter.description} onChange={(e) => setLitter({ ...litter, description: e.target.value })} className="min-h-[90px]" placeholder={`Vertel iets leuks over dit ${terms.litter}…`} />
               </Field>
-              <Field label="Profielfoto van het nest (optioneel)">
+              <Field label={`Profielfoto van het ${terms.litter} (optioneel)`}>
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
                   {litter.cover_image_url ? (
                     <img src={litter.cover_image_url} alt="Profielfoto nest" className="h-32 w-full rounded-2xl border border-forest-900/10 object-cover shadow sm:w-48" />
@@ -410,24 +425,24 @@ export default function LitterEditor({ initialLitterId = null, onClose }) {
                     cameraLabel="Open camera"
                   />
                 </div>
-                <p className="mt-2 text-xs text-forest-600">Deze foto wordt meegenomen zodra je op "Nestje opslaan" drukt.</p>
+                <p className="mt-2 text-xs text-forest-600">{`Deze foto wordt meegenomen zodra je op "${cap(terms.litter)} opslaan" drukt.`}</p>
               </Field>
             </div>
           )}
         </Stepper>
       ) : (
         <div className="flex flex-col gap-3">
-          <CollapsibleSection title="Nestgegevens" hint="De basisgegevens van dit nestje." defaultOpen>
+          <CollapsibleSection title={`${cap(terms.litter)}gegevens`} hint={`De basisgegevens van dit ${terms.litter}.`} defaultOpen>
             <div className="grid gap-4">
-              <Field label="Naam nestje"><Input value={litter.name} onChange={(e) => setLitter({ ...litter, name: e.target.value })} placeholder="Bijv. Noorderlicht" /></Field>
+              <Field label={`Naam ${terms.litter}`}><Input value={litter.name} onChange={(e) => setLitter({ ...litter, name: e.target.value })} placeholder="Bijv. Noorderlicht" /></Field>
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                 <Field label="Ras"><Input value={litter.breed} onChange={(e) => setLitter({ ...litter, breed: e.target.value })} /></Field>
                 <Field label="Status"><Select value={litter.status} onChange={(e) => setLitter({ ...litter, status: e.target.value })}>{LITTER_STATUSES.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}</Select></Field>
-                <Field label="Aantal kittens"><Input type="number" min="0" value={litter.expected_count} onChange={(e) => setLitter({ ...litter, expected_count: e.target.value })} placeholder="Optioneel" /></Field>
+                <Field label={`Aantal ${terms.youngPlural}`}><Input type="number" min="0" value={litter.expected_count} onChange={(e) => setLitter({ ...litter, expected_count: e.target.value })} placeholder="Optioneel" /></Field>
               </div>
               <Field label="Geboortedatum"><Input type="date" value={litter.date_of_birth} onChange={(e) => setLitter({ ...litter, date_of_birth: e.target.value })} /></Field>
               <Field label="Beschrijving (wervende tekst)">
-                <Textarea value={litter.description} onChange={(e) => setLitter({ ...litter, description: e.target.value })} className="min-h-[90px]" placeholder="Vertel iets leuks over dit nestje…" />
+                <Textarea value={litter.description} onChange={(e) => setLitter({ ...litter, description: e.target.value })} className="min-h-[90px]" placeholder={`Vertel iets leuks over dit ${terms.litter}…`} />
               </Field>
               <div>
                 <Btn variant="brass" onClick={saveLitter} disabled={savingLitter} className="w-full sm:w-auto">
@@ -438,25 +453,25 @@ export default function LitterEditor({ initialLitterId = null, onClose }) {
           </CollapsibleSection>
 
           {litterId && (
-            <CollapsibleSection title="Kittens van dit nestje" count={nestKittens.length} defaultOpen>
+            <CollapsibleSection title={`${cap(terms.youngPlural)} van dit ${terms.litter}`} count={nestKittens.length} defaultOpen>
               <div className="mb-4">
                 <Link href={`/admin/litters/new-kitten?litter=${litterId}`} className="inline-flex items-center justify-center rounded-lg bg-forest-800 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-forest-900">
-                  + Kitten toevoegen
+                  {`+ ${cap(terms.young)} toevoegen`}
                 </Link>
               </div>
               {nestKittens.length === 0 ? (
-                <p className="text-sm italic text-forest-600">Nog geen kittens in dit nestje. Gebruik de knop hierboven om ze toe te voegen.</p>
+                <p className="text-sm italic text-forest-600">{`Nog geen ${terms.youngPlural} in dit ${terms.litter}. Gebruik de knop hierboven om ze toe te voegen.`}</p>
               ) : (
                 <div className="grid gap-3">
                   {nestKittens.map((k) => (
-                    <KittenRow key={k.id} kitten={k} onSave={updateKitten} onDelete={deleteKitten} />
+                    <KittenRow key={k.id} kitten={k} onSave={updateKitten} onDelete={deleteKitten} terms={terms} species={species} />
                   ))}
                 </div>
               )}
             </CollapsibleSection>
           )}
 
-          <CollapsibleSection title="Profielfoto van het nest" hint="Een foto van alle kittens samen — verschijnt in het nestjes-overzicht.">
+          <CollapsibleSection title={`Profielfoto van het ${terms.litter}`} hint={`Een foto van alle ${terms.youngPlural} samen — verschijnt in het ${terms.litter}-overzicht.`}>
             <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
               {litter.cover_image_url ? (
                 <button
@@ -490,13 +505,13 @@ export default function LitterEditor({ initialLitterId = null, onClose }) {
 
           <CollapsibleSection title="Ouders" hint="Kies bestaande fokdieren, voeg een nieuw fokdier toe met alle gegevens, of vul alleen een naam in.">
             <div className="grid gap-4 lg:grid-cols-2">
-              <ParentSection role="sire" litter={litter} setLitter={setLitter} options={sireOptions} parentCat={sireCat} parentDocs={sireDocs} deleteDocument={deleteDocument} />
-              <ParentSection role="dam" litter={litter} setLitter={setLitter} options={damOptions} parentCat={damCat} parentDocs={damDocs} deleteDocument={deleteDocument} />
+              <ParentSection role="sire" litter={litter} setLitter={setLitter} options={sireOptions} parentCat={sireCat} parentDocs={sireDocs} deleteDocument={deleteDocument} terms={terms} species={species} />
+              <ParentSection role="dam" litter={litter} setLitter={setLitter} options={damOptions} parentCat={damCat} parentDocs={damDocs} deleteDocument={deleteDocument} terms={terms} species={species} />
             </div>
           </CollapsibleSection>
 
           {litterId && (
-            <CollapsibleSection title="Documenten & checks van het nestje" hint="Paspoort, dierenarts/vet clinic, HCM/PKD/FIV-checks, stamboom en overige papieren van het nestje.">
+            <CollapsibleSection title={`Documenten & checks van het ${terms.litter}`} hint={`Paspoort, dierenarts, gezondheidschecks, stamboom en overige papieren van het ${terms.litter}.`}>
               <DocumentUploader litterId={litterId} folder={`cattery_documents/litter_${litterId}`} />
               <div className="mt-4"><DocumentList documents={litterDocs} onDelete={deleteDocument} /></div>
             </CollapsibleSection>

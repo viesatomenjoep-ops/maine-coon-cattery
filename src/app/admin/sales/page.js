@@ -20,16 +20,11 @@ async function downloadFile(url, filename) {
 import { StatusPill, ImageSlot } from '@/components/ui';
 import { AdminUpload } from '@/components/admin/FilePicker';
 import { nextTreatment, formatDate } from '@/lib/treatments';
+import { cap, sexLabel } from '@/lib/species';
 
 const STATUS_OPTIONS = ['Beschikbaar', 'Gereserveerd', 'Verkocht', 'Houden'];
 const matchStatus = (s) => STATUS_OPTIONS.find((o) => o.toLowerCase() === (s || '').toLowerCase()) || 'Beschikbaar';
 const eur = (n) => new Intl.NumberFormat('nl-NL', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(n || 0);
-const sexLabel = (g) => {
-  const v = (g || '').toLowerCase();
-  if (/kater|mann|\bmale\b|\bm\b/.test(v)) return 'Kater';
-  if (/poes|vrouw|female|\bf\b/.test(v)) return 'Poes';
-  return g || 'Onbekend';
-};
 
 // Klein infoveldje voor de gesynchroniseerde dossiergegevens
 function Info({ label, value }) {
@@ -79,7 +74,7 @@ function AdEditor({ k, customers, documents, media, updateKitten, onCopyLink }) 
     updateKitten(k.id, { customer_id: customerId || null });
   };
 
-  const { litters = [], updateLitter, updateDocument, updateMedia } = useStore();
+  const { litters = [], updateLitter, updateDocument, updateMedia, terms, species } = useStore();
   const litter = litters.find((l) => l.id === k.litter_id) || null;
   const adv = k.ad_settings || {};
   const advOn = (key) => adv[key] !== false; // standaard aan
@@ -122,7 +117,7 @@ function AdEditor({ k, customers, documents, media, updateKitten, onCopyLink }) 
 
         <div className="mt-4 flex items-baseline justify-between">
           <h3 className="font-display text-2xl text-forest-900">{k.name}</h3>
-          <span className="text-sm text-forest-600/70">{sexLabel(k.gender || k.sex)} · {k.color || 'Maine Coon'}</span>
+          <span className="text-sm text-forest-600/70">{sexLabel(k.gender || k.sex, species)} · {k.color || ''}</span>
         </div>
 
         <div className="mt-4 space-y-3">
@@ -222,14 +217,14 @@ function AdEditor({ k, customers, documents, media, updateKitten, onCopyLink }) 
       {/* ---- Ouderfoto's (vader & moeder) ---- */}
       <Card>
         <h4 className="font-display text-lg text-forest-900">Ouderfoto's — vader &amp; moeder</h4>
-        <p className="mt-1 text-sm text-forest-600">Deze verschijnen op een mooie plek in de advertentie van het nestje.</p>
+        <p className="mt-1 text-sm text-forest-600">{`Deze verschijnen op een mooie plek in de advertentie van het ${terms.litter}.`}</p>
         {litter ? (
           <div className="mt-4 grid grid-cols-2 gap-4 sm:max-w-md">
             <ParentPhoto label={`Vader${litter.sire_name ? ` · ${litter.sire_name}` : ''}`} src={litter.sire_image_url} folder={`cattery_parents/${litter.id}/sire`} onSet={(url) => updateLitter(litter.id, { sire_image_url: url })} />
             <ParentPhoto label={`Moeder${litter.dam_name ? ` · ${litter.dam_name}` : ''}`} src={litter.dam_image_url} folder={`cattery_parents/${litter.id}/dam`} onSet={(url) => updateLitter(litter.id, { dam_image_url: url })} />
           </div>
         ) : (
-          <p className="mt-4 rounded-xl border border-forest-900/10 bg-forest-50 p-3 text-sm text-forest-600">Dit kitten hoort nog niet bij een nestje, dus ouderfoto's kunnen hier nog niet worden ingesteld.</p>
+          <p className="mt-4 rounded-xl border border-forest-900/10 bg-forest-50 p-3 text-sm text-forest-600">{`Dit ${terms.young} hoort nog niet bij een ${terms.litter}, dus ouderfoto's kunnen hier nog niet worden ingesteld.`}</p>
         )}
       </Card>
 
@@ -246,7 +241,7 @@ function AdEditor({ k, customers, documents, media, updateKitten, onCopyLink }) 
 
         {litter && (
           <div className="mt-5">
-            <label className="text-xs font-medium uppercase tracking-wide text-forest-700">Extra advertentietekst (voor dit nestje)</label>
+            <label className="text-xs font-medium uppercase tracking-wide text-forest-700">{`Extra advertentietekst (voor dit ${terms.litter})`}</label>
             <textarea
               defaultValue={litter.ad_text || ''}
               onBlur={(e) => { if (e.target.value !== (litter.ad_text || '')) updateLitter(litter.id, { ad_text: e.target.value }); }}
@@ -254,7 +249,7 @@ function AdEditor({ k, customers, documents, media, updateKitten, onCopyLink }) 
               placeholder="Optioneel — extra tekst naast het standaardverhaal dat al op de advertentie staat."
               className="mt-1.5 w-full rounded-xl border border-forest-900/15 bg-white px-4 py-3 text-sm leading-relaxed outline-none focus:border-brass-400 focus:ring-2 focus:ring-brass-200"
             />
-            <p className="mt-1 text-xs text-forest-500">Wordt gedeeld door het hele nestje. Sla op door buiten het veld te klikken.</p>
+            <p className="mt-1 text-xs text-forest-500">{`Wordt gedeeld door het hele ${terms.litter}. Sla op door buiten het veld te klikken.`}</p>
           </div>
         )}
       </Card>
@@ -335,6 +330,7 @@ function ModeCard({ active, onClick, icon, title, desc }) {
 }
 
 function LitterAdEditor({ litter, updateLitter, deleteLitter, onDeleted }) {
+  const { terms } = useStore();
   const gallery = Array.isArray(litter.ad_gallery) ? litter.ad_gallery : [];
   // Ref-accumulator zodat meerdere tegelijk gesleepte foto's niet elkaar overschrijven.
   const galleryRef = useRef(gallery);
@@ -344,13 +340,13 @@ function LitterAdEditor({ litter, updateLitter, deleteLitter, onDeleted }) {
   const copyLink = () => {
     if (!litter.share_token) return alert('Deel-link nog niet beschikbaar (database-update nodig).');
     navigator.clipboard.writeText(`${window.location.origin}/nestje/${litter.share_token}`);
-    alert('Advertentielink van dit nestje gekopieerd!');
+    alert(`Advertentielink van dit ${terms.litter} gekopieerd!`);
   };
   return (
     <div className="space-y-6">
       <Card>
         <h4 className="font-display text-lg text-forest-900">Deelbare advertentielink</h4>
-        <p className="mt-1 text-sm text-forest-600">Stuur deze naar (potentiële) klanten — ze zien de aankondiging van dit verwachte nestje.</p>
+        <p className="mt-1 text-sm text-forest-600">{`Stuur deze naar (potentiële) klanten — ze zien de aankondiging van dit verwachte ${terms.litter}.`}</p>
         <div className="mt-3 flex flex-col gap-2 sm:flex-row">
           <input readOnly value={typeof window !== 'undefined' ? `${window.location.origin}/nestje/${litter.share_token || ''}` : ''} className="min-w-0 flex-1 truncate rounded-lg border border-forest-900/10 bg-white p-2.5 font-mono text-xs text-brass-700 outline-none" />
           <Btn variant="brass" onClick={copyLink} className="shrink-0 justify-center py-2 text-xs">Kopieer link</Btn>
@@ -358,9 +354,9 @@ function LitterAdEditor({ litter, updateLitter, deleteLitter, onDeleted }) {
       </Card>
 
       <Card>
-        <h4 className="font-display text-lg text-forest-900">Nestje-gegevens</h4>
-        <label className="mt-4 block"><span className="text-xs font-medium uppercase tracking-wide text-forest-700">Naam van het nestje</span>
-          <Input defaultValue={litter.name || ''} onBlur={(e) => { if (e.target.value.trim() && e.target.value !== litter.name) updateLitter(litter.id, { name: e.target.value.trim() }); }} placeholder="Bijv. Verwacht nestje zomer 2026" className="mt-1" /></label>
+        <h4 className="font-display text-lg text-forest-900">{`${terms.litter[0].toUpperCase()}${terms.litter.slice(1)}-gegevens`}</h4>
+        <label className="mt-4 block"><span className="text-xs font-medium uppercase tracking-wide text-forest-700">{`Naam van het ${terms.litter}`}</span>
+          <Input defaultValue={litter.name || ''} onBlur={(e) => { if (e.target.value.trim() && e.target.value !== litter.name) updateLitter(litter.id, { name: e.target.value.trim() }); }} placeholder={`Bijv. Verwacht ${terms.litter} zomer 2026`} className="mt-1" /></label>
         <div className="mt-4 grid gap-4 sm:grid-cols-3">
           <label className="block"><span className="text-xs font-medium uppercase tracking-wide text-forest-700">Verwacht op</span>
             <Input type="date" defaultValue={litter.date_of_birth || ''} onBlur={(e) => { if (e.target.value !== (litter.date_of_birth || '')) updateLitter(litter.id, { date_of_birth: e.target.value || null }); }} className="mt-1" /></label>
@@ -381,7 +377,7 @@ function LitterAdEditor({ litter, updateLitter, deleteLitter, onDeleted }) {
 
       <Card>
         <h4 className="font-display text-lg text-forest-900">Foto's van de verwachting</h4>
-        <p className="mt-1 text-sm text-forest-600">Bijvoorbeeld foto's van eerdere nestjes of de ouders — voor de sfeer.</p>
+        <p className="mt-1 text-sm text-forest-600">{`Bijvoorbeeld foto's van eerdere ${terms.litterPlural} of de ouders — voor de sfeer.`}</p>
         <p className="mt-1 text-xs text-forest-500">💡 Sleep meerdere foto's tegelijk (tot 10) op het +-vlak, of klik om te kiezen.</p>
         <div className="mt-4 grid grid-cols-3 gap-3 sm:grid-cols-4">
           {gallery.map((src, i) => (
@@ -425,14 +421,14 @@ function LitterAdEditor({ litter, updateLitter, deleteLitter, onDeleted }) {
 
       <Card>
         <h4 className="font-display text-lg text-forest-900">Extra advertentietekst</h4>
-        <p className="mt-1 text-sm text-forest-600">Op elke advertentie staat al een mooi standaardverhaal (met type-effect). Hier voeg je optioneel <b>extra tekst</b> toe, specifiek voor dit nestje.</p>
+        <p className="mt-1 text-sm text-forest-600">{`Op elke advertentie staat al een mooi standaardverhaal (met type-effect). Hier voeg je optioneel `}<b>extra tekst</b>{` toe, specifiek voor dit ${terms.litter}.`}</p>
         <textarea defaultValue={litter.ad_text || ''} onBlur={(e) => { if (e.target.value !== (litter.ad_text || '')) updateLitter(litter.id, { ad_text: e.target.value }); }} rows={6}
-          placeholder="Bijv. Dit nestje verwachten we begin zomer, uit onze topcombinatie…" className="mt-3 w-full rounded-xl border border-forest-900/15 bg-white px-4 py-3 text-sm leading-relaxed outline-none focus:border-brass-400 focus:ring-2 focus:ring-brass-200" />
+          placeholder={`Bijv. Dit ${terms.litter} verwachten we begin zomer, uit onze topcombinatie…`} className="mt-3 w-full rounded-xl border border-forest-900/15 bg-white px-4 py-3 text-sm leading-relaxed outline-none focus:border-brass-400 focus:ring-2 focus:ring-brass-200" />
         <p className="mt-1 text-xs text-forest-500">Wordt automatisch opgeslagen.</p>
       </Card>
 
       <div className="flex flex-col gap-3 sm:flex-row sm:justify-between">
-        <Btn variant="ghost" onClick={() => { if (confirm(`Weet je zeker dat je het nestje "${litter.name}" definitief wilt verwijderen?`)) { deleteLitter(litter.id); onDeleted && onDeleted(); } }} className="!text-red-600 hover:!bg-red-50">Verwijderen</Btn>
+        <Btn variant="ghost" onClick={() => { if (confirm(`Weet je zeker dat je het ${terms.litter} "${litter.name}" definitief wilt verwijderen?`)) { deleteLitter(litter.id); onDeleted && onDeleted(); } }} className="!text-red-600 hover:!bg-red-50">Verwijderen</Btn>
         <Btn variant="brass" onClick={() => alert('Alle wijzigingen zijn opgeslagen ✓')}>Opslaan</Btn>
       </div>
     </div>
@@ -440,7 +436,7 @@ function LitterAdEditor({ litter, updateLitter, deleteLitter, onDeleted }) {
 }
 
 export default function SalesPage() {
-  const { kittens, litters = [], updateKitten, updateLitter, addLitter, deleteLitter, customers = [], documents = [], media = [] } = useStore();
+  const { kittens, litters = [], updateKitten, updateLitter, addLitter, deleteLitter, customers = [], documents = [], media = [], terms, species } = useStore();
 
   const saleKittens = kittens.filter((k) => !k.is_own_breeding_cat);
   const [mode, setMode] = useState('kitten');
@@ -457,35 +453,35 @@ export default function SalesPage() {
 
   const createExpectedLitter = async () => {
     setCreating(true);
-    const res = await addLitter({ name: 'Nieuw verwacht nestje', status: 'verwacht' });
+    const res = await addLitter({ name: `Nieuw verwacht ${terms.litter}`, status: 'verwacht' });
     setCreating(false);
     if (res?.error) return alert('Aanmaken mislukt: ' + (res.error.message || ''));
     if (res?.data) setLitterId(res.data.id);
   };
 
   return (
-    <>
-      <PageHead label="Verkoop" title="Advertentie & Sales Beheer" />
+    <div className="">
+      <PageHead label="Verkoop" title="Advertentie & sales beheer" />
       <p className="-mt-4 mb-6 max-w-2xl text-sm text-forest-700/70">
-        Maak twee soorten advertenties: voor een <b>bestaande kitten</b> (met alle details en prijs),
-        of voor een <b>verwacht nestje</b> (aankondiging met ouders, foto's en jouw verhaal).
+        {`Maak twee soorten advertenties: voor een `}<b>{`bestaande ${terms.young}`}</b>{` (met alle details en prijs),
+        of voor een `}<b>{`verwacht ${terms.litter}`}</b>{` (aankondiging met ouders, foto's en jouw verhaal).`}
       </p>
 
       {/* Modus-keuze */}
       <div className="mb-8 grid gap-3 sm:grid-cols-2">
-        <ModeCard active={mode === 'kitten'} onClick={() => setMode('kitten')} icon="🐱" title="Bestaande kitten" desc="Volledige advertentie met foto, prijs, status en klantlink." />
-        <ModeCard active={mode === 'litter'} onClick={() => setMode('litter')} icon="🍼" title="Verwacht nestje" desc="Aankondiging met ouders, sfeerfoto's en jouw verhaal." />
+        <ModeCard active={mode === 'kitten'} onClick={() => setMode('kitten')} icon="🐾" title={`Bestaande ${terms.young}`} desc="Volledige advertentie met foto, prijs, status en klantlink." />
+        <ModeCard active={mode === 'litter'} onClick={() => setMode('litter')} icon="🍼" title={`Verwacht ${terms.litter}`} desc="Aankondiging met ouders, sfeerfoto's en jouw verhaal." />
       </div>
 
       {mode === 'kitten' ? (
         <>
           <Card className="mb-8">
             <div className="flex items-center justify-between">
-              <h3 className="font-display text-lg text-forest-900">1. Selecteer een kitten</h3>
-              {selected && <button onClick={() => setSelectedId('')} className="text-xs font-semibold text-brass-600 hover:underline">Andere kitten kiezen</button>}
+              <h3 className="font-display text-lg text-forest-900">{`1. Selecteer een ${terms.young}`}</h3>
+              {selected && <button onClick={() => setSelectedId('')} className="text-xs font-semibold text-brass-600 hover:underline">{`Andere ${terms.young} kiezen`}</button>}
             </div>
             {saleKittens.length === 0 ? (
-              <p className="mt-4 text-sm italic text-forest-600">Er zijn nog geen kittens. Maak eerst een nestje met kittens aan bij <Link href="/admin/litters" className="font-semibold text-brass-600 hover:underline">Nestjes &amp; Kittens</Link>.</p>
+              <p className="mt-4 text-sm italic text-forest-600">{`Er zijn nog geen ${terms.youngPlural}. Maak eerst een ${terms.litter} met ${terms.youngPlural} aan bij `}<Link href="/admin/litters" className="font-semibold text-brass-600 hover:underline">{`${cap(terms.litterPlural)} & ${terms.youngPlural}`}</Link>.</p>
             ) : (
               <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
                 {saleKittens.map((k) => {
@@ -495,7 +491,7 @@ export default function SalesPage() {
                       {k.cover_image ? <img src={k.cover_image} alt={k.name} className="h-12 w-12 shrink-0 rounded-lg object-cover" /> : <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border border-forest-100 bg-forest-50 text-[9px] text-forest-400">Geen foto</div>}
                       <div className="min-w-0">
                         <p className="truncate font-semibold text-forest-900">{k.name}</p>
-                        <p className="truncate text-xs text-forest-600">{sexLabel(k.gender || k.sex)} · {matchStatus(k.status)}</p>
+                        <p className="truncate text-xs text-forest-600">{sexLabel(k.gender || k.sex, species)} · {matchStatus(k.status)}</p>
                       </div>
                     </button>
                   );
@@ -510,21 +506,21 @@ export default function SalesPage() {
               <AdEditor key={selected.id} k={selected} customers={customers} documents={documents} media={media} updateKitten={updateKitten} onCopyLink={handleCopyLink} />
             </>
           ) : (
-            saleKittens.length > 0 && <div className="rounded-2xl border border-dashed border-forest-900/20 bg-white/60 py-12 text-center text-forest-600">Selecteer hierboven een kitten om de advertentie te beheren.</div>
+            saleKittens.length > 0 && <div className="rounded-2xl border border-dashed border-forest-900/20 bg-white/60 py-12 text-center text-forest-600">{`Selecteer hierboven een ${terms.young} om de advertentie te beheren.`}</div>
           )}
         </>
       ) : (
         <>
           <Card className="mb-8">
             <div className="flex flex-wrap items-center justify-between gap-3">
-              <h3 className="font-display text-lg text-forest-900">1. Kies of maak een verwacht nestje</h3>
+              <h3 className="font-display text-lg text-forest-900">{`1. Kies of maak een verwacht ${terms.litter}`}</h3>
               <div className="flex items-center gap-3">
-                {selectedLitter && <button onClick={() => setLitterId('')} className="text-xs font-semibold text-brass-600 hover:underline">Ander nestje kiezen</button>}
-                <Btn variant="brass" onClick={createExpectedLitter} disabled={creating} className="!px-4 !py-2 !text-sm">{creating ? 'Bezig…' : '+ Nieuw verwacht nestje'}</Btn>
+                {selectedLitter && <button onClick={() => setLitterId('')} className="text-xs font-semibold text-brass-600 hover:underline">{`Ander ${terms.litter} kiezen`}</button>}
+                <Btn variant="brass" onClick={createExpectedLitter} disabled={creating} className="!px-4 !py-2 !text-sm">{creating ? 'Bezig…' : `+ Nieuw verwacht ${terms.litter}`}</Btn>
               </div>
             </div>
             {litters.length === 0 ? (
-              <p className="mt-4 text-sm italic text-forest-600">Nog geen nestjes. Klik op <b>+ Nieuw verwacht nestje</b> om er direct een aan te maken en te bewerken.</p>
+              <p className="mt-4 text-sm italic text-forest-600">{`Nog geen ${terms.litterPlural}. Klik op `}<b>{`+ Nieuw verwacht ${terms.litter}`}</b>{` om er direct een aan te maken en te bewerken.`}</p>
             ) : (
               <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 {litters.map((l) => {
@@ -549,10 +545,10 @@ export default function SalesPage() {
               <LitterAdEditor key={selectedLitter.id} litter={selectedLitter} updateLitter={updateLitter} deleteLitter={deleteLitter} onDeleted={() => setLitterId('')} />
             </>
           ) : (
-            litters.length > 0 && <div className="rounded-2xl border border-dashed border-forest-900/20 bg-white/60 py-12 text-center text-forest-600">Selecteer hierboven een nestje om de advertentie te beheren.</div>
+            litters.length > 0 && <div className="rounded-2xl border border-dashed border-forest-900/20 bg-white/60 py-12 text-center text-forest-600">{`Selecteer hierboven een ${terms.litter} om de advertentie te beheren.`}</div>
           )}
         </>
       )}
-    </>
+    </div>
   );
 }

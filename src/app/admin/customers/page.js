@@ -43,9 +43,9 @@ export default function CustomersPage() {
   };
 
   return (
-    <>
-      <PageHead 
-        title="Klantenbestand" 
+    <div className="">
+      <PageHead
+        title="Klantenbestand"
         label="Beheer alle klanten en toewijzingen"
       >
         <Btn variant="brass" onClick={() => setShowAdd(!showAdd)}>+ Nieuwe Klant</Btn>
@@ -133,6 +133,6 @@ export default function CustomersPage() {
           <p className="text-forest-600 text-sm">Geen klanten gevonden. Voeg er een toe!</p>
         )}
       </div>
-    </>
+    </div>
   );
 }

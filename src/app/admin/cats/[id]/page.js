@@ -46,7 +46,7 @@ export default function CatDossier() {
   const {
     kittens, customers, litters = [], deleteKitten, updateKitten, addKitten, addDocument, addMedia, deleteMedia, documents, media,
     addWeight, deleteWeight, deleteDocument, updateDocument, updateMedia, addNote, deleteNote, addMedical, updateMedical, deleteMedical,
-    addCustomer, updateCustomer, news = [], addNews, deleteNews,
+    addCustomer, updateCustomer, news = [], addNews, deleteNews, terms,
   } = useStore();
   const isNew = id === 'new';
 
@@ -239,28 +239,32 @@ export default function CatDossier() {
     </div>
   );
 
+  // De onderdelen van een dossier, gebundeld in drie groepen zodat je niet
+  // door elf losse tabbladen hoeft te zoeken.
   const tabs = [
-    { id: 'paspoort', label: '1. Paspoort & Beschrijving' },
-    { id: 'chip', label: '2. Identificatie & Chip' },
-    { id: 'medisch', label: '3. Inentingen & Medisch' },
-    { id: 'stamboom', label: '4. Stamboom & Afstamming' },
-    { id: 'gewicht', label: '5. Groei & Weegcurves' },
-    { id: 'verkoop', label: '6. Verkoopprijs & Status' },
-    { id: 'media', label: '7. Media & Galerij' },
-    { id: 'notities', label: '8. Algemene notities' },
-    { id: 'klant', label: '9. Klant & Contact' },
-    { id: 'advertentie', label: '10. Advertentie' },
-    { id: 'nieuws', label: '11. Nieuws' },
+    { id: 'paspoort', label: 'Paspoort', group: 'Het dier', icon: <><path d="M4 4v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6H6a2 2 0 0 0-2 2Z" /><path d="M13 2v6h6" /></> },
+    { id: 'chip', label: 'Chip & ID', group: 'Het dier', icon: <><circle cx="12" cy="12" r="3" /><path d="M12 2v4M12 18v4M2 12h4M18 12h4" /></> },
+    { id: 'stamboom', label: 'Stamboom', group: 'Het dier', icon: <><circle cx="12" cy="5" r="2.5" /><circle cx="6" cy="19" r="2.5" /><circle cx="18" cy="19" r="2.5" /><path d="M12 7.5v4M12 11.5 6.5 16.5M12 11.5l5.5 5" /></> },
+    { id: 'medisch', label: 'Gezondheid', group: 'Zorg', icon: <path d="M19 14c1.5-1.5 3-3.4 3-5.5A3.5 3.5 0 0 0 12 5 3.5 3.5 0 0 0 2 8.5C2 12 5 14.5 12 21c2.5-2.3 4.5-4.2 6-6.5Z" /> },
+    { id: 'gewicht', label: 'Groei', group: 'Zorg', icon: <><path d="M3 3v18h18" /><path d="m7 14 4-4 3 3 5-6" /></> },
+    { id: 'notities', label: 'Notities', group: 'Zorg', icon: <><path d="M12 20h9" /><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" /></> },
+    { id: 'media', label: "Foto's", group: 'Zorg', icon: <><rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="9" cy="9" r="2" /><path d="m21 15-5-5L5 21" /></> },
+    { id: 'verkoop', label: 'Prijs & status', group: 'Verkoop', icon: <><path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0l-7.2-7.2A2 2 0 0 1 3 12V4a1 1 0 0 1 1-1h8a2 2 0 0 1 1.4.6l7.2 7.2a2 2 0 0 1 0 2.6Z" /><circle cx="7.5" cy="7.5" r="1.2" /></> },
+    { id: 'klant', label: 'Klant', group: 'Verkoop', icon: <><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /></> },
+    { id: 'advertentie', label: 'Advertentie', group: 'Verkoop', icon: <><rect x="2" y="5" width="20" height="14" rx="2" /><path d="M2 10h20" /></> },
+    { id: 'nieuws', label: 'Nieuws', group: 'Verkoop', icon: <><path d="M4 4h16v16H4z" /><path d="M8 8h8M8 12h8M8 16h5" /></> },
   ];
+  const tabGroups = ['Het dier', 'Zorg', 'Verkoop'];
+  const activeLabel = tabs.find((t) => t.id === activeTab)?.label || '';
 
   return (
     <>
       <Link href="/admin/cats" className="mb-4 inline-flex items-center gap-1.5 text-sm font-semibold text-forest-600 transition hover:text-forest-900">
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m12 19-7-7 7-7" /><path d="M19 12H5" /></svg>
-        Terug naar katten &amp; dossiers
+        Terug naar {terms.animalPlural}
       </Link>
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
-        <PageHead label="Dossier" title={isNew ? 'Nieuwe Kat Toevoegen' : formData.name || 'Laden...'} />
+        <PageHead label="Dossier" title={isNew ? `Nieuwe ${terms.animal} toevoegen` : formData.name || 'Laden...'} />
         {!isNew && (
           <button type="button" onClick={handleDelete} className="rounded-lg border border-red-200 bg-white px-3 py-1.5 text-xs font-bold uppercase tracking-wider text-red-600 transition hover:bg-red-50 shadow-sm">
             Volledig Dossier Verwijderen
@@ -269,32 +273,48 @@ export default function CatDossier() {
       </div>
 
       <div className="flex flex-col lg:flex-row gap-6 lg:gap-8 items-start">
-        {/* Mobiele Dropdown Navigatie */}
-        <div className="w-full lg:hidden">
-          <label className="block text-xs font-bold uppercase tracking-wider text-forest-600 mb-2">Navigeer door dossier</label>
-          <select 
-            value={activeTab}
-            onChange={(e) => setActiveTab(e.target.value)}
-            className="w-full rounded-xl border border-forest-900/10 bg-white p-3.5 text-sm font-bold text-forest-900 shadow-sm outline-none focus:border-brass-400 focus:ring-1 focus:ring-brass-400"
-          >
-            {tabs.map(t => <option key={t.id} value={t.id}>{t.label}</option>)}
-          </select>
+        {/* Mobiel: horizontaal schuivende chips, zoals in een app */}
+        <div className="-mx-4 w-[calc(100%+2rem)] overflow-x-auto px-4 pb-1 lg:hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <div className="flex gap-2">
+            {tabs.map((t) => (
+              <button
+                key={t.id}
+                onClick={() => setActiveTab(t.id)}
+                className={`inline-flex shrink-0 items-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold transition-all duration-300 ${
+                  activeTab === t.id
+                    ? 'bg-brass-400 text-forest-950 shadow-sm'
+                    : 'bg-forest-900/[0.04] text-forest-600'
+                }`}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">{t.icon}</svg>
+                {t.label}
+              </button>
+            ))}
+          </div>
         </div>
 
-        {/* Desktop Sidebar Navigatie */}
-        <div className="hidden lg:flex w-64 shrink-0 flex-col gap-2">
-          {tabs.map(t => (
-            <button
-              key={t.id}
-              onClick={() => setActiveTab(t.id)}
-              className={`text-left rounded-xl px-4 py-3 text-sm transition border outline-none focus:outline-none ${
-                activeTab === t.id 
-                  ? 'bg-brass-400 text-forest-950 border-transparent font-bold shadow-sm' 
-                  : 'bg-white text-forest-600 border-forest-900/10 hover:bg-forest-50 hover:text-forest-900 font-medium'
-              }`}
-            >
-              {t.label}
-            </button>
+        {/* Desktop: gegroepeerde zijnavigatie */}
+        <div className="hidden lg:flex w-60 shrink-0 flex-col gap-5">
+          {tabGroups.map((g) => (
+            <div key={g}>
+              <p className="mb-2 px-3 text-[11px] font-bold uppercase tracking-wider text-forest-400">{g}</p>
+              <div className="flex flex-col gap-1">
+                {tabs.filter((t) => t.group === g).map((t) => (
+                  <button
+                    key={t.id}
+                    onClick={() => setActiveTab(t.id)}
+                    className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm transition ${
+                      activeTab === t.id
+                        ? 'bg-brass-400 font-bold text-forest-950 shadow-sm'
+                        : 'font-medium text-forest-600 hover:bg-forest-50 hover:text-forest-900'
+                    }`}
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4 shrink-0">{t.icon}</svg>
+                    {t.label}
+                  </button>
+                ))}
+              </div>
+            </div>
           ))}
         </div>
 

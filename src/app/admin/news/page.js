@@ -4,6 +4,7 @@ import { useStore } from '@/context/StoreContext';
 import { PageHead, Card, Field, Input, Select, Btn } from '@/components/admin';
 import { ImageSlot } from '@/components/ui';
 import { AdminUpload } from '@/components/admin/FilePicker';
+import { cap } from '@/lib/species';
 
 const CldUploadWidget = AdminUpload;
 
@@ -23,7 +24,7 @@ function Toolbar({ exec }) {
 }
 
 export default function NewsEditor() {
-  const { news, kittens, addNews, updateNews, deleteNews } = useStore();
+  const { news, kittens, addNews, updateNews, deleteNews, terms } = useStore();
   const editorRef = useRef(null);
   
   const [editingId, setEditingId] = useState(null);
@@ -74,8 +75,8 @@ export default function NewsEditor() {
   };
 
   return (
-    <>
-      <PageHead label="CMS" title={editingId ? "Nieuwsbericht Wijzigen" : "Nieuws Editor"}>
+    <div>
+      <PageHead label="CMS" title={editingId ? "Nieuwsbericht wijzigen" : "Nieuws editor"}>
         {saved && <span className="rounded-full bg-forest-100 px-4 py-2 text-sm text-forest-700">✓ Opgeslagen</span>}
       </PageHead>
 
@@ -84,9 +85,9 @@ export default function NewsEditor() {
           <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-[2fr_1fr_1fr]">
             <Field label="Titel"><Input value={title} onChange={(e)=>setTitle(e.target.value)} placeholder="Bijv. Nieuw nestje verwacht!" /></Field>
             <Field label="Categorie"><Select value={tag} onChange={(e)=>setTag(e.target.value)}>{TAGS.map(t=><option key={t}>{t}</option>)}</Select></Field>
-            <Field label="Koppel aan Kitten">
+            <Field label={`Koppel aan ${terms.young}`}>
               <Select value={catId} onChange={(e)=>setCatId(e.target.value)}>
-                <option value="">Algemeen (Geen specifieke kat)</option>
+                <option value="">{`Algemeen (geen specifiek(e) ${terms.animal})`}</option>
                 {kittens.filter(k => !k.is_own_breeding_cat).map(k => <option key={k.id} value={k.id}>{k.name}</option>)}
               </Select>
             </Field>
@@ -150,7 +151,7 @@ export default function NewsEditor() {
                   <p className="text-sm font-medium text-forest-900 truncate">{n.title}</p>
                   <p suppressHydrationWarning className="text-xs text-forest-600/70 truncate">
                     {new Date(n.created_at).toLocaleDateString('nl-NL')} · {n.tag || 'Update'}
-                    {n.cat_id && ` · Gelinkt aan ${kittens.find(k => k.id === n.cat_id)?.name || 'Kitten'}`}
+                    {n.cat_id && ` · Gelinkt aan ${kittens.find(k => k.id === n.cat_id)?.name || cap(terms.young)}`}
                   </p>
                 </div>
                 <div className="flex items-center gap-3 shrink-0">
@@ -162,6 +163,6 @@ export default function NewsEditor() {
           </div>
         </Card>
       </div>
-    </>
+    </div>
   );
 }

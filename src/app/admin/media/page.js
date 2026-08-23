@@ -4,24 +4,25 @@ import { useStore } from '@/context/StoreContext';
 import { PageHead, Card, Select, Btn } from '@/components/admin';
 import { ImageSlot } from '@/components/ui';
 import { AdminUpload } from '@/components/admin/FilePicker';
+import { cap, sexLabel } from '@/lib/species';
 import jsPDF from 'jspdf';
 
 const NativeUploadWidget = AdminUpload;
 
-// Onderscheid: kitten (hoort bij een nestje), fokkater of fokpoes.
-const isMale = (g) => /kater|mann|\bmale\b|\bm\b/i.test(g || '');
-const isFemale = (g) => /poes|vrouw|female|\bf\b/i.test(g || '');
-const catGroup = (k) => (!k.is_own_breeding_cat ? 'kitten' : isMale(k.gender) ? 'kater' : isFemale(k.gender) ? 'poes' : 'overig');
-const GROUP_TABS = [
-  { key: 'kitten', label: 'Kitten', plural: 'kittens' },
-  { key: 'kater', label: 'Kater', plural: 'katers' },
-  { key: 'poes', label: 'Poes', plural: 'poezen' },
-];
+// Onderscheid: jong dier (hoort bij een nestje), vaderdier of moederdier.
+const isMale = (g) => /kater|reu|doffer|ram|mann|\bmale\b|\bm\b/i.test(g || '');
+const isFemale = (g) => /poes|teef|duivin|pop|voedster|vrouw|female|\bf\b/i.test(g || '');
+const catGroup = (k) => (!k.is_own_breeding_cat ? 'young' : isMale(k.gender) ? 'male' : isFemale(k.gender) ? 'female' : 'overig');
 
-// Eerst het type kiezen (Kitten/Kater/Poes), daarna de specifieke kat.
-function CatPicker({ kittens, value, onChange }) {
+// Eerst het type kiezen (jong/vader/moeder), daarna het specifieke dier.
+function CatPicker({ kittens, value, onChange, terms }) {
+  const GROUP_TABS = [
+    { key: 'young', label: cap(terms.young), plural: terms.youngPlural },
+    { key: 'male', label: cap(terms.male), plural: terms.malePlural },
+    { key: 'female', label: cap(terms.female), plural: terms.femalePlural },
+  ];
   const selected = kittens.find((k) => k.id === value);
-  const [type, setType] = useState(selected ? catGroup(selected) : 'kitten');
+  const [type, setType] = useState(selected ? catGroup(selected) : 'young');
   const list = kittens.filter((k) => catGroup(k) === type);
   const tab = GROUP_TABS.find((t) => t.key === type) || GROUP_TABS[0];
   return (
@@ -48,11 +49,11 @@ function CatPicker({ kittens, value, onChange }) {
 }
 
 export default function MediaDocumentenPage() {
-  const { kittens, documents, media, addDocument, deleteDocument, addMedia, deleteMedia, updateMedia } = useStore();
+  const { kittens, documents, media, addDocument, deleteDocument, addMedia, deleteMedia, updateMedia, terms, species } = useStore();
   const [targetMedical, setTargetMedical] = useState('');
   const [targetContract, setTargetContract] = useState('');
   const [archiveCat, setArchiveCat] = useState('');
-  
+
   // States voor de previews na uploaden
   const [previewMedical, setPreviewMedical] = useState(null);
   const [previewContract, setPreviewContract] = useState(null);
@@ -66,7 +67,7 @@ export default function MediaDocumentenPage() {
         setPreviewGallery({ url: result.info.secure_url, name: result.info.name });
       } else {
         if (!kittenId) {
-          alert('Kies eerst een kat (kitten, kater of poes) voordat je uploadt — anders wordt het bestand niet aan een dossier gekoppeld.');
+          alert(`Kies eerst een ${terms.animal} (${terms.young}, ${terms.male} of ${terms.female}) voordat je uploadt — anders wordt het bestand niet aan een dossier gekoppeld.`);
           return;
         }
         const saved = await addDocument({
@@ -76,7 +77,7 @@ export default function MediaDocumentenPage() {
           cat_id: kittenId,
         });
         if (!saved) throw new Error('opslaan mislukt');
-        const catName = kittens.find((k) => k.id === kittenId)?.name || 'de kat';
+        const catName = kittens.find((k) => k.id === kittenId)?.name || `de/het ${terms.animal}`;
         if (category === 'Medisch') setPreviewMedical({ url: result.info.secure_url, name: result.info.name });
         else setPreviewContract({ url: result.info.secure_url, name: result.info.name });
         alert(`✓ Opgeslagen bij ${catName}.`);
@@ -92,10 +93,10 @@ export default function MediaDocumentenPage() {
     ...media.map(m => ({ ...m, isDoc: false, kittenName: 'Galerij', label: 'Algemeen' }))
   ].sort((a,b) => new Date(b.created_at) - new Date(a.created_at));
 
-  // Alleen de bestanden van de geselecteerde kat (kitten/kater/poes).
+  // Alleen de bestanden van het geselecteerde dier.
   const catUploads = allUploads.filter((u) => u.cat_id === archiveCat);
 
-  // De cattery-galerij = media zonder kat-koppeling (vrij te beheren).
+  // De fokkerij-galerij = media zonder dier-koppeling (vrij te beheren).
   const galleryMedia = media.filter((m) => !m.cat_id);
 
   const [selectedItems, setSelectedItems] = useState([]);
@@ -110,7 +111,7 @@ export default function MediaDocumentenPage() {
       const blob = await res.blob();
       const a = document.createElement('a');
       a.href = window.URL.createObjectURL(blob);
-      a.download = filename || `cattery-media-${Date.now()}`;
+      a.download = filename || `fokkerij-media-${Date.now()}`;
       a.click();
     } catch(e) {
       window.open(url, '_blank');
@@ -145,10 +146,10 @@ export default function MediaDocumentenPage() {
   const handleDownloadSelectedPDF = async () => {
     const items = allUploads.filter(u => selectedItems.includes(u.id) && !(u.file_url || u.media_url).endsWith('.pdf'));
     if(items.length === 0) return alert("Selecteer minimaal 1 afbeelding om een PDF album te maken. (Bestaande PDF's worden overgeslagen)");
-    
+
     const pdf = new jsPDF();
     let pagesAdded = 0;
-    
+
     for (const item of items) {
       const imgObj = await fetchImageData(item.file_url || item.media_url);
       if (imgObj) {
@@ -164,20 +165,20 @@ export default function MediaDocumentenPage() {
         pagesAdded++;
       }
     }
-    
+
     if (pagesAdded > 0) {
-      pdf.save('cattery-album.pdf');
+      pdf.save('fokkerij-album.pdf');
     } else {
       alert('Kon geen afbeeldingen verwerken.');
     }
   };
 
   return (
-    <>
-      <PageHead label="Fokkerij" title="Media & Documenten" />
+    <div className="">
+      <PageHead label="Fokkerij" title="Media & documenten" />
       <p className="-mt-4 mb-8 max-w-2xl text-sm text-forest-700/70">
-        Het centrale portaal voor alle cattery documentatie. Upload veilig paspoorten, medische dossiers, 
-        inentingsboekjes en verkoopcontracten direct naar het beveiligde dossier van de kat.
+        {`Het centrale portaal voor al je documentatie. Upload veilig paspoorten, medische dossiers,
+        inentingsboekjes en verkoopcontracten direct naar het beveiligde dossier van ${terms.theAnimal}.`}
       </p>
 
       <div className="grid gap-6 lg:grid-cols-2">
@@ -186,15 +187,15 @@ export default function MediaDocumentenPage() {
           <div className="flex items-center gap-3 mb-4 border-b border-forest-900/10 pb-4">
             <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-100 text-blue-600 font-bold">🩺</span>
             <div>
-              <h2 className="font-display text-xl text-forest-900">Medisch & Paspoorten</h2>
-              <p className="text-xs text-forest-600">Paspoorten, HCM/PKD testen, Inentingen</p>
+              <h2 className="font-display text-xl text-forest-900">Medisch & paspoorten</h2>
+              <p className="text-xs text-forest-600">Paspoorten, gezondheidstesten, inentingen</p>
             </div>
           </div>
-          
+
           <div className="flex-1 space-y-4">
             <div>
-              <span className="text-xs font-medium uppercase tracking-wide text-forest-700">Voor welke kat? Kies eerst het type.</span>
-              <div className="mt-1.5"><CatPicker kittens={kittens} value={targetMedical} onChange={setTargetMedical} /></div>
+              <span className="text-xs font-medium uppercase tracking-wide text-forest-700">{`Voor welk(e) ${terms.animal}? Kies eerst het type.`}</span>
+              <div className="mt-1.5"><CatPicker kittens={kittens} value={targetMedical} onChange={setTargetMedical} terms={terms} /></div>
             </div>
 
             <NativeUploadWidget
@@ -203,18 +204,18 @@ export default function MediaDocumentenPage() {
             >
               {({ open, openCamera }) => (
                 <div className="flex flex-col gap-3">
-                  {!targetMedical && <p className="rounded-lg bg-blue-50 px-3 py-2 text-xs font-medium text-blue-700">👆 Kies eerst een kat hierboven om te kunnen uploaden.</p>}
-                  <button type="button" disabled={!targetMedical} onClick={(e) => { e.preventDefault(); if (!targetMedical) return alert('Kies eerst een kat.'); open(); }} className={`w-full flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-blue-200 bg-blue-50/50 p-6 transition hover:bg-blue-50 ${!targetMedical ? 'cursor-not-allowed opacity-50' : ''}`}>
+                  {!targetMedical && <p className="rounded-lg bg-blue-50 px-3 py-2 text-xs font-medium text-blue-700">{`👆 Kies eerst een ${terms.animal} hierboven om te kunnen uploaden.`}</p>}
+                  <button type="button" disabled={!targetMedical} onClick={(e) => { e.preventDefault(); if (!targetMedical) return alert(`Kies eerst een ${terms.animal}.`); open(); }} className={`w-full flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-blue-200 bg-blue-50/50 p-6 transition hover:bg-blue-50 ${!targetMedical ? 'cursor-not-allowed opacity-50' : ''}`}>
                     <span className="rounded-full bg-blue-100 px-4 py-2 text-sm font-semibold text-blue-700 shadow-sm">📁 Kies bestand</span>
                     <span className="text-xs text-blue-600/70">PDF of foto — wordt direct opgeslagen</span>
                   </button>
-                  <button type="button" disabled={!targetMedical} onClick={(e) => { e.preventDefault(); if (!targetMedical) return alert('Kies eerst een kat.'); openCamera(); }} className={`w-full rounded-xl border border-blue-200 bg-white px-4 py-3 text-sm font-semibold text-blue-700 transition hover:bg-blue-50 ${!targetMedical ? 'cursor-not-allowed opacity-50' : ''}`}>
+                  <button type="button" disabled={!targetMedical} onClick={(e) => { e.preventDefault(); if (!targetMedical) return alert(`Kies eerst een ${terms.animal}.`); openCamera(); }} className={`w-full rounded-xl border border-blue-200 bg-white px-4 py-3 text-sm font-semibold text-blue-700 transition hover:bg-blue-50 ${!targetMedical ? 'cursor-not-allowed opacity-50' : ''}`}>
                     📷 Open camera
                   </button>
                 </div>
               )}
             </NativeUploadWidget>
-            
+
             {previewMedical && (
               <div className="mt-3 flex items-center gap-3 p-3 rounded-xl border border-blue-200 bg-blue-50">
                 <span className="text-xl">✅</span>
@@ -239,11 +240,11 @@ export default function MediaDocumentenPage() {
               <p className="text-xs text-forest-600">Ondertekende contracten & reserveringen</p>
             </div>
           </div>
-          
+
           <div className="flex-1 space-y-4">
             <div>
-              <span className="text-xs font-medium uppercase tracking-wide text-forest-700">Voor welke kat? Kies eerst het type.</span>
-              <div className="mt-1.5"><CatPicker kittens={kittens} value={targetContract} onChange={setTargetContract} /></div>
+              <span className="text-xs font-medium uppercase tracking-wide text-forest-700">{`Voor welk(e) ${terms.animal}? Kies eerst het type.`}</span>
+              <div className="mt-1.5"><CatPicker kittens={kittens} value={targetContract} onChange={setTargetContract} terms={terms} /></div>
             </div>
 
             <NativeUploadWidget
@@ -252,12 +253,12 @@ export default function MediaDocumentenPage() {
             >
               {({ open, openCamera }) => (
                 <div className="flex flex-col gap-3">
-                  {!targetContract && <p className="rounded-lg bg-terracotta-50 px-3 py-2 text-xs font-medium text-terracotta-700">👆 Kies eerst een kat hierboven om te kunnen uploaden.</p>}
-                  <button type="button" disabled={!targetContract} onClick={(e) => { e.preventDefault(); if (!targetContract) return alert('Kies eerst een kat.'); open(); }} className={`w-full flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-terracotta-200 bg-terracotta-50/50 p-6 transition hover:bg-terracotta-50 ${!targetContract ? 'cursor-not-allowed opacity-50' : ''}`}>
+                  {!targetContract && <p className="rounded-lg bg-terracotta-50 px-3 py-2 text-xs font-medium text-terracotta-700">{`👆 Kies eerst een ${terms.animal} hierboven om te kunnen uploaden.`}</p>}
+                  <button type="button" disabled={!targetContract} onClick={(e) => { e.preventDefault(); if (!targetContract) return alert(`Kies eerst een ${terms.animal}.`); open(); }} className={`w-full flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-terracotta-200 bg-terracotta-50/50 p-6 transition hover:bg-terracotta-50 ${!targetContract ? 'cursor-not-allowed opacity-50' : ''}`}>
                     <span className="rounded-full bg-terracotta-100 px-4 py-2 text-sm font-semibold text-terracotta-700 shadow-sm">📁 Kies bestand</span>
                     <span className="text-xs text-terracotta-600/70">Contract PDF of foto — wordt direct opgeslagen</span>
                   </button>
-                  <button type="button" disabled={!targetContract} onClick={(e) => { e.preventDefault(); if (!targetContract) return alert('Kies eerst een kat.'); openCamera(); }} className={`w-full rounded-xl border border-terracotta-200 bg-white px-4 py-3 text-sm font-semibold text-terracotta-700 transition hover:bg-terracotta-50 ${!targetContract ? 'cursor-not-allowed opacity-50' : ''}`}>
+                  <button type="button" disabled={!targetContract} onClick={(e) => { e.preventDefault(); if (!targetContract) return alert(`Kies eerst een ${terms.animal}.`); openCamera(); }} className={`w-full rounded-xl border border-terracotta-200 bg-white px-4 py-3 text-sm font-semibold text-terracotta-700 transition hover:bg-terracotta-50 ${!targetContract ? 'cursor-not-allowed opacity-50' : ''}`}>
                     📷 Open camera
                   </button>
                 </div>
@@ -284,11 +285,11 @@ export default function MediaDocumentenPage() {
           <div className="flex items-center gap-3 mb-4 border-b border-forest-900/10 pb-4">
             <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-brass-100 text-brass-700 font-bold">📸</span>
             <div>
-              <h2 className="font-display text-xl text-forest-900">Cattery Galerij</h2>
-              <p className="text-xs text-forest-600">Sfeerfoto's, nieuwe nestjes en media voor advertenties</p>
+              <h2 className="font-display text-xl text-forest-900">Fokkerij-galerij</h2>
+              <p className="text-xs text-forest-600">{`Sfeerfoto's, nieuwe ${terms.litterPlural} en media voor advertenties`}</p>
             </div>
           </div>
-          
+
           <NativeUploadWidget
             options={{ folder: 'cattery_gallery', accept: 'image/*,video/*', multiple: true, skipRotate: true, maxFiles: 10 }}
             onSuccess={(res) => handleUploadSuccess('Galerij', null, res)}
@@ -318,7 +319,7 @@ export default function MediaDocumentenPage() {
             </div>
           )}
 
-          {/* Overzicht van de galerij — vrij verwijderen, geen kat nodig */}
+          {/* Overzicht van de galerij — vrij verwijderen, geen dier nodig */}
           <div className="mt-6 border-t border-forest-900/10 pt-4">
             <p className="mb-3 text-xs font-bold uppercase tracking-wide text-forest-700">Bestanden in de galerij ({galleryMedia.length})</p>
             {galleryMedia.length === 0 ? (
@@ -363,34 +364,34 @@ export default function MediaDocumentenPage() {
       {/* Recente Uploads Overzicht */}
       <div className="mt-12 space-y-6">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <h2 className="font-display text-2xl text-forest-900">Documenten & Media Archief</h2>
+          <h2 className="font-display text-2xl text-forest-900">Documenten & media archief</h2>
           {selectedItems.length > 0 && (
             <div className="flex flex-wrap items-center gap-2">
                <span className="text-xs font-semibold text-forest-700 mr-2">{selectedItems.length} geselecteerd</span>
-               <Btn variant="ghost" className="text-xs py-1.5 border-forest-900/20" onClick={handleDownloadSelectedFiles}>Download Losse Bestanden</Btn>
-               <Btn variant="brass" className="text-xs py-1.5" onClick={handleDownloadSelectedPDF}>Download PDF Album</Btn>
+               <Btn variant="ghost" className="text-xs py-1.5 border-forest-900/20" onClick={handleDownloadSelectedFiles}>Download losse bestanden</Btn>
+               <Btn variant="brass" className="text-xs py-1.5" onClick={handleDownloadSelectedPDF}>Download PDF album</Btn>
             </div>
           )}
         </div>
-        
+
         <Card>
-          <span className="text-xs font-medium uppercase tracking-wide text-forest-700">Bekijk bestanden van welke kat? Kies eerst het type.</span>
-          <div className="mt-1.5 max-w-md"><CatPicker kittens={kittens} value={archiveCat} onChange={setArchiveCat} /></div>
+          <span className="text-xs font-medium uppercase tracking-wide text-forest-700">{`Bekijk bestanden van welk(e) ${terms.animal}? Kies eerst het type.`}</span>
+          <div className="mt-1.5 max-w-md"><CatPicker kittens={kittens} value={archiveCat} onChange={setArchiveCat} terms={terms} /></div>
         </Card>
 
         {!archiveCat ? (
-          <p className="rounded-2xl border border-dashed border-forest-900/20 bg-white/60 py-10 text-center text-forest-600">Selecteer hierboven een kitten, kater of poes om de bijbehorende bestanden te zien.</p>
+          <p className="rounded-2xl border border-dashed border-forest-900/20 bg-white/60 py-10 text-center text-forest-600">{`Selecteer hierboven een ${terms.young}, ${terms.male} of ${terms.female} om de bijbehorende bestanden te zien.`}</p>
         ) : catUploads.length === 0 ? (
-          <p className="text-forest-700">Nog geen documenten of media voor {kittens.find((k) => k.id === archiveCat)?.name || 'deze kat'}.</p>
+          <p className="text-forest-700">{`Nog geen documenten of media voor ${kittens.find((k) => k.id === archiveCat)?.name || `dit ${terms.animal}`}.`}</p>
         ) : (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {catUploads.map((doc) => {
               const url = doc.file_url || doc.media_url;
               return (
               <div key={doc.id} className={`flex items-center gap-4 rounded-xl border p-3 shadow-sm transition ${selectedItems.includes(doc.id) ? 'border-brass-400 bg-brass-50/50' : 'border-forest-900/10 bg-white hover:border-forest-900/20'}`}>
-                
+
                 <input type="checkbox" checked={selectedItems.includes(doc.id)} onChange={() => toggleSelect(doc.id)} className="ml-1 rounded border-forest-900/20 text-brass-600 focus:ring-brass-400" />
-                
+
                 <div className="h-12 w-12 shrink-0 rounded-lg bg-forest-50 overflow-hidden relative border border-forest-900/5 cursor-pointer" onClick={() => toggleSelect(doc.id)}>
                   {url.endsWith('.pdf') ? (
                     <div className="absolute inset-0 flex items-center justify-center text-[10px] font-bold text-red-500 bg-red-50">PDF</div>
@@ -405,8 +406,8 @@ export default function MediaDocumentenPage() {
                     <button onClick={() => forceDownload(url, doc.name || 'download')} className="text-xs font-semibold text-brass-600 hover:underline">Download</button>
                   </div>
                 </div>
-                <button 
-                  onClick={() => { if(confirm('Weet je zeker dat je dit bestand wilt verwijderen?')) { doc.isDoc ? deleteDocument(doc.id) : deleteMedia(doc.id) } }} 
+                <button
+                  onClick={() => { if(confirm('Weet je zeker dat je dit bestand wilt verwijderen?')) { doc.isDoc ? deleteDocument(doc.id) : deleteMedia(doc.id) } }}
                   className="shrink-0 p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition"
                   title="Verwijder"
                 >
@@ -417,6 +418,6 @@ export default function MediaDocumentenPage() {
           </div>
         )}
       </div>
-    </>
+    </div>
   );
 }

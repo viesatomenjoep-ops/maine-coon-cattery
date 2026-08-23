@@ -4,13 +4,14 @@ import Link from 'next/link';
 import { useStore } from '@/context/StoreContext';
 import { PageHead, Card, Field, Input, Select, Btn } from '@/components/admin';
 import { TREATMENT_TYPES as TYPES, TREATMENT_SCHEDULE, treatmentIcon, urgency, formatDate, collectUpcoming } from '@/lib/treatments';
+import { cap } from '@/lib/species';
 
 const isMale = (g) => /kater|mann|\bmale\b|\bm\b/i.test(g || '');
 const isFemale = (g) => /poes|vrouw|female|\bf\b/i.test(g || '');
 const groupOf = (k) => (!k.is_own_breeding_cat ? 'kittens' : isMale(k.gender) ? 'katers' : isFemale(k.gender) ? 'poezen' : 'overige');
 
 export default function MedicalPage() {
-  const { litters, kittens, addMedical, deleteMedical, updateMedical } = useStore();
+  const { litters, kittens, addMedical, deleteMedical, updateMedical, terms } = useStore();
 
   // Geboortedatum van een kat (eigen datum of die van het nestje).
   const catBirth = (catId) => {
@@ -67,11 +68,11 @@ export default function MedicalPage() {
   // Behandelagenda: alle geplande behandelingen over alle katten.
   const agenda = collectUpcoming(kittens);
 
-  // Groepeer katten voor de losse-keuzelijst.
+  // Groepeer de dieren voor de keuzelijst, met de woorden van deze diersoort.
   const groups = [
-    { key: 'kittens', label: 'Kittens' },
-    { key: 'katers', label: 'Katers' },
-    { key: 'poezen', label: 'Poezen' },
+    { key: 'kittens', label: cap(terms.youngPlural) },
+    { key: 'katers', label: cap(terms.malePlural) },
+    { key: 'poezen', label: cap(terms.femalePlural) },
     { key: 'overige', label: 'Overige' },
   ];
 
@@ -106,7 +107,7 @@ export default function MedicalPage() {
         {/* ---- 1. Groepsbehandeling ---- */}
         <Card>
           <h2 className="mb-1 font-display text-xl text-forest-900">1. Groepsbehandeling registreren</h2>
-          <p className="mb-4 text-sm text-forest-600">Voor meerdere kittens uit één nestje tegelijk.</p>
+          <p className="mb-4 text-sm text-forest-600">{`Voor meerdere ${terms.youngPlural} uit één ${terms.litter} tegelijk.`}</p>
           <div className="grid gap-4">
             <Field label="Nestje"><Select value={litterId} onChange={(e) => { setLitterId(e.target.value); setSelected([]); }}>{litters.map((l) => <option key={l.id} value={l.id}>{l.name}</option>)}</Select></Field>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -120,7 +121,7 @@ export default function MedicalPage() {
 
             <div>
               <div className="mb-2 flex items-center justify-between">
-                <span className="text-xs font-medium uppercase tracking-wide text-forest-700">Toepassen op kittens</span>
+                <span className="text-xs font-medium uppercase tracking-wide text-forest-700">{`Toepassen op ${terms.youngPlural}`}</span>
                 <span className="text-xs"><button onClick={all} className="text-brass-600 hover:underline">Alle</button> · <button onClick={none} className="text-forest-600 hover:underline">Geen</button></span>
               </div>
               <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
@@ -141,11 +142,11 @@ export default function MedicalPage() {
         {/* ---- 2. Losse behandeling per kat ---- */}
         <Card>
           <h2 className="mb-1 font-display text-xl text-forest-900">2. Losse behandeling per kat</h2>
-          <p className="mb-4 text-sm text-forest-600">Voor één specifieke kat — elke kitten, kater of poes.</p>
+          <p className="mb-4 text-sm text-forest-600">{`Voor één specifiek dier — elke ${terms.young}, ${terms.male} of ${terms.female}.`}</p>
           <div className="grid gap-4">
-            <Field label="Welke kat?">
+            <Field label={`Welke ${terms.animal}?`}>
               <Select value={single.catId} onChange={(e) => { const catId = e.target.value; setSingle((s) => ({ ...s, catId, due: suggestDue(catId, s.type) || s.due })); }}>
-                <option value="">Selecteer een kat…</option>
+                <option value="">{`Selecteer een ${terms.animal}…`}</option>
                 {groups.map((g) => {
                   const list = kittens.filter((k) => groupOf(k) === g.key);
                   if (list.length === 0) return null;

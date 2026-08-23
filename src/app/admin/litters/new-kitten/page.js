@@ -5,8 +5,8 @@ import Link from 'next/link';
 import { useStore } from '@/context/StoreContext';
 import { PageHead, Card, Field, Input, Select, Combobox, Btn, Stepper } from '@/components/admin';
 import FilePicker from '@/components/admin/FilePicker';
+import { cap } from '@/lib/species';
 
-const SEXES = ['Kater', 'Poes'];
 const PATTERNS = [
   'Classic Tabby', 'Mackerel Tabby', 'Spotted Tabby', 'Ticked Tabby',
   'Solid (Effen)', 'Smoke', 'Shaded', 'Shell/Chinchilla',
@@ -22,16 +22,17 @@ const KITTEN_STATUSES = [
   { value: 'verkocht', label: 'Verkocht' },
   { value: 'houden', label: 'Houden' },
 ];
-const KIT_STEPS = ['Naam & nestje', 'Uiterlijk', 'Identificatie', 'Verkoop', 'Foto'];
-
 function NewKittenForm() {
   const router = useRouter();
   const params = useSearchParams();
   const litterParam = params.get('litter') || '';
-  const { litters = [], addKitten } = useStore();
+  const { litters = [], addKitten, terms, species } = useStore();
+  const isCat = species === 'katten';
+  const SEXES = [cap(terms.male), cap(terms.female)];
+  const KIT_STEPS = [`Naam & ${terms.litter}`, 'Uiterlijk', 'Identificatie', 'Verkoop', 'Foto'];
 
   const [kit, setKit] = useState({
-    litter_id: litterParam, name: '', sex: 'Kater', color: '', pattern: '', status: 'beschikbaar',
+    litter_id: litterParam, name: '', sex: cap(terms.male), color: '', pattern: '', status: 'beschikbaar',
     chip_no: '', registration_no: '', birth_weight_g: '', ems_code: '', reserved_by: '',
     priceNL: 1250, priceBE: 1300, cover_image: '',
   });
@@ -41,7 +42,7 @@ function NewKittenForm() {
 
   const litter = litters.find((l) => l.id === kit.litter_id) || null;
   const backHref = litterParam ? (litter ? `/admin/litters/${litter.id}` : '/admin/litters') : '/admin/litters/new-cat';
-  const backLabel = litterParam ? (litter ? `Terug naar ${litter.name}` : 'Terug naar nestjes') : 'Terug';
+  const backLabel = litterParam ? (litter ? `Terug naar ${litter.name}` : `Terug naar ${terms.litterPlural}`) : 'Terug';
 
   const handleUpload = async (file) => {
     if (!file) return;
@@ -60,8 +61,8 @@ function NewKittenForm() {
   };
 
   const saveKitten = async () => {
-    if (!kit.litter_id) return alert('Selecteer a.u.b. een nestje om dit kitten aan toe te voegen.');
-    if (!kit.name.trim()) return alert('Vul a.u.b. een naam in voor het kitten.');
+    if (!kit.litter_id) return alert(`Selecteer a.u.b. een ${terms.litter} om dit ${terms.young} aan toe te voegen.`);
+    if (!kit.name.trim()) return alert(`Vul a.u.b. een naam in voor het ${terms.young}.`);
     setSaving(true);
     const res = await addKitten({ ...kit, gender: kit.sex, price_nl: kit.priceNL, price_be: kit.priceBE });
     setSaving(false);
@@ -75,7 +76,7 @@ function NewKittenForm() {
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m12 19-7-7 7-7" /><path d="M19 12H5" /></svg>
         {backLabel}
       </Link>
-      <PageHead label="Fokkerij" title="Kitten toevoegen" />
+      <PageHead label="Fokkerij" title={`${cap(terms.young)} toevoegen`} />
       <Card className="max-w-2xl">
         <Stepper
           steps={KIT_STEPS}
@@ -85,13 +86,13 @@ function NewKittenForm() {
           onFinish={saveKitten}
           canNext={kitStep === 0 ? Boolean(kit.litter_id && kit.name.trim()) : true}
           finishing={saving}
-          finishLabel="Kitten toevoegen"
+          finishLabel={`${cap(terms.young)} toevoegen`}
         >
           {kitStep === 0 && (
             <div className="grid gap-4">
-              <Field label="Nestje">
+              <Field label={cap(terms.litter)}>
                 <Select value={kit.litter_id} onChange={(e) => setKit({ ...kit, litter_id: e.target.value })}>
-                  <option value="">Selecteer nestje...</option>
+                  <option value="">{`Selecteer ${terms.litter}...`}</option>
                   {litters.map((l) => <option key={l.id} value={l.id}>{l.name}</option>)}
                 </Select>
               </Field>
@@ -101,18 +102,24 @@ function NewKittenForm() {
           )}
           {kitStep === 1 && (
             <div className="grid gap-4">
-              <Field label="Kleurslag (Color)">
-                <Combobox id="colorsList" options={COLORS} value={kit.color} onChange={(e) => setKit({ ...kit, color: e.target.value })} placeholder="Bijv. Black Solid" />
-              </Field>
-              <Field label="Patroon (Pattern)">
-                <Combobox id="patternsList" options={PATTERNS} value={kit.pattern} onChange={(e) => setKit({ ...kit, pattern: e.target.value })} placeholder="Bijv. Classic Tabby" />
-              </Field>
+              {isCat ? (
+                <>
+                  <Field label="Kleurslag (Color)">
+                    <Combobox id="colorsList" options={COLORS} value={kit.color} onChange={(e) => setKit({ ...kit, color: e.target.value })} placeholder="Bijv. Black Solid" />
+                  </Field>
+                  <Field label="Patroon (Pattern)">
+                    <Combobox id="patternsList" options={PATTERNS} value={kit.pattern} onChange={(e) => setKit({ ...kit, pattern: e.target.value })} placeholder="Bijv. Classic Tabby" />
+                  </Field>
+                </>
+              ) : (
+                <Field label="Kleur / aftekening"><Input value={kit.color} onChange={(e) => setKit({ ...kit, color: e.target.value })} placeholder="Bijv. Zwart-wit" /></Field>
+              )}
               <Field label="Geboortegewicht (g)"><Input type="number" min="0" value={kit.birth_weight_g} onChange={(e) => setKit({ ...kit, birth_weight_g: e.target.value })} placeholder="Bijv. 110" /></Field>
             </div>
           )}
           {kitStep === 2 && (
             <div className="grid gap-4">
-              <Field label="EMS-code"><Input value={kit.ems_code} onChange={(e) => setKit({ ...kit, ems_code: e.target.value })} placeholder="Bijv. MCO n 22" /></Field>
+              {isCat && <Field label="EMS-code"><Input value={kit.ems_code} onChange={(e) => setKit({ ...kit, ems_code: e.target.value })} placeholder="Bijv. MCO n 22" /></Field>}
               <Field label="Stamboomnummer"><Input value={kit.registration_no} onChange={(e) => setKit({ ...kit, registration_no: e.target.value })} placeholder="Registratienummer" /></Field>
               <Field label="Chipnummer"><Input value={kit.chip_no} onChange={(e) => setKit({ ...kit, chip_no: e.target.value })} /></Field>
             </div>

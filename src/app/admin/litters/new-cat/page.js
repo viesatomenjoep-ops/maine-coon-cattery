@@ -2,6 +2,8 @@
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { PageHead, Icon } from '@/components/admin';
+import { useStore } from '@/context/StoreContext';
+import { cap } from '@/lib/species';
 
 function TypeCard({ icon, title, desc, onClick }) {
   return (
@@ -23,21 +25,42 @@ function TypeCard({ icon, title, desc, onClick }) {
 
 export default function NewCatPickerPage() {
   const router = useRouter();
+  const { terms } = useStore();
 
   return (
-    <>
-      <Link href="/admin/litters" className="mb-4 inline-flex items-center gap-1.5 text-sm font-semibold text-forest-600 transition hover:text-forest-900">
+    <div className="">
+      <Link href="/admin/cats" className="mb-4 inline-flex items-center gap-1.5 text-sm font-semibold text-forest-600 transition hover:text-forest-900">
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m12 19-7-7 7-7" /><path d="M19 12H5" /></svg>
-        Terug naar nestjes
+        Terug naar {terms.animalPlural}
       </Link>
-      <PageHead label="Fokkerij" title="Kat toevoegen" />
+      <PageHead label="Fokkerij" title={`${cap(terms.animal)} toevoegen`} />
       <p className="mb-6 text-sm text-forest-600">Wat wil je toevoegen?</p>
       <div className="grid gap-4 sm:grid-cols-2">
-        <TypeCard icon="cat" title="Nieuwe kitten" desc="Een kitten uit een van je nestjes." onClick={() => router.push('/admin/litters/new-kitten')} />
-        <TypeCard icon="health" title="Fokpoes" desc="Een moederdier, niet gekoppeld aan een nestje." onClick={() => router.push('/admin/litters/new-breeder?gender=female')} />
-        <TypeCard icon="health" title="Fokkater" desc="Een vaderdier, niet gekoppeld aan een nestje." onClick={() => router.push('/admin/litters/new-breeder?gender=male')} />
-        <TypeCard icon="customer" title="Bestaande kat" desc="Een kat die je elders al had, handmatig invoeren." onClick={() => router.push('/admin/cats/new')} />
+        <TypeCard
+          icon="cat"
+          title={`Nieuwe ${terms.young}`}
+          desc={`Een ${terms.young} uit een van je ${terms.litterPlural}.`}
+          onClick={() => router.push('/admin/litters/new-kitten')}
+        />
+        <TypeCard
+          icon="health"
+          title={`Fok${terms.female}`}
+          desc="Een moederdier, niet gekoppeld aan een nestje."
+          onClick={() => router.push('/admin/litters/new-breeder?gender=female')}
+        />
+        <TypeCard
+          icon="health"
+          title={`Fok${terms.male}`}
+          desc="Een vaderdier, niet gekoppeld aan een nestje."
+          onClick={() => router.push('/admin/litters/new-breeder?gender=male')}
+        />
+        <TypeCard
+          icon="customer"
+          title={`Bestaande ${terms.animal}`}
+          desc={`Een ${terms.animal} die je elders al had, handmatig invoeren.`}
+          onClick={() => router.push('/admin/cats/new')}
+        />
       </div>
-    </>
+    </div>
   );
 }
