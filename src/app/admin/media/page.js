@@ -1,7 +1,8 @@
 'use client';
 import { useState } from 'react';
 import { useStore } from '@/context/StoreContext';
-import { PageHead, Card, Select, Btn } from '@/components/admin';
+import { Card, Select, Btn } from '@/components/admin';
+import { PageHeader } from '@/components/admin/PageShell';
 import { ImageSlot } from '@/components/ui';
 import { AdminUpload } from '@/components/admin/FilePicker';
 import { cap, sexLabel } from '@/lib/species';
@@ -175,7 +176,11 @@ export default function MediaDocumentenPage() {
 
   return (
     <div className="">
-      <PageHead label="Fokkerij" title="Media & documenten" />
+      <PageHeader
+        icon={<><rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="9" cy="9" r="2" /><path d="m21 15-5-5L5 21" /></>}
+        title="Bestanden & foto's"
+        subtitle="Paspoorten, contracten en media op één plek"
+      />
       <p className="-mt-4 mb-8 max-w-2xl text-sm text-forest-700/70">
         {`Het centrale portaal voor al je documentatie. Upload veilig paspoorten, medische dossiers,
         inentingsboekjes en verkoopcontracten direct naar het beveiligde dossier van ${terms.theAnimal}.`}

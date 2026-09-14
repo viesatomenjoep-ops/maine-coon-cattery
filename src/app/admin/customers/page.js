@@ -3,10 +3,12 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useStore } from '@/context/StoreContext';
-import { PageHead, Card, Btn } from '@/components/admin';
+import { Card, Btn } from '@/components/admin';
+import { PageHeader, PrimaryAction, EmptyHero, HowItWorks } from '@/components/admin/PageShell';
+import { cap } from '@/lib/species';
 
 export default function CustomersPage() {
-  const { customers, addCustomer, deleteCustomer } = useStore();
+  const { customers, addCustomer, deleteCustomer, terms } = useStore();
   const [showAdd, setShowAdd] = useState(false);
   const router = useRouter();
 
@@ -43,13 +45,13 @@ export default function CustomersPage() {
   };
 
   return (
-    <div className="">
-      <PageHead
-        title="Klantenbestand"
-        label="Beheer alle klanten en toewijzingen"
-      >
-        <Btn variant="brass" onClick={() => setShowAdd(!showAdd)}>+ Nieuwe Klant</Btn>
-      </PageHead>
+    <div>
+      <PageHeader
+        icon={<><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87" /></>}
+        title="Klanten"
+        subtitle={customers.length ? `${customers.length} ${customers.length === 1 ? 'klant' : 'klanten'}` : null}
+        actions={<PrimaryAction onClick={() => setShowAdd(!showAdd)}>Nieuwe klant</PrimaryAction>}
+      />
 
       {showAdd && (
         <Card className="mb-8">
@@ -129,10 +131,39 @@ export default function CustomersPage() {
             </Card>
           </Link>
         ))}
-        {customers.length === 0 && !showAdd && (
-          <p className="text-forest-600 text-sm">Geen klanten gevonden. Voeg er een toe!</p>
-        )}
       </div>
+
+      {customers.length === 0 && !showAdd && (
+        <>
+          <EmptyHero
+            icon={<><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87" /></>}
+            title="Je kopers op één plek"
+            desc={`Zet elke koper één keer in het systeem. Daarna koppel je er een ${terms.young} aan en krijgt die persoon een eigen link naar het dossier — zonder dat je nog foto's hoeft door te appen.`}
+            action={<PrimaryAction onClick={() => setShowAdd(true)}>Voeg je eerste klant toe</PrimaryAction>}
+          />
+
+          <HowItWorks
+            label="Zo werken klanten"
+            steps={[
+              {
+                title: 'Leg de gegevens vast',
+                desc: 'Naam, e-mail, telefoonnummer en adres — alles wat je nodig hebt voor het contract en de overdracht.',
+                icon: <><path d="M4 4v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6H6a2 2 0 0 0-2 2Z" /><path d="M13 2v6h6" /></>,
+              },
+              {
+                title: `Koppel een ${terms.young}`,
+                desc: `Kies welk ${terms.young} bij deze koper hoort. Het dossier volgt dan automatisch mee.`,
+                icon: <><path d="M9 17H7A5 5 0 0 1 7 7h2M15 7h2a5 5 0 0 1 0 10h-2M8 12h8" /></>,
+              },
+              {
+                title: 'Deel de persoonlijke link',
+                desc: 'De koper ziet foto\'s, groeicurve, entingen en papieren — altijd actueel, zonder in te loggen.',
+                icon: <><path d="M4 4h16v12H5.2L4 17.2Z" /><path d="M8 9h8M8 12h5" /></>,
+              },
+            ]}
+          />
+        </>
+      )}
     </div>
   );
 }

@@ -2,7 +2,8 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useStore } from '@/context/StoreContext';
-import { PageHead, Card, Field, Input, Select, Btn } from '@/components/admin';
+import { Card, Field, Input, Select, Btn } from '@/components/admin';
+import { PageHeader } from '@/components/admin/PageShell';
 import { TREATMENT_TYPES as TYPES, TREATMENT_SCHEDULE, treatmentIcon, urgency, formatDate, collectUpcoming } from '@/lib/treatments';
 import { cap } from '@/lib/species';
 
@@ -47,7 +48,7 @@ export default function MedicalPage() {
 
   const apply = () => {
     if (!entry.date && !entry.due) return alert('Vul een uitvoerdatum of een vervolgdatum in.');
-    if (selected.length === 0) return alert('Selecteer minimaal één kitten.');
+    if (selected.length === 0) return alert(`Selecteer minimaal één ${terms.young}.`);
     selected.forEach((id) => addMedical(id, { ...entry }));
     setDone(true);
     setSelected([]);
@@ -57,7 +58,7 @@ export default function MedicalPage() {
   };
 
   const applySingle = async () => {
-    if (!single.catId) return alert('Selecteer eerst een kat.');
+    if (!single.catId) return alert(`Selecteer eerst een ${terms.animal}.`);
     if (!single.date && !single.due) return alert('Vul een uitvoerdatum of een vervolgdatum in.');
     const res = await addMedical(single.catId, { type: single.type, date: single.date, due: single.due, note: single.note });
     if (res?.error) return alert('Opslaan mislukt: ' + (res.error.message || ''));
@@ -77,10 +78,13 @@ export default function MedicalPage() {
   ];
 
   return (
-    <>
-      <PageHead label="Gezondheid" title="Medisch Dashboard">
-        {done && <span className="rounded-full bg-forest-100 px-4 py-2 text-sm text-forest-700">✓ Toegevoegd aan dossiers</span>}
-      </PageHead>
+    <div>
+      <PageHeader
+        icon={<path d="M19 14c1.5-1.5 3-3.4 3-5.5A3.5 3.5 0 0 0 12 5 3.5 3.5 0 0 0 2 8.5C2 12 5 14.5 12 21c2.5-2.3 4.5-4.2 6-6.5Z" />}
+        title="Gezondheid"
+        subtitle={`Ontworming, entingen en controles voor al je ${terms.animalPlural}`}
+        actions={done ? <span className="rounded-full bg-forest-100 px-4 py-2 text-sm text-forest-700">✓ Toegevoegd aan dossiers</span> : null}
+      />
 
       {/* Uitleg standaardschema */}
       <div className="mb-6 rounded-2xl border border-forest-900/10 bg-white p-5">
@@ -88,7 +92,7 @@ export default function MedicalPage() {
         <p className="mt-1 text-sm text-forest-600">Je kunt voor elke categorie een datum + herinnering instellen. Zodra een behandeling gedaan is, vink je hem af — dan stopt de melding.</p>
         <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
           {[
-            { i: '💊', t: 'Ontworming', d: 'Vanaf 4 weken — kittens én de moeder' },
+            { i: '💊', t: 'Ontworming', d: `Vanaf 4 weken — ${terms.youngPlural} én de moeder` },
             { i: '💉', t: 'Vaccinatie 9 weken', d: 'Eerste enting rond 9 weken' },
             { i: '💉', t: 'Vaccinatie 12 weken', d: 'Tweede enting rond 12 weken' },
             { i: '📍', t: 'Transponderchip', d: 'Rond 9 weken — chip plaatsen + registreren' },
@@ -109,7 +113,7 @@ export default function MedicalPage() {
           <h2 className="mb-1 font-display text-xl text-forest-900">1. Groepsbehandeling registreren</h2>
           <p className="mb-4 text-sm text-forest-600">{`Voor meerdere ${terms.youngPlural} uit één ${terms.litter} tegelijk.`}</p>
           <div className="grid gap-4">
-            <Field label="Nestje"><Select value={litterId} onChange={(e) => { setLitterId(e.target.value); setSelected([]); }}>{litters.map((l) => <option key={l.id} value={l.id}>{l.name}</option>)}</Select></Field>
+            <Field label={cap(terms.litter)}><Select value={litterId} onChange={(e) => { setLitterId(e.target.value); setSelected([]); }}>{litters.map((l) => <option key={l.id} value={l.id}>{l.name}</option>)}</Select></Field>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <Field label="Type"><Select value={entry.type} onChange={(e) => { const type = e.target.value; const wk = TREATMENT_SCHEDULE[type]; const birth = litters.find((l) => l.id === litterId)?.date_of_birth; let due = entry.due; if (wk && birth) { const d = new Date(birth); d.setDate(d.getDate() + wk * 7); if (!isNaN(d)) due = d.toISOString().slice(0, 10); } setEntry({ ...entry, type, due }); }}>{TYPES.map((t) => <option key={t}>{t}</option>)}</Select></Field>
               <Field label="Uitgevoerd op"><Input type="date" value={entry.date} onChange={(e) => setEntry({ ...entry, date: e.target.value })} /></Field>
@@ -244,6 +248,6 @@ export default function MedicalPage() {
           ))}
         </div>
       </div>
-    </>
+    </div>
   );
 }

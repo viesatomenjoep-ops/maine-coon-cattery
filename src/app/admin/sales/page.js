@@ -2,7 +2,8 @@
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useStore } from '@/context/StoreContext';
-import { PageHead, Card, Input, Select, Btn } from '@/components/admin';
+import { Card, Input, Select, Btn } from '@/components/admin';
+import { PageHeader } from '@/components/admin/PageShell';
 
 // Open in nieuw venster of forceer download (werkt ook voor Cloudinary-bestanden).
 async function downloadFile(url, filename) {
@@ -461,7 +462,11 @@ export default function SalesPage() {
 
   return (
     <div className="">
-      <PageHead label="Verkoop" title="Advertentie & sales beheer" />
+      <PageHeader
+        icon={<><path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0l-7.2-7.2A2 2 0 0 1 3 12V4a1 1 0 0 1 1-1h8a2 2 0 0 1 1.4.6l7.2 7.2a2 2 0 0 1 0 2.6Z" /><circle cx="7.5" cy="7.5" r="1.2" /></>}
+        title="Verkoop"
+        subtitle="Advertenties, prijzen en wat je kopers zien"
+      />
       <p className="-mt-4 mb-6 max-w-2xl text-sm text-forest-700/70">
         {`Maak twee soorten advertenties: voor een `}<b>{`bestaande ${terms.young}`}</b>{` (met alle details en prijs),
         of voor een `}<b>{`verwacht ${terms.litter}`}</b>{` (aankondiging met ouders, foto's en jouw verhaal).`}

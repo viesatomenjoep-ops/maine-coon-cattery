@@ -8,6 +8,7 @@ import { Logo, PawMark } from '@/components/ui';
 import { Icon } from '@/components/admin';
 import TreatmentReminders from '@/components/admin/TreatmentReminders';
 import MobileTabBar from '@/components/admin/MobileTabBar';
+import AdminTopBar from '@/components/admin/AdminTopBar';
 import { cap } from '@/lib/species';
 
 export default function AdminLayout({ children }) {
@@ -117,7 +118,11 @@ export default function AdminLayout({ children }) {
 
           <div className="w-[42px]" />
         </header>
-        <div className="p-4 pb-28 sm:p-6 sm:pb-28 md:p-10 lg:pb-10">
+
+        {/* Bovenbalk op desktop: overal zoeken, meldingen en je eigen profiel */}
+        <AdminTopBar />
+
+        <div className="p-4 pb-28 sm:p-6 sm:pb-28 md:p-10 lg:pb-10 lg:pt-8">
           <TreatmentReminders />
           {children}
         </div>

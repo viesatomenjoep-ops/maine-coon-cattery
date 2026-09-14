@@ -3,7 +3,8 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useStore } from '@/context/StoreContext';
-import { PageHead, Card } from '@/components/admin';
+import { Card } from '@/components/admin';
+import { PageHeader, PrimaryAction, EmptyHero, HowItWorks } from '@/components/admin/PageShell';
 import { cap } from '@/lib/species';
 
 const LITTER_STATUSES = [
@@ -31,22 +32,58 @@ export default function LittersPage() {
   }, []);
 
   return (
-    <div className="">
+    <div>
       <Link href="/admin/cats" className="mb-4 inline-flex items-center gap-1.5 text-sm font-semibold text-forest-600 transition hover:text-forest-900">
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m12 19-7-7 7-7" /><path d="M19 12H5" /></svg>
         {`Terug naar ${terms.animalPlural} & dossiers`}
       </Link>
-      <PageHead label="Fokkerij" title={`${cap(terms.litterPlural)} & ${terms.youngPlural}`} />
 
-      {/* Overzicht — compacte kaarten, alles verder zit achter "Open" */}
+      <PageHeader
+        icon={<><path d="M3 10.5 12 4l9 6.5" /><path d="M5 9.5V20h14V9.5" /><path d="M9 20v-5a3 3 0 0 1 6 0v5" /></>}
+        title={cap(terms.litterPlural)}
+        subtitle={litters.length ? `${litters.length} in je ${terms.facility}` : null}
+        actions={<PrimaryAction href="/admin/litters/new">{`Nieuw ${terms.litter}`}</PrimaryAction>}
+      />
+
+      {litters.length === 0 ? (
+        <>
+          <EmptyHero
+            icon={<><path d="M3 10.5 12 4l9 6.5" /><path d="M5 9.5V20h14V9.5" /><path d="M9 20v-5a3 3 0 0 1 6 0v5" /></>}
+            title={`Een ${terms.litter} houdt alles bij elkaar`}
+            desc={`Zet de ouders, de geboortedatum en alle ${terms.youngPlural} onder één ${terms.litter}. Daarna deel je er met één link een complete aankondiging van met geïnteresseerden.`}
+            action={<PrimaryAction href="/admin/litters/new">{`Maak je eerste ${terms.litter}`}</PrimaryAction>}
+          />
+
+          <HowItWorks
+            label={`Zo werken ${terms.litterPlural}`}
+            steps={[
+              {
+                title: 'Kies de ouders',
+                desc: `Selecteer de ${terms.male} en de ${terms.female} uit je eigen dieren, of vul alleen hun naam in.`,
+                icon: <><circle cx="9" cy="7" r="4" /><circle cx="17" cy="7" r="3" /><path d="M2 21v-2a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v2" /></>,
+              },
+              {
+                title: `Voeg de ${terms.youngPlural} toe`,
+                desc: `Elk ${terms.young} krijgt een eigen dossier met gewicht, kleur, chipnummer en foto's.`,
+                icon: <><path d="M12 5v14M5 12h14" /></>,
+              },
+              {
+                title: 'Deel de aankondiging',
+                desc: 'Eén link met ouderfoto\'s, je eigen verhaal en wat er beschikbaar is — klaar voor WhatsApp.',
+                icon: <><circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" /><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4" /></>,
+              },
+            ]}
+            footer={
+              <Link href="/admin/cats" className="inline-flex items-center gap-1.5 text-sm font-semibold text-forest-600 transition hover:text-forest-900">
+                {`Eerst je ${terms.animalPlural} invoeren`}
+                <span aria-hidden>→</span>
+              </Link>
+            }
+          />
+        </>
+      ) : (
+      /* Overzicht — compacte kaarten, alles verder zit achter "Open" */
       <div className="space-y-4">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <h2 className="font-display text-2xl text-forest-900">{cap(terms.litterPlural)} overzicht</h2>
-          <Link href="/admin/litters/new" className="inline-flex items-center rounded-lg bg-forest-800 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-forest-900">{`+ Nieuw ${terms.litter}`}</Link>
-        </div>
-
-        {litters.length === 0 && <p className="text-forest-700">{`Geen ${terms.litterPlural} gevonden. Maak er bovenaan eentje aan.`}</p>}
-
         {litters.map((lit) => {
           const nestKittenCount = kittens.filter((k) => k.litter_id === lit.id && !k.is_own_breeding_cat).length;
           const statusLabel = LITTER_STATUSES.find((s) => s.value === norm(lit.status))?.label;
@@ -85,7 +122,7 @@ export default function LittersPage() {
               </div>
 
               <div className="mt-4 flex flex-col gap-2 sm:flex-row">
-                <Link href={`/admin/litters/${lit.id}`} className="inline-flex items-center justify-center rounded-lg bg-brass-500 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-brass-600 sm:w-auto">Open nestje →</Link>
+                <Link href={`/admin/litters/${lit.id}`} className="inline-flex items-center justify-center rounded-lg bg-brass-500 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-brass-600 sm:w-auto">{`Open ${terms.litter} →`}</Link>
                 <div className="grid grid-cols-2 gap-1 rounded-lg border border-forest-900/10 bg-white p-1 sm:w-56">
                   <button
                     onClick={() => {
@@ -108,6 +145,7 @@ export default function LittersPage() {
           );
         })}
       </div>
+      )}
     </div>
   );
 }

@@ -1,14 +1,15 @@
 'use client';
 import Link from 'next/link';
 import { useStore } from '@/context/StoreContext';
-import { PageHead, Card, Icon } from '@/components/admin';
+import { Card, Icon } from '@/components/admin';
+import { PageHeader, PrimaryAction } from '@/components/admin/PageShell';
 import { StatusPill, PawMark } from '@/components/ui';
 import { collectUpcoming, urgency, treatmentIcon, formatDate } from '@/lib/treatments';
 import PushSetup from '@/components/admin/PushSetup';
 import { cap, sexLabel } from '@/lib/species';
 
 export default function AdminDashboard() {
-  const { kittens, litters, news, interests = [], updateInterest, deleteInterest, updateKitten, species, terms } = useStore();
+  const { kittens, litters, news, interests = [], updateInterest, deleteInterest, updateKitten, species, terms, currentTenant } = useStore();
   const agenda = collectUpcoming(kittens).slice(0, 8);
 
   const newInterests = interests.filter((i) => (i.status || 'nieuw') === 'nieuw');
@@ -33,7 +34,12 @@ export default function AdminDashboard() {
 
   return (
     <div className="">
-      <PageHead label="Welkom terug" title="Startscherm" />
+      <PageHeader
+        icon={<><rect x="3" y="3" width="7" height="7" rx="1.5" /><rect x="14" y="3" width="7" height="7" rx="1.5" /><rect x="3" y="14" width="7" height="7" rx="1.5" /><rect x="14" y="14" width="7" height="7" rx="1.5" /></>}
+        title="Startscherm"
+        subtitle={currentTenant?.name || null}
+        actions={<PrimaryAction href="/admin/litters/new-cat">{`${cap(terms.animal)} toevoegen`}</PrimaryAction>}
+      />
 
       <PushSetup />
 
