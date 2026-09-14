@@ -2,11 +2,13 @@
 import { useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { PageHead, Card, Btn } from '@/components/admin';
+import { useStore } from '@/context/StoreContext';
+import { cap } from '@/lib/species';
 
-// Alle tabellen die samen jouw volledige cattery-administratie vormen.
-const TABLES = [
-  { key: 'litters', label: 'Nestjes' },
-  { key: 'cats', label: 'Katten & kittens' },
+// Alle tabellen die samen jouw volledige fokkerij-administratie vormen.
+const tablesFor = (terms) => [
+  { key: 'litters', label: cap(terms.litterPlural) },
+  { key: 'cats', label: `${cap(terms.animalPlural)} & ${terms.youngPlural}` },
   { key: 'customers', label: 'Klanten' },
   { key: 'documents', label: 'Documenten (links)' },
   { key: 'media', label: 'Media (links)' },
@@ -46,6 +48,9 @@ function toCsv(rows) {
 const stamp = () => new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-');
 
 export default function BackupPage() {
+  const { terms, currentTenant } = useStore();
+  const TABLES = tablesFor(terms);
+  const filePrefix = (currentTenant?.slug || 'fokkerij').toLowerCase();
   const [busy, setBusy] = useState(false);
   const [counts, setCounts] = useState(null);
   const [error, setError] = useState('');
@@ -73,12 +78,12 @@ export default function BackupPage() {
       const backup = {
         _meta: {
           exported_at: new Date().toISOString(),
-          cattery: "Wendy's Dream Maine Coon Cattery",
+          fokkerij: currentTenant?.name || 'Onbekende fokkerij',
           note: 'Volledige back-up van alle gegevens uit Supabase. Foto-bestanden staan in Cloudinary; hier staan de links (media_url / file_url).',
         },
         ...result,
       };
-      downloadBlob(JSON.stringify(backup, null, 2), `wendysdream-backup-${stamp()}.json`, 'application/json');
+      downloadBlob(JSON.stringify(backup, null, 2), `${filePrefix}-backup-${stamp()}.json`, 'application/json');
       setCounts(tallCounts);
       setLastAt(new Date());
     } catch (e) {
@@ -106,7 +111,7 @@ export default function BackupPage() {
       const { data, error } = await supabase.from(tableKey).select('*');
       if (error) throw new Error(error.message);
       if (!data || data.length === 0) { alert(`Geen gegevens gevonden voor: ${label}.`); setBusy(false); return; }
-      downloadBlob(toCsv(data), `wendysdream-${tableKey}-${stamp()}.csv`, 'text/csv;charset=utf-8;');
+      downloadBlob(toCsv(data), `${filePrefix}-${tableKey}-${stamp()}.csv`, 'text/csv;charset=utf-8;');
     } catch (e) {
       setError(e.message || 'Er ging iets mis bij het exporteren.');
     }
@@ -118,9 +123,9 @@ export default function BackupPage() {
       <PageHead label="Beveiliging" title="Back-up & Export" />
 
       <p className="mb-8 max-w-2xl text-sm leading-relaxed text-forest-700">
-        Maak met één klik een kopie van al je gegevens (nestjes, kittens, klanten, chipnummers, documenten en meer).
+        {`Maak met één klik een kopie van al je gegevens (${terms.litterPlural}, ${terms.youngPlural}, klanten, chipnummers, documenten en meer).
         Bewaar dit bestand op je computer of in de cloud, zodat je nooit iets kwijtraakt — ook niet als er iets met
-        de database gebeurt. Tip: doe dit bijvoorbeeld elke maand.
+        de database gebeurt. Tip: doe dit bijvoorbeeld elke maand.`}
       </p>
 
       <Card className="mb-6">
@@ -170,8 +175,8 @@ export default function BackupPage() {
           Handig om te openen in Excel of Numbers. Kies wat je wilt downloaden:
         </p>
         <div className="flex flex-wrap gap-3">
-          <Btn variant="ghost" onClick={() => downloadCsv('litters', 'Nestjes')} disabled={busy}>📄 Nestjes (CSV)</Btn>
-          <Btn variant="ghost" onClick={() => downloadCsv('cats', 'Katten & kittens')} disabled={busy}>📄 Katten & kittens (CSV)</Btn>
+          <Btn variant="ghost" onClick={() => downloadCsv('litters', cap(terms.litterPlural))} disabled={busy}>{`📄 ${cap(terms.litterPlural)} (CSV)`}</Btn>
+          <Btn variant="ghost" onClick={() => downloadCsv('cats', `${cap(terms.animalPlural)} & ${terms.youngPlural}`)} disabled={busy}>{`📄 ${cap(terms.animalPlural)} & ${terms.youngPlural} (CSV)`}</Btn>
           <Btn variant="ghost" onClick={() => downloadCsv('customers', 'Klanten')} disabled={busy}>📄 Klanten (CSV)</Btn>
         </div>
       </Card>
