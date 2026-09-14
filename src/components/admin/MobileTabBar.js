@@ -13,6 +13,12 @@ const TABS = [
     icon: <><path d="M3 10.5 12 4l9 6.5" /><path d="M5 9.5V20h14V9.5" /><path d="M9 20v-5a3 3 0 0 1 6 0v5" /></>,
   },
   {
+    href: '/admin/agenda',
+    label: 'Agenda',
+    match: (p) => p.startsWith('/admin/agenda'),
+    icon: <><rect x="3" y="4" width="18" height="18" rx="2" /><path d="M16 2v4M8 2v4M3 10h18" /></>,
+  },
+  {
     href: '/admin/medical',
     label: 'Gezondheid',
     match: (p) => p.startsWith('/admin/medical'),
@@ -21,7 +27,7 @@ const TABS = [
   {
     href: '/admin/profiel',
     label: 'Profiel',
-    match: (p) => p.startsWith('/admin/profiel') || p.startsWith('/admin/settings') || p.startsWith('/admin/customers') || p.startsWith('/admin/news') || p.startsWith('/admin/media'),
+    match: (p) => p.startsWith('/admin/profiel') || p.startsWith('/admin/settings') || p.startsWith('/admin/customers') || p.startsWith('/admin/news') || p.startsWith('/admin/media') || p.startsWith('/admin/documenten'),
     icon: <><circle cx="12" cy="8" r="4" /><path d="M4 21v-1a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v1" /></>,
   },
 ];

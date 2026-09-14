@@ -60,6 +60,47 @@ export function EmptyHero({ icon, title, desc, action }) {
   );
 }
 
+// Omkaderd blok binnen een formulier, met de titel in de rand.
+export function FormSection({ title, hint, children }) {
+  return (
+    <fieldset className="relative mb-6 rounded-2xl border border-forest-900/12 bg-white/70 px-5 pb-6 pt-7 sm:px-6">
+      <legend className="ml-1 rounded-lg bg-white px-3 py-1 font-display text-lg text-forest-900 shadow-[0_1px_2px_rgba(28,20,15,0.05)]">
+        {title}
+      </legend>
+      {hint && <p className="-mt-2 mb-5 text-sm text-forest-500">{hint}</p>}
+      {children}
+    </fieldset>
+  );
+}
+
+// Voet van een formulier: annuleren links, opslaan rechts.
+export function FormActions({ onCancel, onSave, saving, saveLabel = 'Opslaan', note }) {
+  return (
+    <div className="mt-8 border-t border-forest-900/10 pt-6">
+      {note && <p className="mb-4 text-sm text-forest-500">{note}</p>}
+      <div className="flex flex-wrap items-center justify-end gap-3">
+        {onCancel && (
+          <button
+            type="button"
+            onClick={onCancel}
+            className="rounded-xl border border-forest-900/15 bg-white px-6 py-3 text-sm font-semibold text-forest-700 transition hover:bg-forest-50"
+          >
+            Annuleren
+          </button>
+        )}
+        <button
+          type="button"
+          onClick={onSave}
+          disabled={saving}
+          className="rounded-xl bg-forest-800 px-7 py-3 text-sm font-semibold text-cream-50 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:bg-forest-900 disabled:translate-y-0 disabled:opacity-60"
+        >
+          {saving ? 'Opslaan…' : saveLabel}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 // Uitleg in drie stappen, voor wie het scherm voor het eerst ziet.
 export function HowItWorks({ label, steps, footer }) {
   return (

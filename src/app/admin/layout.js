@@ -20,13 +20,17 @@ export default function AdminLayout({ children }) {
 
   // De zijbalk volgt de diersoort van de fokkerij: een hondenfokker leest
   // "Honden & dossiers", een kattenfokker "Katten & dossiers".
+  // Nestjes staan bewust bóven de losse dieren: een fokker begint bij het
+  // nestje en hangt daar daarna de jongen onder.
   const NAV = [
     { href: '/admin', label: 'Startscherm', icon: 'grid' },
-    { href: '/admin/cats', label: `${cap(terms.animalPlural)} & dossiers`, icon: 'cat' },
     { href: '/admin/litters', label: `${cap(terms.litterPlural)}`, icon: 'grid' },
+    { href: '/admin/cats', label: `${cap(terms.animalPlural)} & dossiers`, icon: 'cat' },
+    { href: '/admin/agenda', label: 'Agenda', icon: 'grid' },
     { href: '/admin/medical', label: 'Gezondheid', icon: 'settings' },
     { href: '/admin/customers', label: 'Klanten', icon: 'customer' },
     { href: '/admin/sales', label: 'Verkoop', icon: 'cat' },
+    { href: '/admin/documenten', label: 'Documenten', icon: 'edit' },
     { href: '/admin/news', label: 'Nieuws', icon: 'image' },
     { href: '/admin/media', label: "Bestanden & foto's", icon: 'image' },
     { href: '/admin/settings', label: 'Instellingen', icon: 'settings' },

@@ -222,7 +222,9 @@ export function StoreProvider({ children }) {
         chipLocation: kit.chipLocation || '',
         vetName: kit.vetName || '',
         breed: kit.breed || 'Maine Coon',
-        species: kit.species || 'Cat'
+        species: kit.species || 'Cat',
+        // De roepnaam heeft geen eigen kolom; hij hoort bij de losse gegevens.
+        callName: kit.call_name || kit.callName || '',
       },
       customer_id: kit.customer_id || null
     };

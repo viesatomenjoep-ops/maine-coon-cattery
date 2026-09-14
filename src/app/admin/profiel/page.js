@@ -68,6 +68,8 @@ export default function ProfielPage() {
             icon={<><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87" /></>} />
           <Row href="/admin/sales" title="Verkoop & advertenties" desc="Prijzen, status en publiceren"
             icon={<><path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0l-7.2-7.2A2 2 0 0 1 3 12V4a1 1 0 0 1 1-1h8a2 2 0 0 1 1.4.6l7.2 7.2a2 2 0 0 1 0 2.6Z" /><circle cx="7.5" cy="7.5" r="1.2" /></>} />
+          <Row href="/admin/documenten" title="Documenten" desc="Paspoorten, overzichten en overdracht als PDF"
+            icon={<><path d="M6 9V2h12v7" /><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" /><path d="M6 14h12v8H6z" /></>} />
           <Row href="/admin/news" title="Nieuws" desc="Berichten op je pagina"
             icon={<><path d="M12 20h9" /><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" /></>} />
           <Row href="/admin/media" title="Bestanden & foto's" desc="Alle media op één plek"
