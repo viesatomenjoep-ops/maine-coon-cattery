@@ -9,3 +9,6 @@ supabase/.temp/
 
 # Claude Code local settings
 .claude/settings.local.json
+
+# Wordt bij het bouwen uit pdfjs-dist gekopieerd (zie package.json)
+public/pdf.worker.min.mjs

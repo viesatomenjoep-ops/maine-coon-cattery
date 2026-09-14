@@ -3,6 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "copy-pdf-worker": "node -e \"require('fs').copyFileSync(require.resolve('pdfjs-dist/build/pdf.worker.min.mjs'), 'public/pdf.worker.min.mjs')\"",
+    "predev": "npm run copy-pdf-worker",
+    "prebuild": "npm run copy-pdf-worker",
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
@@ -17,6 +20,7 @@
     "next": "^16.2.10",
     "next-cloudinary": "^6.17.5",
     "nodemailer": "^9.0.3",
+    "pdfjs-dist": "^6.3.289",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "recharts": "^3.9.1",

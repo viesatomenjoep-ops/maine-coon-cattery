@@ -6,6 +6,7 @@ import { PageHead, Card, Field, Input, Select, Textarea, Btn } from '@/component
 import MediaUpload from '@/components/admin/MediaUpload';
 import DocumentUploader, { DocumentList } from '@/components/admin/DocumentUploader';
 import MediaGallery from '@/components/admin/MediaGallery';
+import PdfImport from '@/components/admin/PdfImport';
 import { useStore } from '@/context/StoreContext';
 import { AdminUpload } from '@/components/admin/FilePicker';
 import { TREATMENT_TYPES, TREATMENT_SCHEDULE, treatmentIcon, formatDate } from '@/lib/treatments';
@@ -62,6 +63,7 @@ export default function CatDossier() {
   
   // States voor de verschillende tabbladen of secties
   const [activeTab, setActiveTab] = useState('paspoort');
+  const [showPdfImport, setShowPdfImport] = useState(false);
   const [noteForm, setNoteForm] = useState({ date: new Date().toISOString().slice(0, 10), note: '' });
   const [medForm, setMedForm] = useState({ type: TREATMENT_TYPES[0], date: '', due: '', note: '' });
   const [newsForm, setNewsForm] = useState({ title: '', body: '' });
@@ -257,6 +259,31 @@ export default function CatDossier() {
   const tabGroups = ['Het dier', 'Zorg', 'Verkoop'];
   const activeLabel = tabs.find((t) => t.id === activeTab)?.label || '';
 
+  // De namen uit een ingelezen PDF heten hier deels anders dan in het formulier.
+  const PDF_NAAR_FORMULIER = {
+    chip_number: 'chipNumber',
+    date_of_birth: 'dateOfBirth',
+    ems_code: 'ems_code',
+    registration_no: 'registration_no',
+    name: 'name',
+    breed: 'breed',
+  };
+
+  const huidigeWaarden = Object.fromEntries(
+    Object.entries(PDF_NAAR_FORMULIER).map(([pdfKey, formKey]) => [pdfKey, formData[formKey]])
+  );
+
+  const neemPdfOver = (patch) => {
+    const vertaald = {};
+    for (const [pdfKey, waarde] of Object.entries(patch)) {
+      const formKey = PDF_NAAR_FORMULIER[pdfKey];
+      if (formKey) vertaald[formKey] = waarde;
+    }
+    setFormData((f) => ({ ...f, ...vertaald }));
+    const namen = Object.keys(patch).length;
+    alert(`${namen} ${namen === 1 ? 'gegeven' : 'gegevens'} overgenomen. Vergeet niet op "Dossier opslaan" te drukken.`);
+  };
+
   return (
     <>
       <Link href="/admin/cats" className="mb-4 inline-flex items-center gap-1.5 text-sm font-semibold text-forest-600 transition hover:text-forest-900">
@@ -265,12 +292,31 @@ export default function CatDossier() {
       </Link>
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
         <PageHead label="Dossier" title={isNew ? `Nieuwe ${terms.animal} toevoegen` : formData.name || 'Laden...'} />
-        {!isNew && (
-          <button type="button" onClick={handleDelete} className="rounded-lg border border-red-200 bg-white px-3 py-1.5 text-xs font-bold uppercase tracking-wider text-red-600 transition hover:bg-red-50 shadow-sm">
-            Volledig Dossier Verwijderen
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setShowPdfImport(true)}
+            className="inline-flex items-center gap-2 rounded-lg border border-forest-900/15 bg-white px-4 py-2 text-sm font-semibold text-forest-700 shadow-sm transition hover:bg-forest-50"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6H6a2 2 0 0 0-2 2Z" /><path d="M13 2v6h6" /><path d="M9 15h6M12 12v6" /></svg>
+            PDF inlezen
           </button>
-        )}
+          {!isNew && (
+            <button type="button" onClick={handleDelete} className="rounded-lg border border-red-200 bg-white px-3 py-1.5 text-xs font-bold uppercase tracking-wider text-red-600 transition hover:bg-red-50 shadow-sm">
+              Volledig Dossier Verwijderen
+            </button>
+          )}
+        </div>
       </div>
+
+      {showPdfImport && (
+        <PdfImport
+          catId={isNew ? null : id}
+          currentValues={huidigeWaarden}
+          onApply={neemPdfOver}
+          onClose={() => setShowPdfImport(false)}
+        />
+      )}
 
       <div className="flex flex-col lg:flex-row gap-6 lg:gap-8 items-start">
         {/* Mobiel: horizontaal schuivende chips, zoals in een app */}
