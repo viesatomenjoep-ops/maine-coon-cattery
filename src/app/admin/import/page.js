@@ -32,6 +32,9 @@ function Regel({ r, bestaat, gekozen, onToggle }) {
         <span className="flex flex-wrap items-center gap-2">
           <span className="font-display text-lg text-forest-950">{r.kitten_naam || '(naamloos)'}</span>
           {r.geslacht && <span className="text-sm text-forest-500">{r.geslacht}</span>}
+          {r.status && r.status !== 'Verkocht' && (
+            <span className="rounded-full bg-stone-200 px-2 py-0.5 text-[11px] font-bold uppercase text-stone-700">{r.status}</span>
+          )}
           {bestaat && <span className="rounded-full bg-forest-200 px-2 py-0.5 text-[11px] font-bold text-forest-700">STAAT AL IN HET SYSTEEM</span>}
         </span>
         <span className="mt-1 block text-sm text-forest-600">
@@ -163,7 +166,8 @@ export default function ImportPage() {
           color: r.kleur || null,
           chip_no: (r.chipnummer || '').replace(/\D/g, '') || null,
           date_of_birth: r.geboortedatum || null,
-          status: 'Verkocht',
+          // De status uit de gegevens gaat voor; anders gaan we uit van verkocht.
+          status: r.status || 'Verkocht',
           price_nl: r.prijs ?? null,
           customer_id: customerId,
           reserved_by: r.koper_naam || null,
