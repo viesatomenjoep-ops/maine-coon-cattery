@@ -19,6 +19,9 @@ const STATUS_META = {
   gereserveerd: { label: 'Gereserveerd', cls: 'bg-amber-500/90 text-white' },
   verkocht: { label: 'Verkocht', cls: 'bg-red-500/90 text-white' },
   houden: { label: 'Niet te koop', cls: 'bg-stone-500/90 text-white' },
+  // Zonder deze regel zou een overleden dier op de openbare pagina als
+  // "Beschikbaar" worden getoond, want dat is de terugval.
+  overleden: { label: 'Niet beschikbaar', cls: 'bg-stone-500/90 text-white' },
 };
 
 export default function CatShowcasePage({ params }) {

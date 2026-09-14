@@ -22,6 +22,7 @@ const KITTEN_STATUSES = [
   { value: 'gereserveerd', label: 'Gereserveerd' },
   { value: 'verkocht', label: 'Verkocht' },
   { value: 'houden', label: 'Houden' },
+  { value: 'overleden', label: 'Overleden' },
 ];
 
 function NewKittenForm() {
