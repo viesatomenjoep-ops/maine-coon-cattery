@@ -38,7 +38,7 @@ function FileRow({ thumb, name, type, checked, onToggle }) {
 
 const MALE_TOKENS = ['m', 'male', 'kater', 'mannelijk'];
 const genderToSex = (g) => (MALE_TOKENS.includes((g || '').toString().trim().toLowerCase()) ? 'Kater' : 'Poes');
-const STATUS_MAP = { beschikbaar: 'Beschikbaar', gereserveerd: 'Gereserveerd', verkocht: 'Verkocht', houden: 'Houden', overleden: 'Overleden', 'eigen fok': 'Eigen fok' };
+const STATUS_MAP = { beschikbaar: 'Beschikbaar', gereserveerd: 'Gereserveerd', verkocht: 'Verkocht', houden: 'Houden', overleden: 'Overleden', ingeslapen: 'Ingeslapen', 'eigen fok': 'Eigen fok' };
 const normStatus = (s) => STATUS_MAP[(s || '').toString().trim().toLowerCase()] || (s || 'Beschikbaar');
 
 export default function CatDossier() {

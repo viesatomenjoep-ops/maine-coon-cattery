@@ -6,10 +6,11 @@ import { SearchBar, ViewToggle, SegmentedTabs, EmptyState } from '@/components/a
 import { AnimalRow, AnimalTile, StatusChip } from '@/components/admin/AnimalCard';
 import { PageHeader, PrimaryAction, IconAction, EmptyHero, HowItWorks } from '@/components/admin/PageShell';
 import { cap, sexLabel } from '@/lib/species';
+import { emsSearchTerms } from '@/lib/ems';
 
 const isMale = (g) => /kater|reu|doffer|ram|mann|\bmale\b|\bm\b/i.test(g || '');
 const isFemale = (g) => /poes|teef|duivin|pop|voedster|vrouw|female|\bf\b/i.test(g || '');
-const isGone = (k) => ['verkocht', 'overleden'].includes((k.status || '').trim().toLowerCase());
+const isGone = (k) => ['verkocht', 'overleden', 'ingeslapen'].includes((k.status || '').trim().toLowerCase());
 
 export default function AnimalsHome() {
   const { kittens = [], litters = [], species, terms } = useStore();
@@ -24,7 +25,10 @@ export default function AnimalsHome() {
   const match = (k) => {
     const s = q.trim().toLowerCase();
     if (!s) return true;
-    return [k.name, k.color, k.pattern, k.ems_code, k.chip_number, k.registration_no, litterName(k.litter_id)]
+    // Ook zoeken op EMS-codes én op wat ze betekenen: "ABY" en "Abessijn"
+    // vinden allebei dezelfde dieren.
+    const ems = emsSearchTerms(k.ems_code, k.pedigree_data?.breed || k.pedigree_data?.breedCode);
+    return [k.name, k.color, k.pattern, k.ems_code, k.chip_number, k.registration_no, litterName(k.litter_id), ...ems]
       .filter(Boolean).some((v) => String(v).toLowerCase().includes(s));
   };
 

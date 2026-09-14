@@ -22,6 +22,7 @@ const STATUS_META = {
   // Zonder deze regel zou een overleden dier op de openbare pagina als
   // "Beschikbaar" worden getoond, want dat is de terugval.
   overleden: { label: 'Niet beschikbaar', cls: 'bg-stone-500/90 text-white' },
+  ingeslapen: { label: 'Niet beschikbaar', cls: 'bg-stone-500/90 text-white' },
 };
 
 export default function CatShowcasePage({ params }) {

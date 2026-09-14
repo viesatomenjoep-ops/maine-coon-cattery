@@ -6,6 +6,7 @@ import { useStore } from '@/context/StoreContext';
 import { Field, Input, Select, Combobox } from '@/components/admin';
 import { PageHeader, FormSection, FormActions } from '@/components/admin/PageShell';
 import FilePicker from '@/components/admin/FilePicker';
+import { BreedPicker, EmsCodeInput } from '@/components/admin/EmsFields';
 import { cap } from '@/lib/species';
 
 const PATTERNS = [
@@ -23,6 +24,7 @@ const KITTEN_STATUSES = [
   { value: 'verkocht', label: 'Verkocht' },
   { value: 'houden', label: 'Houden' },
   { value: 'overleden', label: 'Overleden' },
+  { value: 'ingeslapen', label: 'Ingeslapen' },
 ];
 
 function NewKittenForm() {
@@ -34,7 +36,7 @@ function NewKittenForm() {
   const SEXES = [cap(terms.male), cap(terms.female)];
 
   const [kit, setKit] = useState({
-    litter_id: litterParam, name: '', call_name: '', sex: cap(terms.male), color: '', pattern: '',
+    litter_id: litterParam, name: '', call_name: '', sex: cap(terms.male), color: '', pattern: '', breed: '',
     status: 'beschikbaar', chip_no: '', registration_no: '', birth_weight_g: '', ems_code: '',
     reserved_by: '', customer_id: '', priceNL: 1250, priceBE: 1300, cover_image: '',
   });
@@ -140,9 +142,16 @@ function NewKittenForm() {
         <FormSection title="Identificatie" hint="Mag je later ook nog invullen.">
           <div className="grid gap-5 sm:grid-cols-2">
             {isCat && (
-              <Field label="EMS-code">
-                <Input value={kit.ems_code} onChange={(e) => set('ems_code', e.target.value)} placeholder="Bijv. MCO n 22" />
-              </Field>
+              <>
+                <Field label="Ras (EMS)">
+                  <BreedPicker value={kit.breed} onChange={(v) => set('breed', v)} />
+                </Field>
+                <div className="sm:col-span-2">
+                  <Field label="EMS-code">
+                    <EmsCodeInput value={kit.ems_code} onChange={(v) => set('ems_code', v)} breedCode={kit.breed} />
+                  </Field>
+                </div>
+              </>
             )}
             <Field label="Stamboomnummer">
               <Input value={kit.registration_no} onChange={(e) => set('registration_no', e.target.value)} />

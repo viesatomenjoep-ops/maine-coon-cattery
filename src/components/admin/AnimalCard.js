@@ -9,6 +9,7 @@ const STATUS_META = {
   houden: { label: 'Houden', cls: 'bg-sky-100 text-sky-700' },
   'eigen fok': { label: 'Eigen fok', cls: 'bg-violet-100 text-violet-700' },
   overleden: { label: 'Overleden', cls: 'bg-stone-300 text-stone-700' },
+  ingeslapen: { label: 'Ingeslapen', cls: 'bg-stone-300 text-stone-700' },
 };
 
 export function StatusChip({ status }) {

@@ -4,6 +4,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useStore } from '@/context/StoreContext';
 import { PageHead, Card, Field, Input, Textarea, Combobox, Btn } from '@/components/admin';
+import { BreedPicker, EmsCodeInput } from '@/components/admin/EmsFields';
 
 const PATTERNS = [
   'Classic Tabby', 'Mackerel Tabby', 'Spotted Tabby', 'Ticked Tabby',
@@ -48,9 +49,9 @@ function NewBreederForm() {
       <Card className="max-w-2xl">
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="Naam"><Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Bijv. Jona" autoFocus /></Field>
-          <Field label="Ras"><Input value={form.breed} onChange={(e) => setForm({ ...form, breed: e.target.value })} /></Field>
+          <Field label="Ras (EMS)"><BreedPicker value={form.breed} onChange={(v) => setForm({ ...form, breed: v })} /></Field>
           <Field label="Stamboomnummer"><Input value={form.registration_no} onChange={(e) => setForm({ ...form, registration_no: e.target.value })} /></Field>
-          {isCat && <Field label="EMS-code"><Input value={form.ems_code} onChange={(e) => setForm({ ...form, ems_code: e.target.value })} placeholder="Bijv. MCO n 22" /></Field>}
+          {isCat && <div className="sm:col-span-2"><Field label="EMS-code"><EmsCodeInput value={form.ems_code} onChange={(v) => setForm({ ...form, ems_code: v })} breedCode={form.breed} /></Field></div>}
           {isCat ? (
             <>
               <Field label="Kleur"><Combobox id="bc-color" options={COLORS} value={form.color} onChange={(e) => setForm({ ...form, color: e.target.value })} /></Field>

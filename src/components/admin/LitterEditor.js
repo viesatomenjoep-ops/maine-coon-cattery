@@ -20,6 +20,7 @@ const KITTEN_STATUSES = [
   { value: 'verkocht', label: 'Verkocht' },
   { value: 'houden', label: 'Houden' },
   { value: 'overleden', label: 'Overleden' },
+  { value: 'ingeslapen', label: 'Ingeslapen' },
 ];
 const SEXES = ['Kater', 'Poes'];
 const COLORS = [

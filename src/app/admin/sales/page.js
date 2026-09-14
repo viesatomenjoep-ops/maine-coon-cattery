@@ -23,7 +23,7 @@ import { AdminUpload } from '@/components/admin/FilePicker';
 import { nextTreatment, formatDate } from '@/lib/treatments';
 import { cap, sexLabel } from '@/lib/species';
 
-const STATUS_OPTIONS = ['Beschikbaar', 'Gereserveerd', 'Verkocht', 'Houden', 'Overleden'];
+const STATUS_OPTIONS = ['Beschikbaar', 'Gereserveerd', 'Verkocht', 'Houden', 'Overleden', 'Ingeslapen'];
 const matchStatus = (s) => STATUS_OPTIONS.find((o) => o.toLowerCase() === (s || '').toLowerCase()) || 'Beschikbaar';
 const eur = (n) => new Intl.NumberFormat('nl-NL', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(n || 0);
 

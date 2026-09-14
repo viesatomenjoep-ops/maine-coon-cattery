@@ -2,6 +2,7 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { normalizeSpecies, termsFor } from '@/lib/species';
+import { findBreed } from '@/lib/ems';
 
 const StoreContext = createContext(null);
 
@@ -221,7 +222,8 @@ export function StoreProvider({ children }) {
         chipImplantDate: kit.chipImplantDate || '',
         chipLocation: kit.chipLocation || '',
         vetName: kit.vetName || '',
-        breed: kit.breed || 'Maine Coon',
+        breed: (findBreed(kit.breed)?.name) || kit.breed || null,
+        breedCode: findBreed(kit.breed)?.code || null,
         species: kit.species || 'Cat',
         // De roepnaam heeft geen eigen kolom; hij hoort bij de losse gegevens.
         callName: kit.call_name || kit.callName || '',
@@ -305,7 +307,16 @@ export function StoreProvider({ children }) {
     sire_name: cat.sire_name || null,
     dam_name: cat.dam_name || null,
     is_own_breeding_cat: cat.is_own_breeding_cat ?? true,
-    pedigree_data: { ...(cat.pedigree_data || {}), breed: cat.breed || 'Maine Coon (MCO)' }
+    // Het ras bewaren we als leesbare naam én als officiële EMS-code, zodat
+    // oude gegevens blijven kloppen en je voortaan op de code kunt zoeken.
+    pedigree_data: (() => {
+      const b = findBreed(cat.breed);
+      return {
+        ...(cat.pedigree_data || {}),
+        breed: b ? b.name : (cat.breed || null),
+        breedCode: b ? b.code : null,
+      };
+    })()
   });
 
   const addBreedingCat = async (cat) => {
