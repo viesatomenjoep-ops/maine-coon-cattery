@@ -5,45 +5,96 @@ import { useStore } from '@/context/StoreContext';
 import { PageHeader, EmptyHero } from '@/components/admin/PageShell';
 import { Card, Btn } from '@/components/admin';
 import WeightChart from '@/components/admin/WeightChart';
-import { buildWeightTable, buildChartData, kleurVoor, leeftijdInDagen, groeiPerDag } from '@/lib/weights';
+import {
+  buildWeightTable, buildChartData, buildColumns,
+  leeftijdInDagen, groeiPerDag, MOEDER_KLEUR,
+} from '@/lib/weights';
 import { cap } from '@/lib/species';
 
 const vandaag = () => new Date().toISOString().slice(0, 10);
 const nlKort = (d) => new Date(d).toLocaleDateString('nl-NL', { day: 'numeric', month: 'short', year: '2-digit' });
+// Boven de kilo lees je kilo's makkelijker dan vier cijfers grammen.
+const toonGewicht = (g) => (g >= 1000 ? `${(g / 1000).toFixed(2).replace('.', ',')} kg` : `${g} g`);
+
+// Zolang een jong nog geen naam heeft, is zijn nummer zijn naam — precies zoals
+// het op het weegblad staat: 1, 2, 3, 4.
+const kolomNaam = (k) => {
+  const naam = (k.name || '').trim();
+  if (naam && naam.toLowerCase() !== 'naamloos') return naam;
+  return k.animal_no ? `Nr. ${k.animal_no}` : 'Naamloos';
+};
 
 export default function GewichtenPage() {
-  const { litters = [], kittens = [], addWeight, updateWeight, deleteWeight, terms } = useStore();
+  const {
+    litters = [], kittens = [], terms,
+    addWeight, updateWeight, deleteWeight, addKitten,
+    weightNotes = [], saveWeightNote,
+  } = useStore();
 
   const [litterId, setLitterId] = useState('');
   const [nieuweDatum, setNieuweDatum] = useState(vandaag());
   const [invoer, setInvoer] = useState({});        // wat je nu intypt voor de nieuwe ronde
+  const [rondeNotitie, setRondeNotitie] = useState('');
   const [bewerkt, setBewerkt] = useState({});      // gewijzigde bestaande cellen
+  const [toonMoeder, setToonMoeder] = useState(true);
   const [bezig, setBezig] = useState(false);
   const [melding, setMelding] = useState('');
   const [verborgen, setVerborgen] = useState([]);
+  const [aantalNieuw, setAantalNieuw] = useState('');
 
   // Begin bij het nestje waar het laatst iets mee gebeurde.
   useEffect(() => {
     if (!litterId && litters.length) {
-      const gesorteerd = [...litters].sort((a, b) => (b.date_of_birth || '').localeCompare(a.date_of_birth || ''));
+      const gesorteerd = [...litters].sort((a, b) =>
+        (b.date_of_birth || b.mating_date || '').localeCompare(a.date_of_birth || a.mating_date || ''));
       setLitterId(gesorteerd[0].id);
     }
   }, [litters, litterId]);
 
   const litter = litters.find((l) => l.id === litterId) || null;
 
-  // Alle jongen van dit nestje, op naam gesorteerd zodat de volgorde vast staat.
+  // Alle jongen van dit nestje, op nummer en daarna op naam, zodat de volgorde
+  // van de kolommen hetzelfde blijft als op papier.
   const nest = useMemo(
     () => kittens
       .filter((k) => k.litter_id === litterId && !k.is_own_breeding_cat)
-      .sort((a, b) => (a.name || '').localeCompare(b.name || '')),
+      .sort((a, b) => {
+        const na = parseInt(a.animal_no, 10), nb = parseInt(b.animal_no, 10);
+        if (!isNaN(na) && !isNaN(nb) && na !== nb) return na - nb;
+        if (!isNaN(na) !== !isNaN(nb)) return isNaN(na) ? 1 : -1;
+        return (a.name || '').localeCompare(b.name || '');
+      }),
     [kittens, litterId]
   );
 
-  const rijen = useMemo(() => buildWeightTable(nest), [nest]);
-  const grafiek = useMemo(() => buildChartData(nest), [nest]);
+  // De moeder hoort op hetzelfde blad: zij wordt vanaf de dekking gewogen.
+  const moeder = useMemo(
+    () => (litter?.dam_id ? kittens.find((k) => k.id === litter.dam_id) : null) || null,
+    [kittens, litter]
+  );
+
+  // De kolomnaam wordt hier vastgelegd, zodat tabel, grafiek en legenda allemaal
+  // hetzelfde tonen — ook bij jongen die nog alleen een nummer hebben.
+  const kolommen = useMemo(
+    () => buildColumns(nest, toonMoeder ? moeder : null, litter?.mating_date || null)
+      .map((k) => ({ ...k, name: kolomNaam(k) })),
+    [nest, moeder, toonMoeder, litter]
+  );
+
+  const rijen = useMemo(() => buildWeightTable(kolommen), [kolommen]);
+  const grafiek = useMemo(() => buildChartData(kolommen), [kolommen]);
 
   const geboorte = litter?.date_of_birth || null;
+
+  // Notities bij dit nestje, op datum opzoekbaar.
+  const notities = useMemo(() => {
+    const uit = {};
+    for (const n of weightNotes) if (n.litter_id === litterId) uit[n.note_date] = n.note;
+    return uit;
+  }, [weightNotes, litterId]);
+
+  // Als je van datum wisselt, laat dan zien wat er al bij die dag genoteerd staat.
+  useEffect(() => { setRondeNotitie(notities[nieuweDatum] || ''); }, [nieuweDatum, notities]);
 
   // Wat er al op de gekozen datum staat, zodat we niet dubbel wegen.
   const bestaandOpDatum = useMemo(
@@ -54,17 +105,19 @@ export default function GewichtenPage() {
   // Het laatst bekende gewicht per dier — handig als vergelijking tijdens het wegen.
   const laatsteWeging = useMemo(() => {
     const uit = {};
-    for (const k of nest) {
+    for (const k of kolommen) {
       const w = [...(k.weights || [])].sort((a, b) => new Date(a.date) - new Date(b.date)).pop();
       if (w) uit[k.id] = w;
     }
     return uit;
-  }, [nest]);
+  }, [kolommen]);
 
   // Een hele weegronde in één keer opslaan: elk gewicht gaat naar het juiste dier.
   const bewaarRonde = async () => {
     const teDoen = Object.entries(invoer).filter(([, v]) => v !== '' && v != null);
-    if (!teDoen.length) return alert('Vul eerst minstens één gewicht in.');
+    if (!teDoen.length && rondeNotitie === (notities[nieuweDatum] || '')) {
+      return alert('Vul eerst minstens één gewicht of een aantekening in.');
+    }
     if (!nieuweDatum) return alert('Kies eerst een datum.');
 
     setBezig(true);
@@ -82,6 +135,13 @@ export default function GewichtenPage() {
       else if (bestaand) bijgewerkt++;
       else nieuw++;
     }
+
+    let notitieFout = false;
+    if (rondeNotitie !== (notities[nieuweDatum] || '')) {
+      const res = await saveWeightNote(litterId, nieuweDatum, rondeNotitie);
+      if (res?.error) notitieFout = true;
+    }
+
     setBezig(false);
     setInvoer({});
 
@@ -89,7 +149,9 @@ export default function GewichtenPage() {
     if (nieuw) delen.push(`${nieuw} ${nieuw === 1 ? 'gewicht' : 'gewichten'} opgeslagen`);
     if (bijgewerkt) delen.push(`${bijgewerkt} bijgewerkt`);
     if (mislukt) delen.push(`${mislukt} mislukt`);
-    setMelding(`${delen.join(' · ')} op ${nlKort(nieuweDatum)}.`);
+    if (notitieFout) delen.push('aantekening mislukt');
+    else if (rondeNotitie) delen.push('aantekening bewaard');
+    setMelding(`${delen.join(' · ') || 'Niets gewijzigd'} op ${nlKort(nieuweDatum)}.`);
     setTimeout(() => setMelding(''), 6000);
   };
 
@@ -109,21 +171,51 @@ export default function GewichtenPage() {
     for (const [catId, cel] of Object.entries(rij.cellen)) {
       if (cel) await deleteWeight(catId, cel.id);
     }
+    await saveWeightNote(litterId, rij.datum, '');
+  };
+
+  // Vlak na de geboorte hebben de jongen nog geen naam, alleen een nummer.
+  // Hiermee zet je ze in één keer klaar zodat je meteen kunt wegen.
+  const maakGenummerd = async () => {
+    const n = parseInt(aantalNieuw, 10);
+    if (isNaN(n) || n < 1 || n > 20) return alert('Vul een aantal in tussen 1 en 20.');
+    if (!confirm(`${n} ${n === 1 ? terms.young : terms.youngPlural} aanmaken, genummerd 1 t/m ${n}? Namen kun je later invullen.`)) return;
+
+    setBezig(true);
+    const start = nest.length;
+    for (let i = 1; i <= n; i++) {
+      const nummer = String(start + i);
+      await addKitten({
+        litter_id: litterId,
+        name: `${cap(terms.young)} ${nummer}`,
+        animal_no: nummer,
+        status: 'beschikbaar',
+        date_of_birth: geboorte || null,
+        breed: litter?.breed || null,
+      });
+    }
+    setBezig(false);
+    setAantalNieuw('');
+    setMelding(`${n} ${n === 1 ? terms.young : terms.youngPlural} aangemaakt, genummerd ${start + 1} t/m ${start + n}.`);
+    setTimeout(() => setMelding(''), 6000);
   };
 
   const toggleDier = (id) =>
     setVerborgen((v) => (v.includes(id) ? v.filter((x) => x !== id) : [...v, id]));
 
-  // Snelknoppen voor een datum: vandaag, of de leeftijd in weken.
+  // Snelknoppen voor een datum: vandaag, of de leeftijd in weken. Voor de
+  // geboorte tellen we vanaf de dekking, want dan weeg je de moeder.
   const datumKnoppen = useMemo(() => {
-    if (!geboorte) return [];
-    const g = new Date(geboorte);
+    const basis = geboorte || litter?.mating_date;
+    if (!basis) return [];
+    const eenheid = geboorte ? 'wk' : 'wk dracht';
+    const b = new Date(basis);
     return [1, 2, 3, 4, 6, 8, 10, 12].map((wk) => {
-      const d = new Date(g);
+      const d = new Date(b);
       d.setDate(d.getDate() + wk * 7);
-      return { label: `${wk} wk`, datum: d.toISOString().slice(0, 10) };
+      return { label: `${wk} ${eenheid}`, datum: d.toISOString().slice(0, 10) };
     }).filter((x) => x.datum <= vandaag());
-  }, [geboorte]);
+  }, [geboorte, litter]);
 
   if (litters.length === 0) {
     return (
@@ -135,7 +227,7 @@ export default function GewichtenPage() {
         <EmptyHero
           icon={<><path d="M3 3v18h18" /><path d="m7 14 4-4 3 3 5-6" /></>}
           title={`Nog geen ${terms.litterPlural}`}
-          desc={`Maak eerst een ${terms.litter} met ${terms.youngPlural}, dan kun je hier het hele ${terms.litter} in één tabel wegen.`}
+          desc={`Maak eerst een ${terms.litter} aan. Daarna weeg je hier de moeder tijdens de dracht en alle ${terms.youngPlural} tegelijk.`}
           action={
             <Link href="/admin/litters/new" className="rounded-xl bg-forest-800 px-6 py-3 text-sm font-semibold text-cream-50 transition hover:bg-forest-900">
               {`${cap(terms.litter)} aanmaken`}
@@ -151,41 +243,64 @@ export default function GewichtenPage() {
       <PageHeader
         icon={<><path d="M3 3v18h18" /><path d="m7 14 4-4 3 3 5-6" /></>}
         title="Gewichten"
-        subtitle={`Weeg een heel ${terms.litter} in één keer`}
+        subtitle={`Weeg een heel ${terms.litter} in één keer, de moeder erbij`}
       />
 
       {/* Welk nestje */}
-      <div className="mb-6 flex flex-wrap items-center gap-3 rounded-2xl border border-forest-900/10 bg-white p-4">
-        <span className="text-sm font-semibold text-forest-700">{cap(terms.litter)}:</span>
-        <select
-          value={litterId}
-          onChange={(e) => { setLitterId(e.target.value); setInvoer({}); setVerborgen([]); }}
-          className="min-w-0 flex-1 rounded-lg border border-forest-900/15 bg-white px-4 py-2.5 text-sm outline-none focus:border-brass-400 sm:flex-none sm:w-80"
-        >
-          {litters.map((l) => (
-            <option key={l.id} value={l.id}>
-              {l.name}{l.date_of_birth ? ` — ${nlKort(l.date_of_birth)}` : ''}
-            </option>
-          ))}
-        </select>
+      <div className="mb-6 rounded-2xl border border-forest-900/10 bg-white p-4">
+        <div className="flex flex-wrap items-center gap-3">
+          <span className="text-sm font-semibold text-forest-700">{cap(terms.litter)}:</span>
+          <select
+            value={litterId}
+            onChange={(e) => { setLitterId(e.target.value); setInvoer({}); setVerborgen([]); }}
+            className="min-w-0 flex-1 rounded-lg border border-forest-900/15 bg-white px-4 py-2.5 text-sm outline-none focus:border-brass-400 sm:flex-none sm:w-80"
+          >
+            {litters.map((l) => (
+              <option key={l.id} value={l.id}>
+                {l.name}{l.date_of_birth ? ` — ${nlKort(l.date_of_birth)}` : ''}
+              </option>
+            ))}
+          </select>
+          {litter && (
+            <Link href={`/admin/litters/${litter.id}`} className="ml-auto shrink-0 text-sm font-semibold text-forest-600 hover:underline">
+              Open {terms.litter} →
+            </Link>
+          )}
+        </div>
+
         {litter && (
-          <span className="text-sm text-forest-500">
-            {nest.length} {nest.length === 1 ? terms.young : terms.youngPlural}
-            {geboorte && ` · geboren ${nlKort(geboorte)}`}
-          </span>
-        )}
-        {litter && (
-          <Link href={`/admin/litters/${litter.id}`} className="ml-auto shrink-0 text-sm font-semibold text-forest-600 hover:underline">
-            Open {terms.litter} →
-          </Link>
+          <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-forest-900/8 pt-3 text-sm text-forest-500">
+            <span>{nest.length} {nest.length === 1 ? terms.young : terms.youngPlural}</span>
+            {litter.mating_date && (
+              <span>
+                gedekt {nlKort(litter.mating_date)}
+                {litter.mating_time && ` om ${litter.mating_time}`}
+                {litter.sire_name && ` door ${litter.sire_name}`}
+              </span>
+            )}
+            {geboorte && <span>geboren {nlKort(geboorte)}</span>}
+            {moeder && (
+              <label className="ml-auto inline-flex cursor-pointer items-center gap-2 font-medium text-forest-700">
+                <input type="checkbox" checked={toonMoeder} onChange={(e) => setToonMoeder(e.target.checked)} className="h-4 w-4 accent-forest-800" />
+                <span className="inline-flex items-center gap-1.5">
+                  <span className="h-2.5 w-2.5 rounded-full" style={{ background: MOEDER_KLEUR }} />
+                  Moeder {kolomNaam(moeder)} meewegen
+                </span>
+              </label>
+            )}
+          </div>
         )}
       </div>
 
-      {nest.length === 0 ? (
+      {kolommen.length === 0 ? (
         <EmptyHero
           icon={<><path d="M12 5v14M5 12h14" /></>}
-          title={`Dit ${terms.litter} heeft nog geen ${terms.youngPlural}`}
-          desc={`Voeg ze toe aan het ${terms.litter}, dan verschijnen ze hier als kolommen in de weegtabel.`}
+          title={`Nog niets om te wegen in dit ${terms.litter}`}
+          desc={
+            moeder
+              ? `Vink hierboven "moeder meewegen" aan om haar dracht te volgen, of maak de ${terms.youngPlural} aan zodra ze geboren zijn.`
+              : `Koppel een moeder aan het ${terms.litter} om haar dracht te volgen, of maak de ${terms.youngPlural} aan zodra ze geboren zijn.`
+          }
           action={
             <Link href={`/admin/litters/new-kitten?litter=${litterId}`} className="rounded-xl bg-forest-800 px-6 py-3 text-sm font-semibold text-cream-50 transition hover:bg-forest-900">
               {`${cap(terms.young)} toevoegen`}
@@ -210,7 +325,9 @@ export default function GewichtenPage() {
 
               {datumKnoppen.length > 0 && (
                 <div className="min-w-0 flex-1">
-                  <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-forest-500">Of kies een leeftijd</span>
+                  <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-forest-500">
+                    Of kies een leeftijd
+                  </span>
                   <div className="flex flex-wrap gap-1.5">
                     <button
                       onClick={() => setNieuweDatum(vandaag())}
@@ -234,23 +351,27 @@ export default function GewichtenPage() {
 
             {/* Alle dieren onder elkaar, één invoerveld per dier */}
             <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-              {nest.map((k, i) => {
+              {kolommen.map((k) => {
                 const al = bestaandOpDatum[k.id];
                 const vorige = laatsteWeging[k.id];
                 return (
                   <label
                     key={k.id}
-                    className={`flex items-center gap-3 rounded-xl border bg-white p-3 ${al ? 'border-amber-300 bg-amber-50/40' : 'border-forest-900/10'}`}
+                    className={`flex items-center gap-3 rounded-xl border p-3 ${
+                      al ? 'border-amber-300 bg-amber-50/40' : k.isMoeder ? 'border-forest-900/25 bg-forest-50/50' : 'border-forest-900/10 bg-white'
+                    }`}
                   >
-                    <span className="h-3 w-3 shrink-0 rounded-full" style={{ background: kleurVoor(i) }} />
+                    <span className="h-3 w-3 shrink-0 rounded-full" style={{ background: k.kleur }} />
                     <span className="min-w-0 flex-1">
-                      <span className="block truncate text-sm font-semibold text-forest-900">{k.name}</span>
+                      <span className="block truncate text-sm font-semibold text-forest-900">
+                        {kolomNaam(k)}{k.isMoeder && <span className="font-normal text-forest-400"> · moeder</span>}
+                      </span>
                       <span className="block truncate text-xs text-forest-400">
-                        {k.animal_no && `nr. ${k.animal_no}`}
-                        {k.animal_no && (al || vorige) && ' · '}
                         {al
-                          ? `al ${al.grams} g op deze dag`
-                          : vorige && `laatst ${vorige.grams} g · ${nlKort(vorige.date)}`}
+                          ? `al ${toonGewicht(al.grams)} op deze dag`
+                          : vorige
+                            ? `laatst ${toonGewicht(vorige.grams)} · ${nlKort(vorige.date)}`
+                            : 'nog nooit gewogen'}
                       </span>
                     </span>
                     <span className="flex shrink-0 items-center gap-1.5">
@@ -269,10 +390,23 @@ export default function GewichtenPage() {
               })}
             </div>
 
+            {/* De kantlijn van het papieren blad: wat viel er op deze dag op? */}
+            <label className="mt-4 block">
+              <span className="text-xs font-semibold uppercase tracking-wide text-forest-700">
+                Aantekening bij deze dag (optioneel)
+              </span>
+              <input
+                value={rondeNotitie}
+                onChange={(e) => setRondeNotitie(e.target.value)}
+                placeholder="Bijv. voeding extra, eerste ontworming, kleur bepaald"
+                className="mt-1.5 w-full rounded-lg border border-forest-900/15 bg-white px-4 py-2.5 text-sm outline-none focus:border-brass-400"
+              />
+            </label>
+
             <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
               <p className="text-sm text-forest-500">
                 Wat je leeg laat wordt overgeslagen — je hoeft dus niet alles tegelijk te wegen.
-                {Object.keys(bestaandOpDatum).some((id) => bestaandOpDatum[id]) && (
+                {Object.values(bestaandOpDatum).some(Boolean) && (
                   <span className="block text-amber-700">
                     Geel betekent: op deze datum is al gewogen. Vul je iets in, dan wordt dat gecorrigeerd.
                   </span>
@@ -293,14 +427,15 @@ export default function GewichtenPage() {
             <Card className="mb-6">
               <h2 className="mb-1 font-display text-xl text-forest-900">Groeicurve</h2>
               <p className="mb-5 text-sm text-forest-500">
-                Elk {terms.young} heeft zijn eigen kleur. Klik een naam aan of uit om de grafiek rustiger te maken.
+                {`Elk ${terms.young} heeft zijn eigen kleur. Klik een naam aan of uit om de grafiek rustiger te maken.`}
+                {toonMoeder && moeder && ' De moeder loopt gestippeld, met haar eigen schaal rechts in kilo’s.'}
               </p>
-              <WeightChart data={grafiek} kittens={nest} verborgen={verborgen} onToggle={toggleDier} />
+              <WeightChart data={grafiek} kittens={kolommen} verborgen={verborgen} onToggle={toggleDier} />
             </Card>
           )}
 
           {/* De tabel met alles erin */}
-          <Card className="overflow-hidden !p-0">
+          <Card className="mb-6 overflow-hidden !p-0">
             <div className="flex flex-wrap items-center justify-between gap-2 border-b border-forest-900/10 p-5">
               <h2 className="font-display text-xl text-forest-900">Alle wegingen</h2>
               <span className="text-sm text-forest-500">
@@ -314,19 +449,20 @@ export default function GewichtenPage() {
               </p>
             ) : (
               <div className="overflow-x-auto">
-                <table className="w-full min-w-[40rem] border-collapse text-sm">
+                <table className="w-full min-w-[44rem] border-collapse text-sm">
                   <thead>
                     <tr className="border-b border-forest-900/10 bg-forest-50/50">
                       <th className="sticky left-0 z-10 bg-forest-50/50 px-5 py-3 text-left font-semibold text-forest-700">Datum</th>
                       {geboorte && <th className="px-3 py-3 text-left font-semibold text-forest-700">Leeftijd</th>}
-                      {nest.map((k, i) => (
+                      {kolommen.map((k) => (
                         <th key={k.id} className="px-3 py-3 text-right font-semibold text-forest-800">
                           <span className="inline-flex items-center gap-1.5">
-                            <span className="h-2.5 w-2.5 rounded-full" style={{ background: kleurVoor(i) }} />
-                            {k.name}
+                            <span className="h-2.5 w-2.5 rounded-full" style={{ background: k.kleur }} />
+                            {kolomNaam(k)}
                           </span>
                         </th>
                       ))}
+                      <th className="px-3 py-3 text-left font-semibold text-forest-700">Aantekening</th>
                       <th className="w-10 px-3 py-3" aria-label="Verwijderen" />
                     </tr>
                   </thead>
@@ -340,10 +476,10 @@ export default function GewichtenPage() {
                           </td>
                           {geboorte && (
                             <td className="whitespace-nowrap px-3 py-2.5 text-forest-500">
-                              {dagen != null ? `${dagen} d · ${Math.floor(dagen / 7)} wk` : '—'}
+                              {dagen == null ? '—' : dagen < 0 ? `${-dagen} d dracht` : `${dagen} d · ${Math.floor(dagen / 7)} wk`}
                             </td>
                           )}
-                          {nest.map((k) => {
+                          {kolommen.map((k) => {
                             const cel = rij.cellen[k.id];
                             const sleutel = `${k.id}|${cel?.id}`;
                             const groei = groeiPerDag(rijen, k.id, ri);
@@ -372,6 +508,9 @@ export default function GewichtenPage() {
                               </td>
                             );
                           })}
+                          <td className="max-w-[16rem] px-3 py-2.5 text-forest-600">
+                            {notities[rij.datum] || <span className="text-forest-300">—</span>}
+                          </td>
                           <td className="px-3 py-2 text-right">
                             <button
                               type="button"
@@ -394,8 +533,34 @@ export default function GewichtenPage() {
               <p className="border-t border-forest-900/10 px-5 py-3 text-xs text-forest-500">
                 Klik in een getal om het te corrigeren; het wordt opgeslagen zodra je het veld verlaat.
                 Onder elk gewicht staat de groei per dag sinds de vorige weging.
+                Een aantekening pas je aan door die datum hierboven te kiezen.
               </p>
             )}
+          </Card>
+
+          {/* Vlak na de geboorte: snel genummerde jongen klaarzetten */}
+          <Card>
+            <h2 className="mb-1 font-display text-xl text-forest-900">{`${cap(terms.youngPlural)} snel toevoegen`}</h2>
+            <p className="mb-4 text-sm text-forest-500">
+              {`Net geboren en nog geen namen? Zet ze hier in één keer klaar als ${terms.young} 1, 2, 3… zodat je meteen kunt wegen. Namen, geslacht en kleur vul je later in.`}
+            </p>
+            <div className="flex flex-wrap items-center gap-3">
+              <input
+                type="number"
+                min="1"
+                max="20"
+                value={aantalNieuw}
+                onChange={(e) => setAantalNieuw(e.target.value)}
+                placeholder="Aantal"
+                className="w-28 rounded-lg border border-forest-900/15 bg-white px-4 py-2.5 text-sm outline-none focus:border-brass-400"
+              />
+              <Btn variant="ghost" onClick={maakGenummerd} disabled={bezig || !aantalNieuw}>
+                {`Aanmaken vanaf nr. ${nest.length + 1}`}
+              </Btn>
+              <Link href={`/admin/litters/new-kitten?litter=${litterId}`} className="text-sm font-semibold text-forest-600 hover:underline">
+                Of één {terms.young} met alle gegevens →
+              </Link>
+            </div>
           </Card>
         </>
       )}

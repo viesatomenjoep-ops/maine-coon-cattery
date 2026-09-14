@@ -14,6 +14,7 @@ export function StoreProvider({ children }) {
   const [media, setMedia] = useState([]);
   const [customers, setCustomers] = useState([]);
   const [interests, setInterests] = useState([]);
+  const [weightNotes, setWeightNotes] = useState([]);
   const [siteContent, setSiteContent] = useState({});
 
   // Multi-tenant (fase A): welke cattery hoort bij de ingelogde gebruiker.
@@ -101,6 +102,12 @@ export function StoreProvider({ children }) {
           setKittens(kittensWithMed);
         }
 
+        // Aantekeningen bij een weegdag ("voeding extra", "eerste ontworming").
+        try {
+          const wn = await onTenant(supabase.from('weight_notes').select('*')).order('note_date', { ascending: true });
+          if (wn.data) setWeightNotes(wn.data);
+        } catch { /* weight_notes bestaat mogelijk nog niet */ }
+
         const { data: cData } = await onTenant(supabase.from('customers').select('*')).order('created_at', { ascending: false });
         if (cData) setCustomers(cData);
 
@@ -174,6 +181,9 @@ export function StoreProvider({ children }) {
       dam_name: litter.dam_name || null,
       sire_id: litter.sire_id || null,
       dam_id: litter.dam_id || null,
+      // Vanaf de dekking wordt de moeder gewogen; dat is het begin van het weegblad.
+      mating_date: litter.mating_date || null,
+      mating_time: litter.mating_time || null,
       breed: litter.breed || 'Maine Coon (MCO)',
       status: litter.status || 'verwacht',
       expected_count: (litter.expected_count === '' || litter.expected_count == null) ? null : Number(litter.expected_count),
@@ -550,6 +560,34 @@ export function StoreProvider({ children }) {
     return { ok: true };
   };
 
+  // Aantekening bij een weegdag, voor het hele nestje. Eén per dag: opnieuw
+  // opslaan overschrijft de vorige, leegmaken haalt hem weg.
+  const saveWeightNote = async (litterId, date, note) => {
+    const tekst = (note || '').trim();
+    const bestaand = weightNotes.find(n => n.litter_id === litterId && n.note_date === date);
+
+    if (!tekst) {
+      if (!bestaand) return { ok: true };
+      const { error } = await supabase.from('weight_notes').delete().eq('id', bestaand.id);
+      if (error) return { error };
+      setWeightNotes(s => s.filter(n => n.id !== bestaand.id));
+      return { ok: true };
+    }
+
+    if (bestaand) {
+      const { error } = await supabase.from('weight_notes').update({ note: tekst }).eq('id', bestaand.id);
+      if (error) return { error };
+      setWeightNotes(s => s.map(n => (n.id === bestaand.id ? { ...n, note: tekst } : n)));
+      return { ok: true };
+    }
+
+    const { data, error } = await supabase.from('weight_notes')
+      .insert([withTid({ litter_id: litterId, note_date: date, note: tekst })]).select();
+    if (error || !data) return { error: error || { message: 'Opslaan mislukt.' } };
+    setWeightNotes(s => [...s, data[0]]);
+    return { ok: true };
+  };
+
   const deleteWeight = async (catId, weightId) => {
     await supabase.from('cat_weights').delete().eq('id', weightId);
     setKittens(s => s.map(k => {
@@ -632,7 +670,7 @@ export function StoreProvider({ children }) {
       addKitten, updateKitten, deleteKitten,
       addBreedingCat, updateBreedingCat,
       addDocument, addDocumentFull, deleteDocument, updateDocument, addMedia, deleteMedia, updateMedia, addMedical, deleteMedical, updateMedical,
-      addWeight, updateWeight, deleteWeight, addNote, deleteNote,
+      addWeight, updateWeight, deleteWeight, weightNotes, saveWeightNote, addNote, deleteNote,
       addCustomer, updateCustomer, deleteCustomer,
       saveSiteContent
     }}>

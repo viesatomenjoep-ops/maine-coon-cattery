@@ -36,6 +36,7 @@ const PATTERNS = [
 const EMPTY_LITTER = {
   name: '', breed: '', status: 'verwacht', expected_count: '',
   date_of_birth: '', description: '', cover_image_url: '',
+  mating_date: '', mating_time: '',
   sire_id: '', sire_name: '', dam_id: '', dam_name: '',
 };
 const LITTER_STEPS = ['Naam & basis', 'Vader', 'Moeder', 'Foto & tekst'];
@@ -301,6 +302,7 @@ export default function LitterEditor({ initialLitterId = null, onClose }) {
         expected_count: l.expected_count ?? '', date_of_birth: l.date_of_birth || '', description: l.description || '',
         cover_image_url: l.cover_image_url || '', sire_id: l.sire_id || '', sire_name: l.sire_name || '',
         dam_id: l.dam_id || '', dam_name: l.dam_name || '',
+        mating_date: l.mating_date || '', mating_time: l.mating_time || '',
       });
       hydrated.current = true;
     }
@@ -362,6 +364,8 @@ export default function LitterEditor({ initialLitterId = null, onClose }) {
         sire_name: litter.sire_name || null,
         dam_id: litter.dam_id || null,
         dam_name: litter.dam_name || null,
+        mating_date: litter.mating_date || null,
+        mating_time: litter.mating_time || null,
       });
       setSavingLitter(false);
     }
@@ -396,7 +400,13 @@ export default function LitterEditor({ initialLitterId = null, onClose }) {
                 <Field label="Status"><Select value={litter.status} onChange={(e) => setLitter({ ...litter, status: e.target.value })}>{LITTER_STATUSES.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}</Select></Field>
                 <Field label={`Aantal ${terms.youngPlural}`}><Input type="number" min="0" value={litter.expected_count} onChange={(e) => setLitter({ ...litter, expected_count: e.target.value })} placeholder="Optioneel" /></Field>
               </div>
-              <Field label="Geboortedatum"><Input type="date" value={litter.date_of_birth} onChange={(e) => setLitter({ ...litter, date_of_birth: e.target.value })} /></Field>
+              {/* De dekking is het begin van het weegblad: vanaf dat moment wordt
+                  de moeder gewogen. */}
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                <Field label="Dekdatum"><Input type="date" value={litter.mating_date} onChange={(e) => setLitter({ ...litter, mating_date: e.target.value })} /></Field>
+                <Field label="Tijdstip dekking"><Input value={litter.mating_time} onChange={(e) => setLitter({ ...litter, mating_time: e.target.value })} placeholder="Bijv. 16:30" /></Field>
+                <Field label="Geboortedatum"><Input type="date" value={litter.date_of_birth} onChange={(e) => setLitter({ ...litter, date_of_birth: e.target.value })} /></Field>
+              </div>
             </div>
           )}
           {litterStep === 1 && (
@@ -442,7 +452,13 @@ export default function LitterEditor({ initialLitterId = null, onClose }) {
                 <Field label="Status"><Select value={litter.status} onChange={(e) => setLitter({ ...litter, status: e.target.value })}>{LITTER_STATUSES.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}</Select></Field>
                 <Field label={`Aantal ${terms.youngPlural}`}><Input type="number" min="0" value={litter.expected_count} onChange={(e) => setLitter({ ...litter, expected_count: e.target.value })} placeholder="Optioneel" /></Field>
               </div>
-              <Field label="Geboortedatum"><Input type="date" value={litter.date_of_birth} onChange={(e) => setLitter({ ...litter, date_of_birth: e.target.value })} /></Field>
+              {/* De dekking is het begin van het weegblad: vanaf dat moment wordt
+                  de moeder gewogen. */}
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                <Field label="Dekdatum"><Input type="date" value={litter.mating_date} onChange={(e) => setLitter({ ...litter, mating_date: e.target.value })} /></Field>
+                <Field label="Tijdstip dekking"><Input value={litter.mating_time} onChange={(e) => setLitter({ ...litter, mating_time: e.target.value })} placeholder="Bijv. 16:30" /></Field>
+                <Field label="Geboortedatum"><Input type="date" value={litter.date_of_birth} onChange={(e) => setLitter({ ...litter, date_of_birth: e.target.value })} /></Field>
+              </div>
               <Field label="Beschrijving (wervende tekst)">
                 <Textarea value={litter.description} onChange={(e) => setLitter({ ...litter, description: e.target.value })} className="min-h-[90px]" placeholder={`Vertel iets leuks over dit ${terms.litter}…`} />
               </Field>

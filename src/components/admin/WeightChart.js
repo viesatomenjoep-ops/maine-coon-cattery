@@ -1,6 +1,9 @@
 'use client';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
-import { kleurVoor } from '@/lib/weights';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { kleurVoor, MOEDER_KLEUR } from '@/lib/weights';
+
+// Boven de kilo lees je kilo's makkelijker dan vier cijfers grammen.
+const toon = (g) => (g >= 1000 ? `${(g / 1000).toFixed(2).replace('.', ',')} kg` : `${g} g`);
 
 // Eigen tooltip, zodat de dieren op naam en op gewicht gesorteerd staan —
 // dan lees je in één oogopslag wie voorloopt en wie achterblijft.
@@ -18,8 +21,10 @@ function Tip({ active, payload, label, kittens }) {
           return (
             <div key={p.dataKey} className="flex items-center gap-2.5 text-sm">
               <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ background: p.color }} />
-              <span className="min-w-0 flex-1 truncate text-forest-800">{k?.name || '—'}</span>
-              <span className="shrink-0 font-semibold tabular-nums text-forest-950">{p.value} g</span>
+              <span className="min-w-0 flex-1 truncate text-forest-800">
+                {k?.name || '—'}{k?.isMoeder && <span className="text-forest-400"> · moeder</span>}
+              </span>
+              <span className="shrink-0 font-semibold tabular-nums text-forest-950">{toon(p.value)}</span>
             </div>
           );
         })}
@@ -30,6 +35,11 @@ function Tip({ active, payload, label, kittens }) {
 
 export default function WeightChart({ data, kittens, verborgen = [], onToggle }) {
   if (!data?.length) return null;
+  const heeftMoeder = kittens.some((k) => k.isMoeder && !verborgen.includes(k.id));
+  // Bij veel meetmomenten liggen de stippen zo dicht op elkaar dat ze de lijn
+  // helemaal bedekken. Dan alleen de curve tonen; hoveren geeft nog steeds een
+  // stip met het exacte gewicht.
+  const stippen = data.length <= 14;
 
   return (
     <div>
@@ -44,28 +54,50 @@ export default function WeightChart({ data, kittens, verborgen = [], onToggle })
               tickLine={false}
             />
             <YAxis
+              yAxisId="jong"
               tick={{ fontSize: 11, fill: '#5a6b5e' }}
               axisLine={false}
               tickLine={false}
               tickFormatter={(v) => `${v}g`}
               width={56}
             />
+            {/* Tweede as voor de moeder: zij weegt kilo's, anders wordt de
+                grafiek van de jongen een vlakke streep onderin. */}
+            <YAxis
+              yAxisId="moeder"
+              orientation="right"
+              hide={!heeftMoeder}
+              tick={{ fontSize: 11, fill: MOEDER_KLEUR }}
+              axisLine={false}
+              tickLine={false}
+              tickFormatter={(v) => `${(v / 1000).toFixed(1)} kg`}
+              width={56}
+            />
             <Tooltip content={<Tip kittens={kittens} />} />
-            {kittens.map((k, i) => (
-              verborgen.includes(k.id) ? null : (
+            {kittens.map((k, i) => {
+              if (verborgen.includes(k.id)) return null;
+              const kleur = k.kleur || kleurVoor(i);
+              return (
                 <Line
                   key={k.id}
                   type="monotone"
                   dataKey={k.id}
                   name={k.name}
-                  stroke={kleurVoor(i)}
-                  strokeWidth={2.5}
-                  dot={{ r: 3.5, fill: kleurVoor(i), strokeWidth: 0 }}
+                  stroke={kleur}
+                  // De moeder weegt kilo's waar de jongen grammen wegen; haar lijn
+                  // krijgt daarom een eigen as aan de rechterkant.
+                  yAxisId={k.isMoeder ? 'moeder' : 'jong'}
+                  strokeWidth={k.isMoeder ? 3 : 2.5}
+                  strokeDasharray={k.isMoeder ? '6 3' : undefined}
+                  dot={stippen ? { r: 3.5, fill: kleur, strokeWidth: 0 } : false}
                   activeDot={{ r: 6 }}
+                  // Geen intro-animatie: die blijft hangen als het scherm op de
+                  // achtergrond staat, en dan zie je een lege grafiek.
+                  isAnimationActive={false}
                   connectNulls
                 />
-              )
-            ))}
+              );
+            })}
           </LineChart>
         </ResponsiveContainer>
       </div>
@@ -85,9 +117,9 @@ export default function WeightChart({ data, kittens, verborgen = [], onToggle })
             >
               <span
                 className="h-2.5 w-2.5 rounded-full"
-                style={{ background: uit ? '#c9d2cb' : kleurVoor(i) }}
+                style={{ background: uit ? '#c9d2cb' : (k.kleur || kleurVoor(i)) }}
               />
-              {k.name}
+              {k.name}{k.isMoeder && <span className="text-forest-400">· moeder</span>}
             </button>
           );
         })}

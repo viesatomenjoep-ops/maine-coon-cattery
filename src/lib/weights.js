@@ -20,6 +20,26 @@ export const KITTEN_KLEUREN = [
 
 export const kleurVoor = (index) => KITTEN_KLEUREN[index % KITTEN_KLEUREN.length];
 
+// De moeder krijgt bewust een kleur buiten het palet: donker en dik, zodat haar
+// lijn (die veel hoger loopt) niet met een jong verward wordt.
+export const MOEDER_KLEUR = '#24402e';
+
+/**
+ * De kolommen van het weegblad: eerst de jongen, daarna eventueel de moeder.
+ * Elke kolom krijgt hier zijn vaste kleur mee, zodat tabel en grafiek altijd
+ * dezelfde kleur tonen.
+ */
+export function buildColumns(jongen, moeder, vanafDatum) {
+  const kolommen = jongen.map((k, i) => ({ ...k, kleur: kleurVoor(i) }));
+  if (moeder) {
+    // Alleen de wegingen vanaf de dekking horen bij dit nestje; daarvoor was ze
+    // niet drachtig en zegt haar gewicht hier niets.
+    const weights = (moeder.weights || []).filter((w) => !vanafDatum || iso(w.date) >= vanafDatum);
+    kolommen.push({ ...moeder, weights, kleur: MOEDER_KLEUR, isMoeder: true });
+  }
+  return kolommen;
+}
+
 const iso = (d) => {
   if (!d) return null;
   const date = d instanceof Date ? d : new Date(d);
