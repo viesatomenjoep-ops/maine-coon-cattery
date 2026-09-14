@@ -16,7 +16,7 @@ const COLORS = [
   'White (Wit)', 'Black Tortie', 'Blue Tortie',
 ];
 const EMPTY_BREEDER = {
-  name: '', registration_no: '', breed: '', ems_code: '', color: '', pattern: '',
+  name: '', registration_no: '', animal_no: '', breed: '', ems_code: '', color: '', pattern: '',
   date_of_birth: '', chip_number: '', breeder: '', sire_name: '', dam_name: '', notes: '',
 };
 
@@ -50,6 +50,7 @@ function NewBreederForm() {
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="Naam"><Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Bijv. Jona" autoFocus /></Field>
           <Field label="Ras (EMS)"><BreedPicker value={form.breed} onChange={(v) => setForm({ ...form, breed: v })} /></Field>
+          <Field label="Eigen nummer"><Input value={form.animal_no} onChange={(e) => setForm({ ...form, animal_no: e.target.value })} placeholder="Jouw eigen administratienummer" /></Field>
           <Field label="Stamboomnummer"><Input value={form.registration_no} onChange={(e) => setForm({ ...form, registration_no: e.target.value })} /></Field>
           {isCat && <div className="sm:col-span-2"><Field label="EMS-code"><EmsCodeInput value={form.ems_code} onChange={(v) => setForm({ ...form, ems_code: v })} breedCode={form.breed} /></Field></div>}
           {isCat ? (

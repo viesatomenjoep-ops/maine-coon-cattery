@@ -28,7 +28,7 @@ export default function AnimalsHome() {
     // Ook zoeken op EMS-codes én op wat ze betekenen: "ABY" en "Abessijn"
     // vinden allebei dezelfde dieren.
     const ems = emsSearchTerms(k.ems_code, k.pedigree_data?.breed || k.pedigree_data?.breedCode);
-    return [k.name, k.color, k.pattern, k.ems_code, k.chip_number, k.registration_no, litterName(k.litter_id), ...ems]
+    return [k.name, k.animal_no, k.color, k.pattern, k.ems_code, k.chip_number, k.registration_no, litterName(k.litter_id), ...ems]
       .filter(Boolean).some((v) => String(v).toLowerCase().includes(s));
   };
 

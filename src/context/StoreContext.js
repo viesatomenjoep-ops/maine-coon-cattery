@@ -213,6 +213,7 @@ export function StoreProvider({ children }) {
       date_of_birth: kit.dateOfBirth || kit.date_of_birth || null,
       chip_number: kit.chip_no || kit.chipNumber || kit.chip_number || null,
       registration_no: kit.registration_no || null,
+      animal_no: kit.animal_no || null,
       ems_code: kit.ems_code || null,
       birth_weight_g: (kit.birth_weight_g === '' || kit.birth_weight_g == null) ? null : Number(kit.birth_weight_g),
       reserved_by: kit.reserved_by || null,
@@ -258,6 +259,7 @@ export function StoreProvider({ children }) {
     if (patch.chip_no !== undefined) dbPatch.chip_number = patch.chip_no;
     if (patch.ems_code !== undefined) dbPatch.ems_code = patch.ems_code;
     if (patch.registration_no !== undefined) dbPatch.registration_no = patch.registration_no;
+    if (patch.animal_no !== undefined) dbPatch.animal_no = patch.animal_no;
     if (patch.birth_weight_g !== undefined) dbPatch.birth_weight_g = (patch.birth_weight_g === '' || patch.birth_weight_g == null) ? null : Number(patch.birth_weight_g);
     if (patch.reserved_by !== undefined) dbPatch.reserved_by = patch.reserved_by;
     if (patch.customer_id !== undefined) dbPatch.customer_id = patch.customer_id === '' ? null : patch.customer_id;
@@ -297,6 +299,7 @@ export function StoreProvider({ children }) {
   const mapBreedingCat = (cat) => ({
     name: cat.name || 'Naamloos',
     registration_no: cat.registration_no || null,
+    animal_no: cat.animal_no || null,
     gender: cat.gender || null,
     ems_code: cat.ems_code || null,
     color: cat.color || null,
@@ -523,16 +526,28 @@ export function StoreProvider({ children }) {
       weigh_date: date,
       weight_grams: parseInt(grams, 10)
     })]).select();
-    if (!error && data) {
-      const dbEntry = { id: data[0].id, date: data[0].weigh_date, grams: data[0].weight_grams };
-      setKittens(s => s.map(k => {
-        if (k.id === catId) {
-          const newWeights = [...(k.weights || []), dbEntry].sort((a, b) => new Date(a.date) - new Date(b.date));
-          return { ...k, weights: newWeights };
-        }
-        return k;
-      }));
-    }
+    if (error || !data) return { error: error || { message: 'Opslaan mislukt.' } };
+    const dbEntry = { id: data[0].id, date: data[0].weigh_date, grams: data[0].weight_grams };
+    setKittens(s => s.map(k => {
+      if (k.id === catId) {
+        const newWeights = [...(k.weights || []), dbEntry].sort((a, b) => new Date(a.date) - new Date(b.date));
+        return { ...k, weights: newWeights };
+      }
+      return k;
+    }));
+    return { ok: true };
+  };
+
+  // Een bestaande weging corrigeren, bijvoorbeeld bij een typefout.
+  const updateWeight = async (catId, weightId, grams) => {
+    const n = parseInt(grams, 10);
+    if (isNaN(n)) return { error: { message: 'Geen geldig gewicht.' } };
+    const { error } = await supabase.from('cat_weights').update({ weight_grams: n }).eq('id', weightId);
+    if (error) return { error };
+    setKittens(s => s.map(k => (k.id === catId
+      ? { ...k, weights: (k.weights || []).map(w => (w.id === weightId ? { ...w, grams: n } : w)) }
+      : k)));
+    return { ok: true };
   };
 
   const deleteWeight = async (catId, weightId) => {
@@ -617,7 +632,7 @@ export function StoreProvider({ children }) {
       addKitten, updateKitten, deleteKitten,
       addBreedingCat, updateBreedingCat,
       addDocument, addDocumentFull, deleteDocument, updateDocument, addMedia, deleteMedia, updateMedia, addMedical, deleteMedical, updateMedical,
-      addWeight, deleteWeight, addNote, deleteNote,
+      addWeight, updateWeight, deleteWeight, addNote, deleteNote,
       addCustomer, updateCustomer, deleteCustomer,
       saveSiteContent
     }}>

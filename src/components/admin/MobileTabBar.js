@@ -2,8 +2,9 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
-// Zwevende onderbalk op mobiel, zoals in een echte app. Drie plekken waar een
-// fokker heen wil: zijn dieren, de gezondheidscheck, en zijn eigen profiel.
+// Zwevende onderbalk op mobiel, zoals in een echte app. De plekken waar een
+// fokker met de telefoon in de hand heen wil: zijn dieren, de weegronde,
+// de agenda, de gezondheidscheck, en zijn eigen profiel.
 const TABS = [
   {
     href: '/admin/cats',
@@ -11,6 +12,13 @@ const TABS = [
     // Actief zodra je ergens in de dieren-, nestjes- of verkoopschermen zit.
     match: (p) => p.startsWith('/admin/cats') || p.startsWith('/admin/litters') || p.startsWith('/admin/sales'),
     icon: <><path d="M3 10.5 12 4l9 6.5" /><path d="M5 9.5V20h14V9.5" /><path d="M9 20v-5a3 3 0 0 1 6 0v5" /></>,
+  },
+  {
+    // Wegen doe je met de telefoon in de hand, naast de weegschaal — dus hier.
+    href: '/admin/gewichten',
+    label: 'Wegen',
+    match: (p) => p.startsWith('/admin/gewichten'),
+    icon: <><path d="M3 20h18" /><path d="m6 16 4-5 3 3 5-7" /><circle cx="18" cy="7" r="1.5" /></>,
   },
   {
     href: '/admin/agenda',

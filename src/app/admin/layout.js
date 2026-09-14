@@ -26,6 +26,7 @@ export default function AdminLayout({ children }) {
     { href: '/admin', label: 'Startscherm', icon: 'grid' },
     { href: '/admin/litters', label: `${cap(terms.litterPlural)}`, icon: 'grid' },
     { href: '/admin/cats', label: `${cap(terms.animalPlural)} & dossiers`, icon: 'cat' },
+    { href: '/admin/gewichten', label: 'Gewichten', icon: 'grid' },
     { href: '/admin/agenda', label: 'Agenda', icon: 'grid' },
     { href: '/admin/medical', label: 'Gezondheid', icon: 'settings' },
     { href: '/admin/customers', label: 'Klanten', icon: 'customer' },

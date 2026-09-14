@@ -96,6 +96,7 @@ export default function CatDossier() {
     color: '',
     ems_code: '',
     registration_no: '',
+    animal_no: '',
     birth_weight_g: '',
     reserved_by: '',
     chipNumber: '',
@@ -170,6 +171,7 @@ export default function CatDossier() {
           dateOfBirth: cat.date_of_birth || '',
           ems_code: cat.ems_code || '',
           registration_no: cat.registration_no || '',
+          animal_no: cat.animal_no || '',
           birth_weight_g: cat.birth_weight_g ?? '',
           reserved_by: cat.reserved_by || '',
           chipNumber: cat.chip_number || '',
@@ -635,6 +637,7 @@ export default function CatDossier() {
                   </div>
 
                   <div className="grid gap-4 sm:grid-cols-2">
+                    <Field label="Eigen nummer"><Input name="animal_no" value={formData.animal_no} onChange={handleChange} placeholder="Jouw eigen administratienummer" /></Field>
                     <Field label="Stamboomnummer (registratie)"><Input name="registration_no" value={formData.registration_no} onChange={handleChange} placeholder="Bijv. NHSB 1234567" /></Field>
                     <Field label="EMS-code"><Input name="ems_code" value={formData.ems_code} onChange={handleChange} placeholder="Bijv. MCO n 22" /></Field>
                   </div>

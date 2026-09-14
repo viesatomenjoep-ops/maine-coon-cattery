@@ -38,7 +38,7 @@ function NewKittenForm() {
 
   const [kit, setKit] = useState({
     litter_id: litterParam, name: '', call_name: '', sex: cap(terms.male), color: '', pattern: '', breed: '',
-    status: 'beschikbaar', chip_no: '', registration_no: '', birth_weight_g: '', ems_code: '',
+    status: 'beschikbaar', chip_no: '', registration_no: '', animal_no: '', birth_weight_g: '', ems_code: '',
     reserved_by: '', customer_id: '', priceNL: 1250, priceBE: 1300, cover_image: '',
   });
   const [uploading, setUploading] = useState(false);
@@ -154,6 +154,9 @@ function NewKittenForm() {
                 </div>
               </>
             )}
+            <Field label="Eigen nummer">
+              <Input value={kit.animal_no} onChange={(e) => set('animal_no', e.target.value)} placeholder="Jouw eigen administratienummer" />
+            </Field>
             <Field label="Stamboomnummer">
               <Input value={kit.registration_no} onChange={(e) => set('registration_no', e.target.value)} />
             </Field>
