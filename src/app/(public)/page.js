@@ -1,9 +1,15 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import MainbreedLogo from '@/components/MainbreedLogo';
 import Reveal from '@/components/Reveal';
 import Faq from '@/components/Faq';
+
+// De algemene Mainbreed-marketingpagina staat voorlopig even uit — we
+// bouwen eerst de achterkant verder uit voor Willem. De pagina hieronder
+// blijft gewoon bestaan; verwijder deze redirect om hem weer te tonen.
+const HOMEPAGE_VISIBLE = false;
 
 // Diersoorten waarvoor Mainbreed bedoeld is. Katten werkt vandaag, de rest
 // volgt — dat staat er eerlijk bij zodat niemand zich misleid voelt.
@@ -134,6 +140,13 @@ function Icon({ children, className = 'h-6 w-6' }) {
 
 export default function MainbreedHome() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!HOMEPAGE_VISIBLE) router.replace('/wendysdream');
+  }, [router]);
+
+  if (!HOMEPAGE_VISIBLE) return null;
 
   return (
     <div className="min-h-screen bg-cream-50 text-ink">
