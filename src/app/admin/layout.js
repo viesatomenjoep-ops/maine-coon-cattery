@@ -30,6 +30,7 @@ export default function AdminLayout({ children }) {
     { href: '/admin/medical', label: 'Gezondheid', icon: 'settings' },
     { href: '/admin/customers', label: 'Klanten', icon: 'customer' },
     { href: '/admin/sales', label: 'Verkoop', icon: 'cat' },
+    { href: '/admin/contract', label: 'Koopovereenkomst', icon: 'edit' },
     { href: '/admin/documenten', label: 'Documenten', icon: 'edit' },
     { href: '/admin/news', label: 'Nieuws', icon: 'image' },
     { href: '/admin/media', label: "Bestanden & foto's", icon: 'image' },

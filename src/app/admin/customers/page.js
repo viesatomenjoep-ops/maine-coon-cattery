@@ -6,6 +6,7 @@ import { useStore } from '@/context/StoreContext';
 import { Card, Btn } from '@/components/admin';
 import { PageHeader, PrimaryAction, EmptyHero, HowItWorks } from '@/components/admin/PageShell';
 import { cap } from '@/lib/species';
+import { klantnummer } from '@/lib/contract';
 
 export default function CustomersPage() {
   const { customers, addCustomer, deleteCustomer, terms } = useStore();
@@ -109,8 +110,15 @@ export default function CustomersPage() {
         {customers.map((c) => (
           <Link key={c.id} href={`/admin/customers/${c.id}`} className="block group">
             <Card className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 transition group-hover:border-brass-400 group-hover:shadow-md">
-              <div>
-                <p className="font-display text-xl text-forest-900 group-hover:text-brass-600">{c.name}</p>
+              <div className="min-w-0">
+                <div className="flex flex-wrap items-center gap-2">
+                  {c.customer_no && (
+                    <span className="rounded-md bg-forest-100 px-2 py-0.5 font-mono text-xs font-bold text-forest-700">
+                      {klantnummer(c.customer_no)}
+                    </span>
+                  )}
+                  <p className="font-display text-xl text-forest-900 group-hover:text-brass-600">{c.name}</p>
+                </div>
                 <p className="mt-1 text-sm text-forest-600">
                   {c.email && <span className="mr-3">📧 {c.email}</span>}
                   {c.whatsapp_number && <span>📱 {c.whatsapp_number}</span>}

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useStore } from '@/context/StoreContext';
 import { PageHead, Card, Btn } from '@/components/admin';
 import { cap } from '@/lib/species';
+import { klantnummer } from '@/lib/contract';
 
 export default function CustomerDetailPage() {
   const { id } = useParams();
@@ -116,6 +117,10 @@ export default function CustomerDetailPage() {
         <Card>
           <h2 className="mb-4 font-display text-xl text-forest-900">Gegevens</h2>
           <div className="space-y-4 text-sm text-forest-800">
+            <div>
+              <span className="block font-semibold text-forest-900">Klantnummer</span>
+              <span className="font-mono">{customer.customer_no ? klantnummer(customer.customer_no) : 'nog niet toegekend'}</span>
+            </div>
             <div>
               <span className="block font-semibold text-forest-900">Naam</span>
               {customer.name}
