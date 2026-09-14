@@ -7,6 +7,7 @@ import { Field, Input, Select, Combobox } from '@/components/admin';
 import { PageHeader, FormSection, FormActions } from '@/components/admin/PageShell';
 import FilePicker from '@/components/admin/FilePicker';
 import { BreedPicker, EmsCodeInput } from '@/components/admin/EmsFields';
+import CustomerPicker from '@/components/admin/CustomerPicker';
 import { cap } from '@/lib/species';
 
 const PATTERNS = [
@@ -170,10 +171,7 @@ function NewKittenForm() {
               </Select>
             </Field>
             <Field label="Koper">
-              <Select value={kit.customer_id} onChange={(e) => set('customer_id', e.target.value)}>
-                <option value="">Nog geen koper gekoppeld</option>
-                {customers.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-              </Select>
+              <CustomerPicker value={kit.customer_id} onChange={(v) => set('customer_id', v)} />
             </Field>
             <Field label="Prijs NL (€)">
               <Input type="number" value={kit.priceNL} onChange={(e) => set('priceNL', Number(e.target.value))} />

@@ -7,6 +7,7 @@ import MediaUpload from '@/components/admin/MediaUpload';
 import DocumentUploader, { DocumentList } from '@/components/admin/DocumentUploader';
 import MediaGallery from '@/components/admin/MediaGallery';
 import PdfImport from '@/components/admin/PdfImport';
+import CustomerPicker from '@/components/admin/CustomerPicker';
 import { useStore } from '@/context/StoreContext';
 import { AdminUpload } from '@/components/admin/FilePicker';
 import { TREATMENT_TYPES, TREATMENT_SCHEDULE, treatmentIcon, formatDate } from '@/lib/treatments';
@@ -798,10 +799,11 @@ export default function CatDossier() {
                   <h2 className="font-display text-xl text-forest-900">Klant & contact</h2>
                   <div className="grid gap-4 sm:grid-cols-2">
                     <Field label="Gekoppelde klant">
-                      <Select name="customer_id" value={formData.customer_id || ''} onChange={handleChange}>
-                        <option value="">— Geen klant gekoppeld —</option>
-                        {customers.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                      </Select>
+                      <CustomerPicker
+                        value={formData.customer_id}
+                        onChange={(v) => setFormData((f) => ({ ...f, customer_id: v }))}
+                        placeholder="— Geen klant gekoppeld —"
+                      />
                     </Field>
                     <Field label="Gereserveerd door (naam)"><Input name="reserved_by" value={formData.reserved_by} onChange={handleChange} placeholder="Optioneel" /></Field>
                   </div>

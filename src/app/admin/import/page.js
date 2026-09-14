@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useStore } from '@/context/StoreContext';
 import { PageHeader } from '@/components/admin/PageShell';
 import { Card, Btn } from '@/components/admin';
+import ContractUploader from '@/components/admin/ContractUploader';
 import { cap } from '@/lib/species';
 
 // Eenmalige invoer van oude koopcontracten. Je plakt de uitgelezen gegevens,
@@ -59,6 +60,7 @@ function Regel({ r, bestaat, gekozen, onToggle }) {
 
 export default function ImportPage() {
   const { kittens = [], litters = [], customers = [], addKitten, addLitter, addCustomer, terms } = useStore();
+  const [stap, setStap] = useState('gegevens');
   const [ruw, setRuw] = useState('');
   const [rijen, setRijen] = useState(null);
   const [fout, setFout] = useState('');
@@ -192,6 +194,39 @@ export default function ImportPage() {
         subtitle="Eenmalig oude koopcontracten in het systeem zetten"
       />
 
+      {/* Twee stappen: eerst de gegevens, daarna de bestanden zelf. */}
+      <div className="mb-6 flex gap-1.5 rounded-2xl bg-forest-900/[0.04] p-1.5">
+        {[
+          { key: 'gegevens', label: '1. Gegevens invoeren' },
+          { key: 'bestanden', label: '2. Contract-PDF\u2019s koppelen' },
+        ].map((t) => (
+          <button
+            key={t.key}
+            onClick={() => setStap(t.key)}
+            className={`flex-1 rounded-xl px-4 py-2.5 text-sm font-semibold transition ${
+              stap === t.key ? 'bg-forest-800 text-cream-50 shadow-sm' : 'bg-white text-forest-600 hover:bg-forest-50'
+            }`}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
+
+      {stap === 'bestanden' && (
+        <Card>
+          <h2 className="mb-2 font-display text-xl text-forest-900">Contract-PDF&apos;s koppelen</h2>
+          <p className="mb-5 text-sm leading-relaxed text-forest-600">
+            Kies de map waarin de contracten staan. Elke submap heet naar een {terms.young}, en daarop
+            koppel ik de bestanden automatisch aan het juiste dier. Wat niet vanzelf klopt kies je zelf,
+            en niets wordt geüpload voordat je bevestigt.
+          </p>
+          <ContractUploader />
+        </Card>
+      )}
+
+      {stap === 'gegevens' && (
+      <>
+
       {!rijen && (
         <Card className="max-w-3xl">
           <h2 className="mb-2 font-display text-xl text-forest-900">Plak de uitgelezen gegevens</h2>
@@ -254,7 +289,10 @@ export default function ImportPage() {
         </>
       )}
 
-      {log.length > 0 && (
+      </>
+      )}
+
+      {stap === 'gegevens' && log.length > 0 && (
         <Card className="mt-6">
           <h2 className="mb-3 font-display text-xl text-forest-900">Wat er gebeurde</h2>
           <div className="max-h-80 overflow-y-auto rounded-xl bg-forest-50/60 p-4 font-mono text-xs leading-relaxed text-forest-800">
